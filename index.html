@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#9BD770">
+<title>Zoomies</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<canvas id="game"></canvas>
+<canvas id="hud"></canvas>
+<div id="ui">
+  <button id="btn-mute" class="round small" aria-label="Sound">
+    <svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 9.5v5h3.5l4.5 4v-13l-4.5 4z" fill="#fff"/>
+      <g id="mute-waves"><path d="M15.5 9.5a3.5 3.5 0 0 1 0 5"/><path d="M18 7a7 7 0 0 1 0 10"/></g>
+      <g id="mute-cross" style="display:none"><path d="M16 9.5l5 5M21 9.5l-5 5"/></g>
+    </svg>
+  </button>
+  <div id="keys">arrows / WASD run &nbsp;·&nbsp; space jump &nbsp;·&nbsp; B bark &nbsp;·&nbsp; E car &nbsp;·&nbsp; or click where he should go</div>
+  <div id="actions">
+    <button id="btn-car" class="round big car hidden" aria-label="Car">
+      <svg viewBox="0 0 48 48" width="58%" height="58%" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="3.5" fill="#fff"/><path d="M24 24v17M24 24L9.5 16M24 24l14.5-8"/></svg>
+    </button>
+    <button id="btn-bark" class="round big bark" aria-label="Bark">
+      <svg viewBox="0 0 48 48" width="60%" height="60%" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><path d="M10 18v12h7l10 8V10l-10 8z" fill="#fff" stroke-linejoin="round"/><path d="M33 17a10 10 0 0 1 0 14"/><path d="M38 11a18 18 0 0 1 0 26"/></svg>
+    </button>
+    <button id="btn-jump" class="round big jump" aria-label="Jump">
+      <svg viewBox="0 0 48 48" width="60%" height="60%" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M24 40V10M11 22L24 9l13 13"/></svg>
+    </button>
+  </div>
+</div>
+<script type="module" src="src/main.js"></script>
+</body>
+</html>
