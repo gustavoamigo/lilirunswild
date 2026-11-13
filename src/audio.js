@@ -69,21 +69,15 @@ function noise(when, dur, o = {}) {
 
 // ---- the dog ----
 // The bark is the one recorded sound (sounds/CREDITS.md): a synthesised one never sounded like a dog.
-// Each bark is played a little higher or lower, and sometimes twice: "ruff-ruff".
 let barkBuf = null;
 function loadBark() {
   fetch(new URL('../sounds/bark.wav', import.meta.url)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((b) => { barkBuf = b; }).catch(() => {});
 }
-function woof(when, rate, vol) {
-  const src = ac.createBufferSource(), g = ac.createGain();
-  src.buffer = barkBuf; src.playbackRate.value = rate; g.gain.value = vol;
-  src.connect(g); g.connect(sfx); src.start(ac.currentTime + when);
-}
 export function bark() {
   if (!ac || !barkBuf) return;
-  const r = 1.12 + Math.random() * 0.16;                 // a spaniel: a bit higher than the recording
-  woof(0, r, 0.9);
-  if (Math.random() < 0.4) woof(0.24, r * 0.95, 0.75);
+  const src = ac.createBufferSource(), g = ac.createGain();
+  src.buffer = barkBuf; src.playbackRate.value = 1.2; g.gain.value = 0.9;   // a spaniel: a bit higher than the recording
+  src.connect(g); g.connect(sfx); src.start();
 }
 // an excited little yip: "a bird!"
 export function yip() { tone(700, 0, 0.12, { type: 'triangle', to: 1300, sweep: 0.08, vol: 0.2 }); tone(900, 0.13, 0.12, { type: 'triangle', to: 1500, sweep: 0.08, vol: 0.16 }); }
