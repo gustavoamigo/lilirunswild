@@ -1,6 +1,6 @@
 # Tech
 
-Three.js r170 (vendored), plain ES modules, no build step, no asset files. Same architecture as wheek.
+Three.js r170 (vendored), plain ES modules, no build step, and no asset files but one: the bark is a recording (`sounds/bark.wav`, credit in `sounds/CREDITS.md`), because a synthesised bark did not sound like a dog. Same architecture as wheek.
 
 ## Files
 
@@ -50,7 +50,7 @@ Nothing is recorded or key-framed, and there is no motion data to load. The legs
 - **About-turn at a gallop.** Asking for the opposite direction (more than 120° off) while galloping sets `dog.skid`: she brakes at `BRAKE` 1500 with the front legs braced and the haunches low. Below 150 the brake hands over to `dog.push`: she is back at a trot and steps round as in any trot turn, and once she faces within 0.45 rad of where she is going she pushes off at 330, straight into the gallop. Letting go of the stick, a jump or a bump ends it.
 - **Spine.** The chest and the haunches are two halves hinged in the middle. At a gallop they fold under as the hind paws reach forward and open out as she stretches; the leg joints move with them.
 - **Ears.** Each ear is a chain of four points hanging from the head, simulated every frame (gravity, drag, a weak spring towards hanging straight, kept outside the head). The air she moves through lifts them out sideways and flutters them, more the faster she goes, and the head rolls a little with the stride, so they flap in and out and up and down as well as trailing. Nothing poses them.
-- **Shake.** `dog.shake` (seconds left): the head twists one way and the other about five times a second, the twist runs down the back to the tail a little late, eyes shut; the ears are thrown round by it. She shakes after a bonk, every other time she is left standing (the other time is the play bow), and on the studio's `shake` button (B). Moving cancels it.
+- **Shake.** `dog.shake` (seconds left): the head twists one way and the other about five times a second, the twist runs down the back to the tail a little late, eyes shut; the ears are thrown round by it. She shakes after a bonk, every other time she is left standing (the other time is the play bow), and on the studio's `shake` button (K). Moving cancels it.
 - **Stopping.** A paw caught in the air when she slows finishes its step at once rather than at the gait's pace.
 - The model reports `dog.footfall` when a paw lands (the step sound), `dog.gait` (cycle phase) and `dog.feet` (for tests: `x`, `y`, `u` = progress of the step, 1 when standing, `off` = distance from rest).
 

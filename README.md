@@ -17,4 +17,4 @@ python3 tools/serve.py 8765     # then open http://localhost:8765/
 
 Keep running and he gets the zoomies. `http://localhost:8765/?studio` shows the dog alone, close up, with slow motion and pose buttons. See `docs/game-design.md` for what he does and `docs/tech.md` for the code.
 
-Three.js (vendored), plain ES modules, no build step, no asset files.
+Three.js (vendored), plain ES modules, no build step. One asset file: the bark (`sounds/CREDITS.md`).

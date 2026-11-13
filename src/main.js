@@ -592,7 +592,7 @@ function drawStudio() {
 }
 function initStudio() {
   document.getElementById('btn-car').remove();
-  document.getElementById('keys').textContent = '1 2 3 view · wheel zoom · G gait · T slow · P pause · . step · H N V B C poses';
+  document.getElementById('keys').textContent = '1 2 3 view · wheel zoom · G gait · T slow · P pause · . step · H N V K C poses';
   const bar = document.createElement('div'); bar.id = 'studio'; document.getElementById('ui').append(bar);
   const btn = (label, fn, on) => {
     const b = document.createElement('button'); b.textContent = label; bar.append(b);
@@ -615,7 +615,7 @@ function initStudio() {
     KeyG: () => { studio.gait = { auto: 'trot', trot: 'gallop', gallop: 'auto' }[studio.gait]; },
     KeyT: () => { studio.speed = SPEEDS[(SPEEDS.indexOf(studio.speed) + 1) % SPEEDS.length]; studio.paused = false; },
     KeyP: () => { studio.paused = !studio.paused; }, Period: () => { studio.paused = true; studio.step = true; },
-    KeyH: POSES.hello, KeyN: POSES.bonk, KeyV: POSES.bow, KeyB: POSES.shake, KeyC: POSES.point,
+    KeyH: POSES.hello, KeyN: POSES.bonk, KeyV: POSES.bow, KeyK: POSES.shake, KeyC: POSES.point,
   };
   window.addEventListener('keydown', (e) => { const f = KEYS[e.code]; if (f && !e.repeat) { f(); refresh(); } });
   window.addEventListener('wheel', (e) => { zoomBy(e.deltaY > 0 ? 1.1 : 0.9); refresh(); }, { passive: true });

@@ -23,7 +23,7 @@ Small iterations with the owner as tester.
 
 ## Code
 
-- Three.js r170, vendored in `vendor/`. Plain ES modules, **no build step, no asset files**: models are assembled in code, the ground is painted into a texture, sound is synthesised.
+- Three.js r170, vendored in `vendor/`. Plain ES modules, **no build step, no asset files**: models are assembled in code, the ground is painted into a texture, sound is synthesised. The one exception is the bark, `sounds/bark.wav` (owner asked for a soundfont sample, 2026-11-13).
 - Game logic lives on a flat map (`x` east, `y` south) plus height `z`; `src/scene.js` turns it into 3D. A 2D overlay canvas carries the HUD and bubbles.
 - File map, tuning constants, URL parameters and keys are in `docs/tech.md`.
 
