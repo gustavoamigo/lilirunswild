@@ -1,5 +1,5 @@
 # Sounds
 
-`bark.wav` is the "Dog Bark" sample from the Fluid (R3) GS SoundFont (`FluidR3_GS.sf2`),
-Copyright (c) 2000-2002, 2008 Frank Wen, released under the MIT licence (the same terms as `../LICENSE`).
-It is the only recorded sound in the game; everything else is synthesised in `src/audio.js`.
+`lili-bark.wav`, `lili-grumble-1.wav` and `lili-grumble-2.wav` are Lili herself, recorded by Gustavo Amigo
+on 2026-11-13 and cleaned of background noise. They are covered by `../LICENSE` like the rest of the repository.
+They are the only recorded sounds in the game; everything else is synthesised in `src/audio.js`.

@@ -75,3 +75,15 @@ Each iteration: what was built → what to test → feedback received → what t
 **Decision**: a pointer that is moving is not an arrival. While it moves, a galloping dog keeps full speed (see `docs/tech.md`).
 
 **Checked by script**: reversals stepped frame by frame in the studio, straight across her and in an arc round her, taking 0.06 to 0.9 s, ending far and near: all brake, turn and push off, except a slow arc (0.45 s or more) to a point close by, which she curves to. Before, only the instant jump braked. A pointer held still on screen: no brake. Stop trials unchanged (8 of 24 with a paw up at a quarter second). **Not checked**: touch; by eye in motion.
+
+## Iteration 6: Lili's own voice
+
+**Feedback**: three recordings of Lili. Cut into 30 events and named by a classifier; the owner listened and chose three from the first recording: events 6, 7 and 9. None had her breathing.
+
+**Decisions**
+- Event 9 (0.43 s) is the bark, replacing the soundfont sample.
+- Events 6 and 7 (about 1 s, low grumbles) alternate with the play bow. Which sound goes where was not specified; this is a first guess.
+- The studio shows the unchosen clips as buttons (local only).
+
+**Checked by script**: the three files load and decode, bark and bow raise no errors. **Not checked**: by ear.
+

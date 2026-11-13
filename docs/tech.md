@@ -1,6 +1,6 @@
 # Tech
 
-Three.js r170 (vendored), plain ES modules, no build step, and no asset files but one: the bark is a recording (`sounds/bark.wav`, credit in `sounds/CREDITS.md`), because a synthesised bark did not sound like a dog. Same architecture as wheek.
+Three.js r170 (vendored), plain ES modules, no build step, and no asset files but her voice: the bark and the grumble with the play bow are recordings of Lili (`sounds/lili-*.wav`, see `sounds/CREDITS.md`), because a synthesised bark did not sound like a dog. Same architecture as wheek.
 
 ## Files
 
