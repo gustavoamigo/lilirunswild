@@ -150,3 +150,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the shake is really bad; the other movements are realistic; running may need fine tuning.
 
 **Decision**: the shake rocked her whole body like a toy. Now it is a twist about her spine that starts at the head and runs down her back to the tail (`shakeAt`): the head rolls far each way, the skin of her body rolls round her a little later (and the marks on her back with it), the rump and tail last; her paws stay planted and her head is lowered. **Checked by script**: a strip of the shake every 0.12 s; no page errors. **Not checked**: by eye at full speed.
+
+**Feedback**: a slow-motion clip of a spaniel shaking (not kept in the repo): nose held up and nearly still, the head rolling far each way about it, the ears thrown straight out and up, for well over a second.
+
+**Decision**: matched to it: nose up (the last note said lowered; it was not), head roll 1.35 rad each way, 1.4 s long, body skin roll 0.8 rad, and the ears are thrown outwards from the head and upwards while she shakes (`fling` in `swingEars`). **Checked by script**: a strip every 0.15 s set beside the clip's frames. **Not checked**: at full speed by eye; forelegs are not braced wide as in the clip.
