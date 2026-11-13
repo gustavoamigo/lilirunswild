@@ -12,7 +12,7 @@ Lili, liver and white: a white body, brown sides to her head with a white blaze 
 |---|---|
 | Trot | Steer. He turns on the spot and stops when you let go. |
 | Zoomies | Keep running flat out for about a second (or run at birds) and he tips into a gallop: half as fast again, ears flying, dust. He has no brakes and skids wide round corners. |
-| Jump | She takes a run at it: a few bounds from a standstill, a stride when already running, then springs. In the air she can still lean. |
+| Jump | She takes a run at it: a few bounds from a standstill, a stride when already running, then springs: a long low leap, or a high one when there is a bench, the table or the car in front of her. In the air she can still lean. |
 | Bonk | Gallop straight into a tree, lamp, bench or the hedge: stars, a dazed moment, leaves fall. A glancing hit only slides him past. |
 | Say hello | Trot into a person: paws up on their chest, hearts. Fly into them (jumping or galloping): they sit down with a bump. |
 | Break stuff | Run into pots, bins, cones, boxes and a ball. Pots smash, bins spill. Jump on the picnic table and the plates go flying. Each thing counts once on the paw counter. |

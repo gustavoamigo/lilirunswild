@@ -10,7 +10,7 @@ import { buildTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js
 import { CAR } from './models.js';
 import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
 
-const DOG_R = 30, GRAV = 1900, JUMP_V = 560, BRAKE = 1500;
+const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560, BRAKE = 1500;
 const TROT = 420, ZOOM = 640, ZOOM_AFTER = 0.9;      // run flat out for this long and he gets the zoomies
 const BONK = 470;                                    // faster than this into something solid and he sees stars
 const CAR_TOP = 900;
@@ -96,7 +96,12 @@ function jump() {
 function takeOff() {
   const sp = Math.max(Math.hypot(dog.vx, dog.vy), 240);
   dog.vx = Math.cos(dog.heading) * sp; dog.vy = Math.sin(dog.heading) * sp;
-  dog.vz = JUMP_V; dog.air = true;
+  // A long, low leap, about two thirds of her own height. Only with something to get up onto in front of her
+  // (a bench, the table, the car) does she go for height.
+  const hx = Math.cos(dog.heading), hy = Math.sin(dog.heading);
+  let high = false;
+  for (let d = 30; d < sp * 0.55 && !high; d += 20) for (const o of [0, 22, -22]) high ||= floorAt(world, dog.x + hx * d - hy * o, dog.y + hy * d + hx * o, 1e4)[0] > dog.z + 30;
+  dog.vz = high ? JUMP_UP : JUMP_V; dog.air = true;
   A.jump(); dust(dog.x, dog.y, 4);
 }
 
@@ -199,6 +204,7 @@ function updateDog(dt) {
   if (p.air) {
     p.vz -= GRAV * dt; p.z += p.vz * dt;
     const [fl] = floorAt(world, p.x, p.y, p.z);
+    p.clear = p.z - fl;
     if (p.vz <= 0 && p.z <= fl) { p.z = fl; land(false); if (p.state === 'drive') return; }
   } else {
     const [fl] = floorAt(world, p.x, p.y, p.z);

@@ -100,3 +100,16 @@ Each iteration: what was built → what to test → feedback received → what t
 - Jump: run-up, gather, take-off; a rising and a falling pose; heavier gravity (0.57 s in the air, was 0.72); landing squash halved; ears carried with her and calmed in the air. Cost: from a standstill the jump now starts 0.3 s after the button and covers more ground, so hopping onto a bench she stands beside needs a step back.
 
 **Checked by script**: frame-stepped jumps from a standstill and from a gallop (run-up 18 and 7 frames, peak 78, enough for the car at 64), side-on screenshots of each phase. **Not checked**: by eye in motion, hopping onto bench, table and car in the game, touch.
+
+## Iteration 8: a lower leap, and a simulated skeleton to capture movement from
+
+**Feedback**: the reworked jump is still "not realistic at all". Then: simulate a real dog, its skeleton and joints, and capture the movement, instead of posing it; the same will be needed for people. A full muscle model (simtk.org dogmodel) may be too much.
+
+**Decisions**
+- Stop-gap in the game: a long low leap (45 high, was 80), high only with something to get up onto ahead; body along her path; forelegs down first; no paw through the ground.
+- `tools/sim/`: her bones, joints, joint ranges and masses in MuJoCo, and a search for the leap. Two captures: a long leap (2.5 m/s, middle rises 25 cm, 0.44 s in the air) and a high jump. A page plays them.
+- Agreed the muscle model is too much.
+- Next, if the captures look right to the owner: give Lili's legs the real bones in the game and play the captures; then a running take-off and the gaits; then people.
+
+**Checked by script**: the search converges and the captures land forepaws first and end standing; the page loads without errors; in the game, a trotting jump lands on the bench and on the table, and a jump in the open stays low. **Not checked**: by eye in motion; the car; a jump started right beside a bench (she bumps its side during the run-up and misses).
+

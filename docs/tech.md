@@ -18,6 +18,7 @@ Three.js r170 (vendored), plain ES modules, no build step, and no asset files bu
 | `src/input.js`, `src/gamepad.js` | Keys, pointer, pad |
 | `src/style.js` | `?style=real` (default) or `toon` |
 | `tools/serve.py` | Local server with caching off |
+| `tools/sim/` | Lili's skeleton in a physics engine, to capture movement from instead of posing it (see below) |
 
 ## Coordinates and camera
 
@@ -27,7 +28,7 @@ The camera looks north from above and behind, never turns, leads the dog by 0.3 
 
 ## How the dog moves (`updateDog`)
 
-Constants at the top of `src/main.js`: `TROT` 420, `ZOOM` 640 (after `ZOOM_AFTER` 0.9 s flat out), `JUMP_V` 560, `GRAV` 1900 (a jump about 80 high and 0.57 s long), `BONK` 470 (speed into a solid thing that dazes him), `CAR_TOP` 900.
+Constants at the top of `src/main.js`: `TROT` 420, `ZOOM` 640 (after `ZOOM_AFTER` 0.9 s flat out), `JUMP_V` 430, `GRAV` 1900 (a leap about 45 high and 0.45 s long), `JUMP_UP` 560 (about 82 high, used when there is something to get up onto ahead), `BONK` 470 (speed into a solid thing that dazes him), `CAR_TOP` 900.
 
 - On the ground, velocity eases toward steering × top speed: fast at a trot, slowly in zoomies (that is the skid).
 - In the air it eases toward steering at no less than 0.75 × `TROT`.
@@ -47,7 +48,7 @@ Nothing is recorded or key-framed, and there is no motion data to load. The legs
 - **Standing still**, any paw left more than a few units from its rest position steps back under the body.
 - **Poses** (jump, hello, bow, point, daze, driving) hold a paw at an angle and length from its joint instead; each paw blends between the pose and its place on the ground.
 - **Turning.** In `updateDog` the heading turns towards the stick at a limited rate (8.5 rad/s trotting, 5.5 galloping, 4 in the air) and the velocity follows the heading, so a change of direction is a curve; trotting, speed drops with the angle still to turn, so an about-turn is walked round almost on the spot. The model reads the turn rate: the spine bends in the middle, the head and tail lead into the turn, and the body leans in at speed.
-- **Jump.** `jump()` does not lift her: it sets `dog.spring`, a run-up of 0.3 s from a standstill down to 0.12 s at a trot or faster. During it she runs straight on at full strength whatever the pointer says, and over the last 0.11 s she sinks on her haunches. `takeOff()` then launches her at the speed she has reached (at least 240). In the air the pose follows `vz`: going up, nose high, forelegs folded, hind legs straight out behind; coming down, nose low, forelegs reaching for the ground, hind legs drawn up under her. The ears take 70% of her rise and fall with them and are flapped a fifth as much as on the ground, so they hang and trail instead of rising like wings.
+- **Jump.** `jump()` does not lift her: it sets `dog.spring`, a run-up of 0.3 s from a standstill down to 0.12 s at a trot or faster. During it she runs straight on at full strength whatever the pointer says, and over the last 0.11 s she sinks on her haunches. `takeOff()` then launches her at the speed she has reached (at least 240): a long low leap, or a high one (`JUMP_UP`) when a bench, the table or the car lies within about half a second ahead. In the air her body lies along her path and turns about her middle: going up, nose high, forelegs folded, hind legs straight out behind and the last to leave the ground; coming down, nose low, forelegs reaching and down first, hind legs drawn up under her. She lands nose down and bounds out of it. This is still posed by hand on two-bone legs; the simulated skeleton in `tools/sim/` is what it is to be rebuilt from. The ears take 70% of her rise and fall with them and are flapped a fifth as much as on the ground, so they hang and trail instead of rising like wings.
 - **About-turn at a gallop.** Asking for a direction more than about 115° off her travel while galloping (faster than 330) sets `dog.skid`: she brakes at `BRAKE` 1500 with the front legs braced and the haunches low. Below 150 the brake hands over to `dog.push`: she is back at a trot and steps round as in any trot turn, and once she faces within 0.45 rad of where she is going she pushes off at 330, straight into the gallop. Letting go of the stick, a jump or a bump ends it. With the pointer, steering strength falls with the pointer's distance from her, so a pointer dragged across her to the other side used to read as "slow down" and she had lost the gallop before it was behind her. While the pointer is moving on screen (more than 350 px/s, and for 0.3 s after) a galloping dog ignores its distance and keeps going flat out, also while it is right on top of her, so the reversal meets her at speed. A pointer held still is unchanged: she slows as she reaches it. After the turn she pushes off into a gallop only if the pointer is far enough to ask for one.
 - **Spine.** The chest and the haunches are two halves hinged in the middle. At a gallop they fold under as the hind paws reach forward and open out as she stretches; the leg joints move with them.
 - **Ears.** Each ear is a chain of four points hanging from the head, simulated every frame (gravity, drag, a weak spring towards hanging straight, kept outside the head). The air she moves through lifts them out sideways and flutters them, more the faster she goes, and the head rolls a little with the stride, so they flap in and out and up and down as well as trailing. Nothing poses them.
@@ -73,3 +74,12 @@ Run left or right for a side view, toward the camera for the front. The readout 
 `window.__G`: `t`, `dog`, `car`, `mess`, `birds`, `world`, `flocks`, `people`, `props`. `__G.api`: `jump()`, `bark()`, `car()`, `knock(i)`, `enterCar()`, `leaveCar()`, `flyAway(i)`.
 
 - **Auditioning recordings in the studio.** If `sounds/lili/index.json` exists (a list of `{file, label, dur, dog}`), the studio gets a `recordings` button that unfolds a row of buttons, one per clip (folded by default: there are thirty); pressing one plays it (`playClip` in `src/audio.js`) and opens her mouth. The folder is in `.gitignore`: raw recordings stay on the machine until one is chosen as a game sound.
+
+## The simulated skeleton (`tools/sim/`)
+
+Movement posed by hand did not look like a dog. `tools/sim/dog.py` is a springer spaniel's skeleton for MuJoCo, side on: back, neck, head, tail, and for each leg the real bones (shoulder blade, upper arm, forearm, wrist to paw; thigh, shin, hock to paw), with a dog's joint ranges, about 20 kg spread over the bones, and servos limited to a dog's strength. `tools/sim/jump.py` drives the joints from knots over time and searches (cross-entropy, 16 processes, about 3 minutes) for the leap that reaches the asked height and speed, lands forepaws first, ends standing and costs the least effort. The first guess is rough; the result is whatever the physics allows.
+
+- `python jump.py stand` (long leap) or `high`; `python jump.py stand 0` replays the saved result. Needs `pip install mujoco numpy pillow`, in a virtual environment outside the repo.
+- Output in `tools/sim/out/`: `<case>.json` (every joint's position 100 times a second, and which paws are down), `<case>.png` (a strip), `<case>.npy` (the knots, to resume a search).
+- `tools/sim/view.html` plays a capture in slow motion: `/tools/sim/view.html` on the local server.
+- Not done yet: the game does not use the captures. Lili's legs there have two bones and no hock. A running take-off, the gaits and people are not simulated.

@@ -1,0 +1,63 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Lili's skeleton, simulated</title>
+<style>
+  body { margin: 0; font: 15px system-ui, sans-serif; background: #F4F1EA; color: #333; }
+  canvas { display: block; width: 100vw; height: 62vh; background: #EAF3F8; }
+  .bar { padding: 10px 14px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  button { font: inherit; padding: 6px 12px; border: 1px solid #998; border-radius: 6px; background: #fff; }
+  button.on { background: #5E3829; color: #fff; }
+  input[type=range] { flex: 1; min-width: 200px; }
+  p { margin: 4px 14px; max-width: 70ch; }
+</style>
+<canvas id="c"></canvas>
+<div class="bar" id="cases"></div>
+<div class="bar"><button id="play">pause</button><span id="speeds"></span><input id="scrub" type="range" min="0" max="1" step="0.001" value="0"><span id="time"></span></div>
+<p>A springer spaniel's bones and joints in a physics engine (MuJoCo). The motion is not drawn by hand: her joints are driven within a dog's joint ranges and strength, starting from a rough guess, and a search finds the leap that reaches the asked height with the least effort and lands on its paws. Dark legs are the near side, pale the far side. Dots under a paw mean it is on the ground.</p>
+<p id="info"></p>
+<script>
+const cv = document.getElementById('c'), g = cv.getContext('2d');
+const CASES = { stand: 'long leap', high: 'high jump' };
+let clip = null, t = 0, playing = true, speed = 0.25, last = 0;
+const el = (id) => document.getElementById(id);
+for (const k in CASES) { const b = document.createElement('button'); b.textContent = CASES[k]; b.onclick = () => load(k); b.dataset.k = k; el('cases').append(b); }
+for (const s of [1, 0.5, 0.25, 0.1]) { const b = document.createElement('button'); b.textContent = '×' + s; b.onclick = () => { speed = s; mark(); }; b.dataset.s = s; el('speeds').append(b); }
+el('play').onclick = () => { playing = !playing; el('play').textContent = playing ? 'pause' : 'play'; };
+el('scrub').oninput = (e) => { t = e.target.value * dur(); playing = false; el('play').textContent = 'play'; };
+const dur = () => clip ? (clip.frames.length - 1) * clip.dt : 1;
+function mark() { for (const b of el('speeds').children) b.className = +b.dataset.s === speed ? 'on' : ''; for (const b of el('cases').children) b.className = clip && b.dataset.k === clip.case ? 'on' : ''; }
+async function load(k) {
+  clip = await (await fetch(`out/${k}.json`)).json(); t = 0; mark();
+  const i = clip.info;
+  el('info').textContent = `Leaves the ground at ${i.takeoff.toFixed(2)} s going ${i.vx.toFixed(1)} m/s, her middle rises ${(i.apex * 100).toFixed(0)} cm, lands at ${i.land.toFixed(2)} s.`;
+}
+function frame(now) {
+  requestAnimationFrame(frame);
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  if (!clip) return;
+  if (playing) { t += dt * speed; if (t > dur() + 0.6) t = 0; el('scrub').value = Math.min(1, t / dur()); }
+  const w = cv.width = cv.clientWidth * devicePixelRatio, h = cv.height = cv.clientHeight * devicePixelRatio;
+  const f = Math.min(clip.frames.length - 1, t / clip.dt), i0 = Math.floor(f), i1 = Math.min(clip.frames.length - 1, i0 + 1), u = f - i0;
+  const A = clip.frames[i0], B = clip.frames[i1], at = {};
+  clip.keys.forEach((k, n) => { at[k] = [A[n * 2] + (B[n * 2] - A[n * 2]) * u, A[n * 2 + 1] + (B[n * 2 + 1] - A[n * 2 + 1]) * u]; });
+  const sc = Math.min(w / 2.6, h / 1.5), cx = (at.spine[0] + at.neck[0]) / 2, gy = h * 0.86;
+  const X = (x) => w / 2 + (x - cx) * sc, Y = (z) => gy - z * sc;
+  g.fillStyle = '#DDE8C9'; g.fillRect(0, gy, w, h - gy);
+  g.strokeStyle = '#9AAA88'; g.lineWidth = 1 * devicePixelRatio; g.beginPath();
+  for (let m = Math.floor(cx - 2); m < cx + 2; m += 0.25) { g.moveTo(X(m), gy); g.lineTo(X(m), gy + (m % 1 === 0 ? 14 : 6) * devicePixelRatio); }
+  g.stroke();
+  g.lineCap = g.lineJoin = 'round';
+  const order = ['fore_r', 'hind_r', 'spine', 'hind_l', 'fore_l'];
+  for (const name of order) {
+    const ch = clip.chains[name], far = name.endsWith('_r');
+    g.strokeStyle = far ? '#BFB3A6' : '#5E3829'; g.lineWidth = (name === 'spine' ? 0.035 : 0.022) * sc;
+    g.beginPath(); ch.forEach((k, n) => n ? g.lineTo(X(at[k][0]), Y(at[k][1])) : g.moveTo(X(at[k][0]), Y(at[k][1]))); g.stroke();
+    g.fillStyle = far ? '#8F8377' : '#2A1810';
+    for (const k of ch) { g.beginPath(); g.arc(X(at[k][0]), Y(at[k][1]), 0.011 * sc, 0, 7); g.fill(); }
+  }
+  g.fillStyle = '#C0392B';
+  for (const p of clip.on[i0]) { const k = (p[0] === 'f' ? 'mcp_' : 'mtp_') + p.slice(-1); g.beginPath(); g.arc(X(at[k][0] + 0.02), gy + 0.02 * sc, 0.008 * sc, 0, 7); g.fill(); }
+  el('time').textContent = Math.min(t, dur()).toFixed(2) + ' s';
+}
+load('stand'); requestAnimationFrame(frame);
+</script>
