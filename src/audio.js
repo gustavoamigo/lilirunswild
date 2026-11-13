@@ -67,12 +67,43 @@ function noise(when, dur, o = {}) {
 }
 
 // ---- the dog ----
-// "Woof!" – a rough, quick drop in pitch with a breathy edge.
+// "Ruff!" A bark is a voice pushed through a mouth that snaps open and shut: a buzzing source whose pitch
+// jumps up and falls away, with breath in it, shaped by three resonances that open with the mouth and close again.
+let grit = null;
+function woof(when, f0, dur, vol) {
+  const t0 = ac.currentTime + when, t1 = t0 + dur;
+  if (!grit) { grit = new Float32Array(257); for (let i = 0; i < 257; i++) grit[i] = Math.tanh((i / 128 - 1) * 2.5); }
+  const mix = ac.createGain(); mix.gain.value = 1;
+  const rough = ac.createOscillator(), roughG = ac.createGain();               // the growl in the throat
+  rough.frequency.value = 62 + Math.random() * 14; roughG.gain.value = f0 * 0.07; rough.connect(roughG);
+  for (const [det, type, g] of [[1, 'sawtooth', 0.5], [1.008, 'sawtooth', 0.35], [0.5, 'square', 0.18]]) {
+    const o = ac.createOscillator(), og = ac.createGain(); o.type = type; og.gain.value = g;
+    o.frequency.setValueAtTime(f0 * 0.72 * det, t0);
+    o.frequency.exponentialRampToValueAtTime(f0 * det, t0 + 0.03);
+    o.frequency.exponentialRampToValueAtTime(f0 * 0.5 * det, t1);
+    roughG.connect(o.frequency); o.connect(og); og.connect(mix); o.start(t0); o.stop(t1 + 0.05);
+  }
+  rough.start(t0); rough.stop(t1 + 0.05);
+  const br = ac.createBufferSource(), brG = ac.createGain(); br.buffer = noiseBuf; br.loop = true;   // breath
+  brG.gain.setValueAtTime(0.5, t0); brG.gain.exponentialRampToValueAtTime(0.12, t0 + 0.05); brG.gain.setValueAtTime(0.12, t1 - 0.04); brG.gain.linearRampToValueAtTime(0.3, t1);
+  br.connect(brG); brG.connect(mix); br.start(t0, Math.random() * 0.5); br.stop(t1 + 0.05);
+  const out = ac.createGain(), shape = ac.createWaveShaper(); shape.curve = grit;
+  for (const [shut, open, q, g] of [[520, 980, 5, 1], [1250, 1900, 7, 0.55], [2600, 3100, 8, 0.22]]) {
+    const f = ac.createBiquadFilter(), fg = ac.createGain(); f.type = 'bandpass'; f.Q.value = q; fg.gain.value = g;
+    f.frequency.setValueAtTime(shut, t0); f.frequency.exponentialRampToValueAtTime(open, t0 + 0.035); f.frequency.exponentialRampToValueAtTime(shut * 0.9, t1);
+    mix.connect(f); f.connect(fg); fg.connect(shape);
+  }
+  const body = ac.createBiquadFilter(), bodyG = ac.createGain(); body.type = 'lowpass'; body.frequency.value = 380; bodyG.gain.value = 0.35;
+  mix.connect(body); body.connect(bodyG); bodyG.connect(shape);
+  out.gain.setValueAtTime(0.0001, t0); out.gain.linearRampToValueAtTime(vol, t0 + 0.012);
+  out.gain.setValueAtTime(vol * 0.85, t0 + dur * 0.6); out.gain.exponentialRampToValueAtTime(0.0001, t1);
+  shape.connect(out); out.connect(sfx);
+}
 export function bark() {
-  const f = 400 + Math.random() * 60;
-  tone(f, 0, 0.16, { type: 'sawtooth', to: 170, sweep: 0.13, vol: 0.3, attack: 0.008 });
-  tone(f * 2.02, 0, 0.1, { type: 'square', to: 360, sweep: 0.09, vol: 0.07 });
-  noise(0, 0.14, { freq: 900, q: 0.8, vol: 0.28 });
+  if (!ac) return;
+  const f = 430 + Math.random() * 70;
+  woof(0, f, 0.19, 0.95);
+  if (Math.random() < 0.4) woof(0.23, f * 0.94, 0.16, 0.8);                  // sometimes "ruff-ruff"
 }
 // an excited little yip: "a bird!"
 export function yip() { tone(700, 0, 0.12, { type: 'triangle', to: 1300, sweep: 0.08, vol: 0.2 }); tone(900, 0.13, 0.12, { type: 'triangle', to: 1500, sweep: 0.08, vol: 0.16 }); }
