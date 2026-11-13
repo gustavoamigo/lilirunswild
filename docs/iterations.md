@@ -87,3 +87,16 @@ Each iteration: what was built → what to test → feedback received → what t
 
 **Checked by script**: the three files load and decode, bark and bow raise no errors. **Not checked**: by ear.
 
+
+## Iteration 7: Lili as she is, and a jump with a run-up
+
+**Feedback**: fog too heavy, most of all in the car. Two photos of Lili: liver and white, a longer tail. Studio: the recording buttons take up room. Tail should wag a little faster. The jump is not realistic, has no running start, and her ears move as if she were about to fly with them.
+
+**Decisions**
+- Fog starts half as far again and moves out with the camera.
+- Coat, blaze, freckles, pink collar, tail patch and back marks from the photos.
+- Recordings fold behind one studio button.
+- Wag a third faster in every pose.
+- Jump: run-up, gather, take-off; a rising and a falling pose; heavier gravity (0.57 s in the air, was 0.72); landing squash halved; ears carried with her and calmed in the air. Cost: from a standstill the jump now starts 0.3 s after the button and covers more ground, so hopping onto a bench she stands beside needs a step back.
+
+**Checked by script**: frame-stepped jumps from a standstill and from a gallop (run-up 18 and 7 frames, peak 78, enough for the car at 64), side-on screenshots of each phase. **Not checked**: by eye in motion, hopping onto bench, table and car in the game, touch.

@@ -10,7 +10,7 @@ import { buildTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js
 import { CAR } from './models.js';
 import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
 
-const DOG_R = 30, GRAV = 1500, JUMP_V = 540, BRAKE = 1500;
+const DOG_R = 30, GRAV = 1900, JUMP_V = 560, BRAKE = 1500;
 const TROT = 420, ZOOM = 640, ZOOM_AFTER = 0.9;      // run flat out for this long and he gets the zoomies
 const BONK = 470;                                    // faster than this into something solid and he sees stars
 const CAR_TOP = 900;
@@ -31,7 +31,7 @@ const dog = {
   state: 'idle', stT: 0,            // idle (on his feet) | paws (up on someone) | daze | hop (in or out of the car) | drive
   air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0, skid: false, sweepT: 9, ptrX: 0, ptrY: 0, push: false, shake: 0, fidget: 0,
   lookYaw: 0, lookPitch: 0, seen: null, thought: 0, point: 0,
-  barkT: 0, landT: 0, bow: 0, idleT: 0, happy: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
+  barkT: 0, landT: 0, spring: 0, bow: 0, idleT: 0, happy: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
 };
 const car = { ...world.car, v: 0, steer: 0, bump: 0, on: false, rev: false, skidT: 0 };
 const G = { t: 0, mess: 0, birds: 0, pop: 0, dog, car, world, props: world.props, people: world.people, flocks: world.flocks, debris: [], focus: { x: dog.x, y: dog.y, vx: 0, vy: 0, zoom: 1 }, input };
@@ -87,12 +87,16 @@ function land(fromHop) {
 
 function jump() {
   if (dog.state === 'drive') { leaveCar(); return; }
-  if (dog.air || (dog.state !== 'idle' && dog.state !== 'paws')) return;
-  dog.state = 'idle';
-  // a forward pounce: he never jumps straight up
+  if (dog.air || dog.spring > 0 || (dog.state !== 'idle' && dog.state !== 'paws')) return;
+  dog.state = 'idle'; dog.bow = 0;
+  // A dog does not go up from where it stands. She takes a run at it: a few bounds from a standstill, a stride
+  // if she is already running, and gathers herself over the last of it (updateDog, src/models.js).
+  dog.spring = lerp(0.3, 0.12, clamp(Math.hypot(dog.vx, dog.vy) / TROT, 0, 1));
+}
+function takeOff() {
   const sp = Math.max(Math.hypot(dog.vx, dog.vy), 240);
   dog.vx = Math.cos(dog.heading) * sp; dog.vy = Math.sin(dog.heading) * sp;
-  dog.vz = JUMP_V; dog.air = true; dog.bow = 0;
+  dog.vz = JUMP_V; dog.air = true;
   A.jump(); dust(dog.x, dog.y, 4);
 }
 
@@ -123,6 +127,14 @@ function updateDog(dt) {
   p.sweepT = input.pointerDown && Math.hypot(input.sx - p.ptrX, input.sy - p.ptrY) > 350 * dt ? 0 : p.sweepT + dt;
   p.ptrX = input.sx; p.ptrY = input.sy;
   if (p.zoom && input.pointerDown && p.sweepT < 0.3 && sp0 > 1) st = st.mag ? { x: st.x, y: st.y, mag: 1 } : { x: p.vx / sp0, y: p.vy / sp0, mag: 1 };
+  if (p.spring > 0) {                                  // the run-up to a jump: straight on, as fast as she can, whatever the pointer says
+    if (p.state !== 'idle' || p.air) p.spring = 0;
+    else {
+      p.spring -= dt; p.skid = p.push = false;
+      st = st.mag ? { x: st.x, y: st.y, mag: 1 } : { x: Math.cos(p.heading), y: Math.sin(p.heading), mag: 1 };
+      if (p.spring <= 0) takeOff();
+    }
+  }
   watchBirds(st, dt);
   if (st.mag || p.air) p.shake = 0;
 

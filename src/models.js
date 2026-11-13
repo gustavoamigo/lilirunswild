@@ -158,8 +158,8 @@ export function makeDog() {
 
   // Each ear is a little chain with weight. The head drags its top end about; the rest follows late,
   // falls under gravity and is held back by the air, so it streams out behind a run, flies up in a
-  // fall, swings forward when she brakes and slaps about when she shakes her head.
-  function swingEars(dt, jx, jy) {
+  // fall (a little: see update), swings forward when she brakes and slaps about when she shakes her head.
+  function swingEars(dt, jx, jy, jz, calm) {
     head.updateWorldMatrix(true, false); _inv.copy(head.matrixWorld).invert();
     const len = EAR_SEG * _a.setFromMatrixScale(head.matrixWorld).y, n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n, keep = Math.exp(-h * EAR_DRAG);
     earT += dt;
@@ -167,14 +167,14 @@ export function makeDog() {
     for (const e of ears) {
       const top = _a.copy(e.top).applyMatrix4(head.matrixWorld);
       if (!e.pts) { e.pts = e.segs.map((_, i) => top.clone().setY(top.y - (i + 1) * len)); e.was = e.pts.map((q) => q.clone()); }
-      else if (jx || jy) for (let i = 0; i < 4; i++) { e.pts[i].x += jx; e.pts[i].z += jy; e.was[i].x += jx; e.was[i].z += jy; }
+      else if (jx || jy || jz) for (let i = 0; i < 4; i++) { e.pts[i].x += jx; e.pts[i].z += jy; e.was[i].x += jx; e.was[i].z += jy; e.pts[i].y += jz; e.was[i].y += jz; }
       for (let k = 0; k < n && dt > 0; k++) {
         for (let i = 0; i < 4; i++) {
           const q = e.pts[i], w = e.was[i];
           _b.copy(q).sub(w).multiplyScalar(keep); w.copy(q); q.add(_b); q.y -= EAR_G * h * h;
           // the air she runs through: it lifts the ear out sideways and never lets it lie still,
           // so it flaps up, down, in and out as well as trailing
-          const air = _b.length() / h, f = air * h * h * (i + 1) * 0.25, u = earT * (17 + i * 3) + e.s * 2 + i * 1.9;
+          const air = _b.length() / h, f = air * h * h * (i + 1) * 0.25 * calm, u = earT * (17 + i * 3) + e.s * 2 + i * 1.9;
           q.x += (me[8] / side * e.s * 1.1 + Math.sin(u * 1.3) * 1.2) * f; q.y += (me[9] / side * e.s * 1.1 + 0.9 + Math.sin(u) * 1.6) * f; q.z += (me[10] / side * e.s * 1.1 + Math.cos(u * 0.8) * 1.2) * f;
           // an ear is not a string: it has some spring in it, most where it joins the head
           q.lerp(_b.set(top.x, top.y - (i + 1) * len, top.z), 1 - Math.exp(-h * EAR_SPRING[i]));
@@ -206,9 +206,9 @@ export function makeDog() {
   }
 
   // smoothed pose: everything eases towards its target so states blend into each other
-  const P = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: 0, gal: 0, yaw: 0, hp: 0, jaw: 0, tailUp: 0.5, wag: 0.45, wagHz: 9, y: 0, tongue: 0, bend: 0, roll: 0, flex: 0, shk: 0 };
+  const P = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: 0, gal: 0, yaw: 0, hp: 0, jaw: 0, tailUp: 0.5, wag: 0.45, wagHz: 12, y: 0, tongue: 0, bend: 0, roll: 0, flex: 0, shk: 0 };
   let earT = 0;
-  let last = -1, blink = 0, ph = 0, wagPh = 0, px = 0, py = 0, ph0 = 0, turn = 0, fresh = true;
+  let last = -1, blink = 0, ph = 0, wagPh = 0, px = 0, py = 0, pz = 0, earCalm = 1, ph0 = 0, turn = 0, fresh = true;
 
   function update(p, t) {
     const dt = last < 0 ? 0.016 : clamp(t - last, 0, 0.05); last = t;
@@ -217,30 +217,36 @@ export function makeDog() {
     // wf, wr, wh: how much the front left, front right and hind paws follow a pose instead of standing on the ground
     const T = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: p.air ? 0 : clamp(sp / 240, 0, 1) * (p.zoom ? 0.95 : 0.6), gal: p.zoom ? 1 : 0,
       yaw: p.lookYaw || 0, hp: p.lookPitch || 0, jaw: 0,
-      tailUp: 0.5, wag: 0.45, wagHz: 9, y: -3 * clamp(sp / 400, 0, 1), tongue: p.zoom ? 1 : 0, bend: 0, roll: 0, flex: 0, shk: 0 };
+      tailUp: 0.5, wag: 0.45, wagHz: 12, y: -3 * clamp(sp / 400, 0, 1), tongue: p.zoom ? 1 : 0, bend: 0, roll: 0, flex: 0, shk: 0 };
     const paddle = Math.sin(t * 17);
     if (p.skid && !p.air) {                              // brakes on: front legs braced out ahead, haunches down, all four paws sliding
       T.pitch = 0.2; T.y = -10; T.fl = 0.62; T.fr = 0.78; T.rf = 34; T.hl = 0.75; T.hr = 0.55; T.rh = 26; T.wf = T.wr = T.wh = 1;
       T.flex = 0.2; T.tailUp = 1.1; T.wag = 0.1; T.hp = -0.25; T.tongue = 1; T.amp = 0;
-    } else if (p.air || p.state === 'hop') {                    // a flying leap: front legs reach, hind legs trail, ears fly
-      const up = clamp(p.vz / 500, -1, 1);
-      T.pitch = up * 0.34; T.fl = 1.2 - up * 0.2; T.fr = 1.05 - up * 0.2; T.hl = -1.05; T.hr = -0.9; T.rf = T.rh = 33; T.wf = T.wr = T.wh = 1;
-      T.tailUp = 0.2; T.tongue = 1; T.y = 0; T.flex = -0.12;
+    } else if (p.air || p.state === 'hop') {
+      // A jump has two halves. Going up: nose high, forelegs folded up under her chest, hind legs left straight out
+      // behind from the push. Coming down: nose low, forelegs stretched out for the ground, hind legs drawn up
+      // under her to land after them.
+      const up = clamp(p.vz / 500, -1, 1), dn = Math.max(0, -up);
+      T.pitch = up > 0 ? up * 0.42 : up * 0.36; T.fl = 1.0; T.fr = 0.9; T.rf = lerp(21, 34, dn);
+      T.hl = lerp(-1.1, 0.3, dn); T.hr = lerp(-0.95, 0.45, dn); T.rh = lerp(34, 23, dn); T.wf = T.wr = T.wh = 1;
+      T.tailUp = 0.2; T.y = 0; T.flex = lerp(-0.12, 0.16, dn);
+    } else if (p.spring > 0 && p.spring < 0.11) {        // the last of the run-up: she sinks on her haunches, back doubled up, to spring
+      T.y = -11; T.flex = 0.24; T.pitch = 0.05; T.tailUp = 0.1;
     } else if (p.state === 'paws') {                     // up on the hind legs, paws going like mad
-      T.pitch = 0.98; T.fl = 0.25 + paddle * 0.4; T.fr = 0.25 - paddle * 0.4; T.rf = 26; T.wf = T.wr = 1; T.wag = 0.8; T.wagHz = 15; T.tongue = 1; T.hp = -0.45;
+      T.pitch = 0.98; T.fl = 0.25 + paddle * 0.4; T.fr = 0.25 - paddle * 0.4; T.rf = 26; T.wf = T.wr = 1; T.wag = 0.8; T.wagHz = 18; T.tongue = 1; T.hp = -0.45;
     } else if (p.state === 'drive') {                    // sitting at the wheel
       const k = clamp(Math.abs(p.carV || 0) / 800, 0, 1);
       T.pitch = 0.62; T.hl = T.hr = 1.35; T.rh = 24; T.fl = 0.42 + (p.carSteer || 0) * 0.3; T.fr = 0.42 - (p.carSteer || 0) * 0.3; T.wf = T.wr = T.wh = 1;
-      T.tongue = k > 0.35 ? 1 : 0; T.hp = -0.5; T.wag = 0.3 + k * 0.4; T.wagHz = 12; T.tailUp = -0.2; T.y = 0;
+      T.tongue = k > 0.35 ? 1 : 0; T.hp = -0.5; T.wag = 0.3 + k * 0.4; T.wagHz = 15; T.tailUp = -0.2; T.y = 0;
     } else if (p.state === 'daze') {                     // flat on the tummy seeing stars
       T.fl = T.fr = 1.35; T.hl = T.hr = -1.35; T.rf = T.rh = 33; T.wf = T.wr = T.wh = 1; T.y = -20; T.yaw = Math.sin(t * 13) * 0.35; T.hp = 0.1; T.wag = 0.05; T.tailUp = 0;
     } else if (p.bow > 0) {                              // play bow: elbows down, bottom up, a slow wide wag. "Come on then!"
-      T.pitch = -0.4; T.fl = T.fr = 1.5; T.rf = 30; T.wf = T.wr = 1; T.wag = 0.95; T.wagHz = 8.5; T.hp = 0.5; T.tailUp = 0.9;
+      T.pitch = -0.4; T.fl = T.fr = 1.5; T.rf = 30; T.wf = T.wr = 1; T.wag = 0.95; T.wagHz = 11; T.hp = 0.5; T.tailUp = 0.9;
     } else if (p.point > 0.5) {                          // a bird! One paw up, tail out straight, stock still
       T.fr = 0.55; T.rf = 21; T.wr = 1; T.wag = 0.02; T.tailUp = -0.1; T.pitch = -0.04;
     } else if (p.shake > 0) {                            // a good shake: the head twists one way and the other, and the twist runs down her back
       T.shk = 1; T.hp = 0.12; T.tailUp = 0.3; T.wag = 0.1; T.y = -2;
-    } else if (sp < 30) { T.wag = 0.55 + (p.happy ? 0.25 : 0); T.wagHz = p.happy ? 13 : 9; }
+    } else if (sp < 30) { T.wag = 0.55 + (p.happy ? 0.25 : 0); T.wagHz = p.happy ? 17 : 12; }
     if (p.barkT > 0) { T.jaw = 0.75; T.hp += 0.3; }
 
     // ---- turning: the spine bends into the turn, the head leads it, and at speed the body leans in ----
@@ -258,7 +264,7 @@ export function makeDog() {
     // ---- the paws ----
     // A jump in position (into the car, the studio floor wrapping round) carries the paws along.
     const jx = p.x - px, jy = p.y - py; px = p.x; py = p.y;
-    const jumped = fresh || Math.hypot(jx, jy) > 150;
+    const fresh0 = fresh, jumped = fresh || Math.hypot(jx, jy) > 150;
     let moving = 0, worst = 0;
     for (const L of legs) {
       const hx = p.x + L.jx * ch - L.jz * sh, hy = p.y + L.jx * sh + L.jz * ch;       // where it would stand at rest
@@ -346,10 +352,14 @@ export function makeDog() {
     brows.forEach((b, i) => { b.rotation.x = (i ? -1 : 1) * (p.point > 0.5 ? 0.5 : 0.15); b.position.y = 13.4 + (p.barkT > 0 || p.point > 0.5 ? 1.5 : 0); });
 
     const sq = clamp((p.landT || 0) / 0.22, 0, 1);
-    root.scale.set(1 + sq * 0.12, 1 - sq * 0.26, 1 + sq * 0.12);
+    root.scale.set(1 + sq * 0.05, 1 - sq * 0.12, 1 + sq * 0.05);
     root.position.set(p.x, p.z, p.y);
     root.rotation.y = -p.heading;
-    swingEars(dt, jumped ? jx : 0, jumped ? jy : 0);
+    // Ears are heavy and she is not falling far: most of her rise and fall carries them with her, and in the air
+    // they are not flapped about as they are by a run. Otherwise she takes off with them like wings.
+    const air = p.air || p.state === 'hop'; earCalm = lerp(earCalm, air ? 0.2 : 1, 1 - Math.exp(-dt * 12));
+    const jz = fresh0 || jumped ? 0 : (p.z - pz) * 0.7; pz = p.z;
+    swingEars(dt, jumped ? jx : 0, jumped ? jy : 0, jz, earCalm);
   }
   return { root, update };
 }
