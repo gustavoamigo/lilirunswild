@@ -166,3 +166,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the body shakes in the opposite direction to the head.
 
 **Decision**: the body's rock and the skin's roll now go against the head's roll instead of following it a little late. **Checked by script**: front strip. **Not checked**: at full speed by eye.
+
+**Feedback**: running is not bad, but would benefit from the simulation. Go.
+
+**Decision**: a steady trot and a gallop searched for on the simulated skeleton (`tools/sim/gait.py`, method in `docs/tech.md`), shown in the viewer first; nothing in the game changes until they are approved. Two gallops to choose from: a longer stride (0.32 s) and a quicker one (0.25 s). **Checked by script**: speed, stride time, share of stride each paw is down, contacts other than paws, strips of one stride, the viewer loops them without errors. **Not checked**: by eye in motion; how they look on Lili's body.

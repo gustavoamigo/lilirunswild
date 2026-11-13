@@ -21,11 +21,18 @@ STRIDES = 7                          # simulated; the first WARM do not count
 WARM = 3
 
 # v the speed asked for (m/s), T a first guess at the stride time, lag where each leg is in the stride (fl fr hl hr),
-# free whether the search may move those, axial how many times the back and neck repeat in a stride
+# free whether the search may move those, axial how many times the back and neck repeat in a stride, duty the share
+# of the stride a paw may spend on the ground, Tmin the shortest stride allowed
 CASES = dict(
     trot=dict(v=2.4, T=0.42, lag=[0.0, 0.5, 0.5, 0.0], free=False, axial=2, duty=(0.35, 0.6)),
-    gallop=dict(v=5.5, T=0.36, lag=[0.5, 0.62, 0.0, 0.12], free=True, axial=1, duty=(0.15, 0.45)),
+    gallop=dict(v=5.5, T=0.36, lag=[0.5, 0.62, 0.0, 0.12], free=True, axial=1, duty=(0.15, 0.45), Tmin=0.32),
 )
+
+# --v=3.5 asks for another speed, so a hard gait can be reached in steps from an easier one (worker processes read
+# the same command line); --from=trot starts from another case's result
+for _a in sys.argv:
+    if _a.startswith('--v='):
+        for _k in CASES.values(): _k['v'] = float(_a[4:])
 
 def prior(case):
     #               scap   sho    elb    car    hip    sti    hock  spine  neck   head
@@ -46,7 +53,7 @@ _FORE = np.array([g in dog.FORE for g in GROUPS]); _HIND = np.array([g in dog.HI
 
 def curves(x, case):
     k = CASES[case]
-    c = x[:NC * NJ].reshape(NC, NJ); T = float(np.exp(np.clip(x[NC * NJ], np.log(0.25), np.log(0.8))))
+    c = x[:NC * NJ].reshape(NC, NJ); T = float(np.exp(np.clip(x[NC * NJ], np.log(k.get('Tmin', 0.25)), np.log(0.8))))
     lag = np.array(k['lag']) if not k['free'] else np.concatenate([[x[-4]], [x[-4] + np.clip(x[-3] - x[-4], 0.03, 0.5)], [0.0], [np.clip(x[-1], 0.03, 0.5)]])
     return c, T, lag
 
@@ -128,6 +135,8 @@ if __name__ == '__main__':
     here = os.path.dirname(os.path.abspath(__file__)); os.makedirs(here + '/out', exist_ok=True)
     f = f'{here}/out/{case}.npy'
     x0 = np.load(f) if os.path.exists(f) and '--fresh' not in sys.argv else None
+    for a in sys.argv:
+        if a.startswith('--from='): x0 = np.load(f'{here}/out/{a[7:]}.npy'); x0[-4:] = CASES[case]['lag']
     x = search(case, gens, x0=x0) if gens > 0 else (x0 if x0 is not None else prior(case))
     np.save(f, x)
     J, info, frames = rollout(x, case, True); print(info)

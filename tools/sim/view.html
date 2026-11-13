@@ -13,33 +13,36 @@
 <canvas id="c"></canvas>
 <div class="bar" id="cases"></div>
 <div class="bar"><button id="play">pause</button><span id="speeds"></span><input id="scrub" type="range" min="0" max="1" step="0.001" value="0"><span id="time"></span></div>
-<p>A springer spaniel's bones and joints in a physics engine (MuJoCo). The motion is not drawn by hand: her joints are driven within a dog's joint ranges and strength, starting from a rough guess, and a search finds the leap that reaches the asked height with the least effort and lands on its paws. Dark legs are the near side, pale the far side. Dots under a paw mean it is on the ground.</p>
+<p>A springer spaniel's bones and joints in a physics engine (MuJoCo). The motion is not drawn by hand: her joints are driven within a dog's joint ranges and strength, starting from a rough guess, and a search finds the leap that reaches the asked height with the least effort and lands on its paws. For the trot and the gallop each joint follows a repeating curve, and the search finds the curves that keep the asked speed, stride after stride, without falling. Dark legs are the near side, pale the far side. Dots under a paw mean it is on the ground.</p>
 <p id="info"></p>
 <script>
 const cv = document.getElementById('c'), g = cv.getContext('2d');
-const CASES = { stand: 'long leap', high: 'high jump' };
+const CASES = { stand: 'long leap', high: 'high jump', trot: 'trot', gallop: 'gallop', gallop_quick: 'gallop, quicker steps' };
 let clip = null, t = 0, playing = true, speed = 0.25, last = 0;
 const el = (id) => document.getElementById(id);
 for (const k in CASES) { const b = document.createElement('button'); b.textContent = CASES[k]; b.onclick = () => load(k); b.dataset.k = k; el('cases').append(b); }
 for (const s of [1, 0.5, 0.25, 0.1]) { const b = document.createElement('button'); b.textContent = '×' + s; b.onclick = () => { speed = s; mark(); }; b.dataset.s = s; el('speeds').append(b); }
 el('play').onclick = () => { playing = !playing; el('play').textContent = playing ? 'pause' : 'play'; };
 el('scrub').oninput = (e) => { t = e.target.value * dur(); playing = false; el('play').textContent = 'play'; };
-const dur = () => clip ? (clip.frames.length - 1) * clip.dt : 1;
+const dur = () => clip ? (clip.frames.length - (clip.loop ? 0 : 1)) * clip.dt : 1;      // a gait's last frame runs on into its first
 function mark() { for (const b of el('speeds').children) b.className = +b.dataset.s === speed ? 'on' : ''; for (const b of el('cases').children) b.className = clip && b.dataset.k === clip.case ? 'on' : ''; }
 async function load(k) {
   clip = await (await fetch(`out/${k}.json`)).json(); t = 0; mark();
   const i = clip.info;
+  if (clip.loop) { el('info').textContent = `One stride, repeated: ${i.T.toFixed(2)} s long, ${(i.v * i.T * 100).toFixed(0)} cm of ground, ${i.v.toFixed(1)} m/s. Each paw is down for ${i.duty.map((d) => (d * 100).toFixed(0) + '%').join(', ')} of it (fore left, fore right, hind left, hind right).`; return; }
   el('info').textContent = `Sinks ${(i.crouch * 100).toFixed(0)} cm first. Leaves the ground at ${i.takeoff.toFixed(2)} s going ${i.vx.toFixed(1)} m/s, her middle rises ${(i.apex * 100).toFixed(0)} cm, lands at ${i.land.toFixed(2)} s.`;
 }
 function frame(now) {
   requestAnimationFrame(frame);
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   if (!clip) return;
-  if (playing) { t += dt * speed; if (t > dur() + 0.6) t = 0; el('scrub').value = Math.min(1, t / dur()); }
+  if (playing) { t += dt * speed; if (!clip.loop && t > dur() + 0.6) t = 0; el('scrub').value = clip.loop ? (t / dur()) % 1 : Math.min(1, t / dur()); }
   const w = cv.width = cv.clientWidth * devicePixelRatio, h = cv.height = cv.clientHeight * devicePixelRatio;
-  const f = Math.min(clip.frames.length - 1, t / clip.dt), i0 = Math.floor(f), i1 = Math.min(clip.frames.length - 1, i0 + 1), u = f - i0;
+  const N = clip.frames.length, f = clip.loop ? t / clip.dt : Math.min(N - 1, t / clip.dt), fl = Math.floor(f), u = f - fl;
+  const i0 = fl % N, i1 = clip.loop ? (fl + 1) % N : Math.min(N - 1, fl + 1);
+  const L = clip.loop ? clip.info.v * clip.info.T : 0, x0 = Math.floor(fl / N) * L, x1 = Math.floor((fl + 1) / N) * L;     // each stride starts a stride further on
   const A = clip.frames[i0], B = clip.frames[i1], at = {};
-  clip.keys.forEach((k, n) => { at[k] = [A[n * 2] + (B[n * 2] - A[n * 2]) * u, A[n * 2 + 1] + (B[n * 2 + 1] - A[n * 2 + 1]) * u]; });
+  clip.keys.forEach((k, n) => { const a = A[n * 2] + x0; at[k] = [a + (B[n * 2] + x1 - a) * u, A[n * 2 + 1] + (B[n * 2 + 1] - A[n * 2 + 1]) * u]; });
   const sc = Math.min(w / 2.6, h / 1.5), cx = (at.spine[0] + at.neck[0]) / 2, gy = h * 0.86;
   const X = (x) => w / 2 + (x - cx) * sc, Y = (z) => gy - z * sc;
   g.fillStyle = '#DDE8C9'; g.fillRect(0, gy, w, h - gy);
@@ -57,7 +60,7 @@ function frame(now) {
   }
   g.fillStyle = '#C0392B';
   for (const p of clip.on[i0]) { const k = (p[0] === 'f' ? 'mcp_' : 'mtp_') + p.slice(-1); g.beginPath(); g.arc(X(at[k][0] + 0.02), gy + 0.02 * sc, 0.008 * sc, 0, 7); g.fill(); }
-  el('time').textContent = Math.min(t, dur()).toFixed(2) + ' s';
+  el('time').textContent = (clip.loop ? t % dur() : Math.min(t, dur())).toFixed(2) + ' s';
 }
 load('stand'); requestAnimationFrame(frame);
 </script>
