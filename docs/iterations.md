@@ -28,3 +28,5 @@ Each iteration: what was built → what to test → feedback received → what t
 **Decisions to revisit**: the name; fixed camera while driving; one car; town size; no title, music or saved progress yet.
 
 **Feedback**: (waiting)
+
+**Added after hand-over**: "Can we create a scene with the dog with more zoom in so we can work on the dog's movement?" → `?studio`: the dog alone on a ruled floor, close camera at three heights, gait lock, slow motion, pause and single frames, pose buttons. Described in `docs/tech.md`. Checked by script: loads with no errors, gallop, hello, view and gait keys, point, half speed. Not checked: wheel zoom, the buttons by touch.

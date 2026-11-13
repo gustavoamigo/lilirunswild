@@ -36,7 +36,20 @@ Constants at the top of `src/main.js`: `TROT` 420, `ZOOM` 640 (after `ZOOM_AFTER
 
 ## URL parameters
 
-`?style=toon|real`, `?at=x,y` (start there), `?car` (start driving).
+`?style=toon|real`, `?at=x,y` (start there), `?car` (start driving), `?studio` (below).
+
+## The studio (`?studio`)
+
+For working on how he moves: the dog alone on a ruled floor (a line every 100 units, a darker one every 400), seen from close by. The camera is locked on him, so he runs on the spot and the floor slides past; he is carried back a whole number of squares before he reaches the edge, which cannot be seen. It runs the same `updateDog` and the same model as the game, so what is tuned here is what is played.
+
+| | Buttons | Keys |
+|---|---|---|
+| View (how far, how high; it never turns) | low, game, top, + − | 1 2 3, wheel |
+| Gait | auto, trot (never zoomies), gallop (at once) | G |
+| Time | ×1 ×0.5 ×0.25 ×0.1, pause, step (one 1/60 s frame) | T, P, `.` |
+| Poses | hello (paws up), bonk (daze), bow, point (stays on while he stands) | H N V C |
+
+Run left or right for a side view, toward the camera for the front. The readout shows state, speed, height and stride phase (0–2, one full cycle). Not in the studio: the car and the driving pose. Tests: `__G.studio`, `__G.api.pose('hello'|'bonk'|'bow'|'point')`.
 
 ## Test hooks
 

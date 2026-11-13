@@ -9,6 +9,8 @@ import * as M from './models.js';
 import { clamp, lerp, rng } from './util.js';
 
 export const view = { w: 1, h: 1, dpr: 1 };
+// The studio (?studio) looks at him from close by. It still never turns: only how far and how high.
+export const studioCam = { dist: 420, elev: 0.3 };
 const FOV = 42, CAM_UP = 500, CAM_BACK = 700;
 let renderer, scene, camera, sun, world;
 let fit = 1, zoom = 1;
@@ -36,8 +38,9 @@ export function initScene(canvas, w) {
   scene.add(sun, sun.target);
 
   // ---- ground: endless plain grass, with the painted town laid on top ----
-  const far = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), M.surf({ color: '#9BD770' }));
+  const far = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), M.surf(world.studio ? { map: studioFloor() } : { color: '#9BD770' }));
   far.rotation.x = -Math.PI / 2; far.position.set(W / 2, -1, H / 2); far.receiveShadow = true; scene.add(far);
+  if (world.studio) { dog = M.makeDog(); scene.add(dog.root); car = { update() {} }; resize(); return; }
   const res = renderer.capabilities.maxTextureSize >= 4096 ? 1 : 0.66;
   const tex = new THREE.CanvasTexture(paintGround(world, res));
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -116,7 +119,32 @@ export function screenToGround(sx, sy, h = 0) {
   return { x: camera.position.x + _a.x * k, y: camera.position.z + _a.z * k };
 }
 
+// a plain floor with a line every 100 and a darker one every 400, so strides and sliding feet can be measured by eye
+function studioFloor() {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 512;
+  const c = cv.getContext('2d'), u = 512 / 400;
+  c.fillStyle = '#DCE8D2'; c.fillRect(0, 0, 512, 512);
+  for (let i = 0; i < 4; i++) {
+    c.fillStyle = i ? 'rgba(70,100,80,.22)' : 'rgba(50,80,60,.5)';
+    const w = i ? 2 : 4; c.fillRect(i * 100 * u - w / 2, 0, w, 512); c.fillRect(0, i * 100 * u - w / 2, 512, w);
+    if (!i) { c.fillRect(512 - w / 2, 0, w, 512); c.fillRect(0, 512 - w / 2, 512, w); }
+  }
+  const tex = new THREE.CanvasTexture(cv);
+  tex.colorSpace = THREE.SRGBColorSpace; tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(40, 40);
+  tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+  return tex;
+}
+
 function placeCamera() {
+  if (world.studio) {
+    const D = studioCam.dist * fit, e = studioCam.elev;
+    camera.position.set(camAim.x, 45 + D * Math.sin(e), camAim.z + D * Math.cos(e));
+    camera.lookAt(camAim.x, 45, camAim.z);
+    camera.updateMatrixWorld();
+    sun.position.set(camAim.x + STYLE.sunAt[0], STYLE.sunAt[1], camAim.z + STYLE.sunAt[2]);
+    sun.target.position.copy(camAim);
+    return;
+  }
   const d = fit * zoom;
   camera.position.set(camAim.x, CAM_UP * d, camAim.z + CAM_BACK * d);
   camera.lookAt(camAim.x, 30, camAim.z - 70 * d);
@@ -129,6 +157,12 @@ export function snapCamera(f) { camAim.set(f.x, 0, f.y); zoom = f.zoom || 1; pla
 export function render(G, dt) {
   const t = G.t, f = G.focus;
   // ---- camera: a little ahead of where he is going, further back the faster he goes ----
+  if (world.studio) {                                  // locked on, so he runs on the spot and the floor slides by
+    camAim.set(f.x, 0, f.y); placeCamera();
+    dog.update(G.dog, t);
+    renderer.render(scene, camera);
+    return;
+  }
   const k = 1 - Math.exp(-dt * 4);
   camAim.x = lerp(camAim.x, f.x + f.vx * 0.3, k); camAim.z = lerp(camAim.z, f.y + f.vy * 0.3, k);
   zoom = lerp(zoom, f.zoom || 1, 1 - Math.exp(-dt * 2));

@@ -17,6 +17,15 @@ const CAR_TOP = 900;
 
 const world = buildTown();
 const params = new URLSearchParams(location.search);
+// ?studio: an empty floor and a close camera, for working on how he moves (see the end of this file)
+const STUDIO = params.has('studio');
+const studio = { gait: 'auto', point: false, speed: 1, paused: false, step: false };
+if (STUDIO) {
+  world.studio = true;
+  for (const k of ['obstacles', 'props', 'people', 'flocks', 'trees', 'lamps', 'houses', 'flowers']) world[k].length = 0;
+  world.platforms.length = 0; world.car.x = world.car.y = -9000;
+  world.start = { x: 1800, y: 1500 };
+}
 const dog = {
   x: world.start.x, y: world.start.y, z: 0, vx: 0, vy: 0, vz: 0, heading: -Math.PI / 2,
   state: 'idle', stT: 0,            // idle (on his feet) | paws (up on someone) | daze | hop (in or out of the car) | drive
@@ -114,6 +123,7 @@ function updateDog(dt) {
   if (st.mag > 0.85 && sp0 > 250) p.runT += dt; else if (st.mag < 0.5) p.runT = 0;
   const chase = p.seen && st.mag > 0.5 && st.x * Math.cos(p.birdDir) + st.y * Math.sin(p.birdDir) > 0.75;
   if (chase) p.runT = Math.max(p.runT, ZOOM_AFTER);
+  if (studio.gait === 'trot') p.runT = 0; else if (studio.gait === 'gallop' && st.mag > 0.5) p.runT = ZOOM_AFTER;
   const was = p.zoom; p.zoom = p.runT >= ZOOM_AFTER && p.state === 'idle';
   if (p.zoom && !was) { A.whoosh(); dust(p.x, p.y, 8, { speed: 110 }); }
 
@@ -183,13 +193,14 @@ function watchBirds(st, dt) {
       p.point = 1; p.heading += angDiff(p.birdDir, p.heading) * (1 - Math.exp(-dt * 4));
     }
   } else if (!best) p.seen = null;
+  if (studio.point && p.state === 'idle' && !st.mag && !p.air && !p.bow) p.point = 1;
   const k = 1 - Math.exp(-dt * 10);
   p.lookYaw = lerp(p.lookYaw, yaw, k); p.lookPitch = lerp(p.lookPitch, pitch, k);
 }
 
 // ------------------------------------------------------- in and out of the car --
 const seat = () => ({ x: car.x + Math.cos(car.heading) * CAR.seatX, y: car.y + Math.sin(car.heading) * CAR.seatX, z: CAR.seatY });
-const nearCar = () => onFoot() && platDist(world.carPlat, dog.x, dog.y) < 230;
+const nearCar = () => !STUDIO && onFoot() && platDist(world.carPlat, dog.x, dog.y) < 230;
 
 function hopTo(to, T, then) {
   dog.hop = { x0: dog.x, y0: dog.y, z0: dog.z, to, t: 0, T, then };
@@ -447,6 +458,16 @@ function updateBirds(dt) {
 function update(dt) {
   G.t += dt; G.pop = Math.max(0, G.pop - dt * 3);
   updateDog(dt);
+  if (STUDIO) {
+    // the floor repeats every 400, so carrying him back a whole number of squares cannot be seen
+    for (const [a, mid] of [['x', 1800], ['y', 1500]]) {
+      const d = dog[a] > mid + 800 ? -1600 : dog[a] < mid - 800 ? 1600 : 0;
+      if (d) { dog[a] += d; if (input.target) input.target[a] += d; }
+    }
+    updateFx(dt);
+    G.focus.x = dog.x; G.focus.y = dog.y;
+    return;
+  }
   updateCar(dt);
   updateProps(dt);
   updatePeople(dt);
@@ -479,6 +500,7 @@ function drawOverlay(t) {
     const [sx, sy, k, ok] = S.project(car.x, 190, car.y);
     if (ok) { const r = Math.max(20, 36 * k), y = sy - r + Math.sin(t * 4) * 4; Art.drawBubble(c, sx, y, r); Art.drawWheel(c, sx, y, r * 0.66); }
   }
+  if (STUDIO) { drawStudio(); return; }
   const u = clamp(Math.min(w, h) / 620, 0.75, 1.3), x = 18 * u, y = 34 * u, pop = 1 + G.pop * 0.25;
   Art.drawPaw(c, x + 18 * u, y, 20 * u * pop); Art.drawNum(c, G.mess, x + 46 * u, y + 2 * u, 34 * u);
   const x2 = x + 46 * u + c.measureText(G.mess).width + 30 * u;
@@ -512,10 +534,77 @@ updateCar(0);
 if (params.has('car')) enterCar();
 update(0); S.snapCamera(G.focus);
 
+// ------------------------------------------------------------------ studio --
+// What the buttons do. Each pose is the same state the game puts him in, so what is tuned here is what is played.
+const POSES = {
+  hello() { if (dog.air) return; dog.state = 'paws'; dog.stT = 1.15; dog.vx = dog.vy = 0; dog.runT = 0; hearts(dog.x + Math.cos(dog.heading) * 40, dog.y + Math.sin(dog.heading) * 40, 110); },
+  bonk() {
+    if (dog.air) return;
+    const hx = Math.cos(dog.heading), hy = Math.sin(dog.heading);
+    dog.vx = -hx * 170; dog.vy = -hy * 170; dog.state = 'daze'; dog.stT = 0.75; dog.runT = 0; dog.zoom = false;
+    A.bonk(); stars(dog.x + hx * 20, dog.y + hy * 20, dog.z + 70, 7);
+  },
+  bow() { dog.bow = 1.3; dog.idleT = 0; },
+  point() { studio.point = !studio.point; },
+};
+const VIEWS = { low: [420, 0.12], game: [520, 0.62], top: [620, 1.45] };
+const SPEEDS = [1, 0.5, 0.25, 0.1];
+function drawStudio() {
+  const sp = Math.hypot(dog.vx, dog.vy);
+  const rows = [
+    `${dog.state}${dog.air ? ' · air' : ''}${dog.zoom ? ' · zoomies' : ''}${dog.point ? ' · point' : ''}${dog.bow > 0 ? ' · bow' : ''}`,
+    `speed ${sp.toFixed(0)}   height ${dog.z.toFixed(0)}   stride ${((dog.stride / Math.PI) % 2).toFixed(2)}`,
+    `gait ${studio.gait}   time ×${studio.paused ? 0 : studio.speed}`,
+  ];
+  c.font = '600 14px ui-monospace, Menlo, Consolas, monospace'; c.textBaseline = 'top';
+  rows.forEach((r, i) => { c.fillStyle = 'rgba(30,50,40,.8)'; c.fillText(r, 14, 12 + i * 19); });
+}
+function initStudio() {
+  document.getElementById('btn-car').remove();
+  document.getElementById('keys').textContent = '1 2 3 view · wheel zoom · G gait · T slow · P pause · . step · H N V C poses';
+  const bar = document.createElement('div'); bar.id = 'studio'; document.getElementById('ui').append(bar);
+  const btn = (label, fn, on) => {
+    const b = document.createElement('button'); b.textContent = label; bar.append(b);
+    b.addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); A.initAudio(); fn(); refresh(); });
+    b.isOn = on; return b;
+  };
+  const gap = () => bar.append(document.createElement('span'));
+  const view = (k) => { [S.studioCam.dist, S.studioCam.elev] = VIEWS[k]; studio.view = k; };
+  const all = [];
+  for (const k of Object.keys(VIEWS)) all.push(btn(k, () => view(k), () => studio.view === k));
+  all.push(btn('+', () => zoomBy(0.8)), btn('−', () => zoomBy(1.25))); gap();
+  for (const g of ['auto', 'trot', 'gallop']) all.push(btn(g, () => { studio.gait = g; }, () => studio.gait === g)); gap();
+  for (const s of SPEEDS) all.push(btn('×' + s, () => { studio.speed = s; studio.paused = false; }, () => !studio.paused && studio.speed === s));
+  all.push(btn('pause', () => { studio.paused = !studio.paused; }, () => studio.paused), btn('step', () => { studio.paused = true; studio.step = true; })); gap();
+  for (const k of Object.keys(POSES)) all.push(btn(k, POSES[k], k === 'point' ? () => studio.point : null));
+  function refresh() { for (const b of all) b.classList.toggle('on', !!b.isOn?.()); }
+  function zoomBy(k) { S.studioCam.dist = clamp(S.studioCam.dist * k, 140, 1600); studio.view = null; }
+  const KEYS = {
+    Digit1: () => view('low'), Digit2: () => view('game'), Digit3: () => view('top'),
+    KeyG: () => { studio.gait = { auto: 'trot', trot: 'gallop', gallop: 'auto' }[studio.gait]; },
+    KeyT: () => { studio.speed = SPEEDS[(SPEEDS.indexOf(studio.speed) + 1) % SPEEDS.length]; studio.paused = false; },
+    KeyP: () => { studio.paused = !studio.paused; }, Period: () => { studio.paused = true; studio.step = true; },
+    KeyH: POSES.hello, KeyN: POSES.bonk, KeyV: POSES.bow, KeyC: POSES.point,
+  };
+  window.addEventListener('keydown', (e) => { const f = KEYS[e.code]; if (f && !e.repeat) { f(); refresh(); } });
+  window.addEventListener('wheel', (e) => { zoomBy(e.deltaY > 0 ? 1.1 : 0.9); refresh(); }, { passive: true });
+  view('low'); refresh();
+  G.studio = studio; G.api.pose = (k) => POSES[k]();
+}
+if (STUDIO) initStudio();
+
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   pollPad();
+  if (STUDIO) {
+    const sdt = studio.step ? 1 / 60 : studio.paused ? 0 : dt * studio.speed; studio.step = false;
+    if (sdt) update(sdt);
+    S.render(G, sdt);
+    drawOverlay(G.t);
+    requestAnimationFrame(frame);
+    return;
+  }
   update(dt);
   S.render(G, dt);
   drawOverlay(G.t);

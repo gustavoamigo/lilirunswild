@@ -19,3 +19,10 @@ button.small { position: fixed; top: max(12px, env(safe-area-inset-top)); right:
 #keys { display: none; position: fixed; left: 14px; bottom: 14px; padding: 6px 16px; border-radius: 99px;
   background: rgba(40, 70, 40, .45); color: #fff; font-weight: 700; font-size: 14px; white-space: nowrap; pointer-events: none; }
 @media (hover: hover) and (pointer: fine) and (min-width: 900px) { #keys { display: block; } }
+
+/* ?studio: the row of small buttons for working on how he moves */
+#studio { position: fixed; left: 10px; right: 64px; top: 76px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; pointer-events: none; }
+#studio button { pointer-events: auto; border: 0; border-radius: 8px; padding: 7px 11px; font: 600 13px ui-monospace, Menlo, Consolas, monospace;
+  background: rgba(40, 70, 50, .6); color: #fff; cursor: pointer; touch-action: none; }
+#studio button.on { background: #2E8B57; box-shadow: 0 0 0 2px #fff inset; }
+#studio span { width: 8px; }
