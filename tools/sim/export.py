@@ -41,6 +41,9 @@ def move(case, gait=False):
     # the tail hangs from a spring in the simulation and nothing drives it: how far it swings up against the pelvis
     # is what her running does to it
     tail = up(at('tail_tip'), at('tail')) - pelvis; tail = -(tail - tail[0])[1:]
+    # the neck and head against the chest, from how they are at a stand
+    neck = up(at('neck'), at('head')) - thorax; neck = (neck - neck[0])[1:]
+    head = up(at('head'), at('nose')) - thorax; head = (head - head[0])[1:]
     f[:, [0, 1]] = (f[:, [0, 1]] + np.pi) % (2 * np.pi) - np.pi
     if case == 'trot':
       # A trot's second half is its first half with left and right changed over. The simulated one is nearly so,
@@ -49,12 +52,14 @@ def move(case, gait=False):
       h = n // 2; g = np.roll(f, -h, axis=0).copy(); g[:, 4:8], g[:, 8:12], g[:, 12:16], g[:, 16:20] = g[:, 8:12].copy(), g[:, 4:8].copy(), g[:, 16:20].copy(), g[:, 12:16].copy()
       bits = f[:, 3].astype(int); gb = g[:, 3].astype(int); gb = ((gb & 1) << 1) | ((gb & 2) >> 1) | ((gb & 4) << 1) | ((gb & 8) >> 1)
       f = (f + g) / 2; f[:, 3] = bits | gb; tail = (tail + np.roll(tail, -h)) / 2
+      neck = (neck + np.roll(neck, -h)) / 2; head = (head + np.roll(head, -h)) / 2
     down = []                  # for each paw: where in the stride it comes down, and for what share of it it stays
     for i in range(4):
       on = [(int(v) >> i) & 1 for v in f[:, 3]]
       runs = [(a, next(k for k in range(1, n + 1) if not (on[(a + k) % n] or on[(a + k + 1) % n]))) for a in range(n) if on[a] and not (on[a - 1] or on[a - 2])]
       a, k = max(runs, key=lambda r: r[1]); down.append([round(a / n, 3), round(k / n, 3)])
-    return dict(dt=d['dt'], n=n, T=round(d['info']['T'], 3), v=round(float(d['info']['v']), 2), down=down, tail=[round(float(v), 3) for v in tail],
+    return dict(dt=d['dt'], n=n, T=round(d['info']['T'], 3), v=round(float(d['info']['v']), 2), down=down, len=round(float(d['info']['v'] * d['info']['T'] * UNITS), 1),
+                tail=[round(float(v), 3) for v in tail], neck=[round(float(v), 3) for v in neck], head=[round(float(v), 3) for v in head],
                 f=[int(v) if j == 3 else round(float(v), 3) for row in f for j, v in enumerate(row)])
   f = np.array(cols).T[::STEP]
   return dict(dt=d['dt'] * STEP, takeoff=round(d['info']['takeoff'], 3), land=round(d['info']['land'], 3), n=len(f),
@@ -82,7 +87,7 @@ if __name__ == '__main__':
   out.append('};')
   out += ['// One stride of each gait, to be played round and round. down: for each paw (fl fr hl hr), where in the stride',
           '// it comes down and for what share of the stride it stays. T: seconds a stride took, v: metres a second.',
-          '// tail: how far the tail has swung up from where it hangs at a stand, each frame.',
+          '// len: game units of ground a stride covers. tail, neck, head: each frame, how far each has swung up from where it is at a stand.',
           'export const GAITS = {']
   for case in ('trot', 'gallop'):
     out.append(f'  {case}: {json.dumps(move(case, True), separators=(",", ":"))},')

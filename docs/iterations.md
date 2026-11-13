@@ -186,3 +186,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the tail is not natural when she runs or trots; was the tail's movement copied?
 
 **Decision**: it was not: she kept wagging side to side at a fixed rate whatever her legs did. The simulated tail's swing is now exported with each stride and played: carried out behind, rising and falling with the stride, hardly wagging. **Checked by script**: strips at a trot and a gallop, no errors. **Not checked**: by eye in motion; whether 0.4 of the simulated swing is the right amount.
+
+**Feedback**: it doesn't look as if anything was copied from the simulation; the simulation has a natural flow for the legs, the head and the tail. Not pinning the paws while running is fine.
+
+**Decision**: running now plays the simulated strides whole: every leg bone at the simulated angle (paws not pinned), body, neck, head and tail as simulated, each stride at its true length with the tempo following her speed. The gait is picked by speed: trot below 260, gallop above, so her normal run is a gallop; the studio's trot button holds her at half speed to show the trot. **Checked by script**: strips of the trot at 210 and the gallop at 420 and 640 against the simulated strips, jumps from a stand and from a run, no errors. **Not checked**: by eye in motion; the change from trot to gallop and back; turning, stopping and the skid with unpinned paws; whether the low-carried head (as simulated) reads well.

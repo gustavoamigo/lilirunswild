@@ -187,7 +187,7 @@ function updateDog(dt) {
   else if (!p.air) {
     // She runs the way she is pointing, so a change of direction is a curve: at a trot a tight one
     // (she slows right down to turn about), at full gallop a wide skid, because she has no brakes.
-    const top = (p.zoom ? ZOOM : TROT) * st.mag * (p.zoom ? 1 : clamp(Math.cos(off), 0.1, 1)), k = 1 - Math.exp(-dt * (p.state !== 'idle' ? 12 : p.zoom ? 4.5 : 9));
+    const top = (p.zoom ? ZOOM : TROT) * st.mag * (p.zoom ? 1 : clamp(Math.cos(off), 0.1, 1)) * (studio.gait === 'trot' ? 0.5 : 1), k = 1 - Math.exp(-dt * (p.state !== 'idle' ? 12 : p.zoom ? 4.5 : 9));
     p.vx = lerp(p.vx, Math.cos(p.heading) * top, k); p.vy = lerp(p.vy, Math.sin(p.heading) * top, k);
     if (p.zoom && sp0 > 380) {
       p.dustT -= dt;
