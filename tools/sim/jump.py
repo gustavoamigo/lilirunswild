@@ -18,10 +18,11 @@ NJ = len(GROUPS)
 LO = np.array([dog.J[g][0] for g in GROUPS]); HI = np.array([dog.J[g][1] for g in GROUPS])
 CTRL_DT = 0.002
 
-# what is asked of each leap: v0 the speed she arrives with, vx the speed she leaves the ground with, rise of her middle
+# what is asked of each leap: v0 the speed she arrives with, vx the speed she leaves the ground with, rise of her middle,
+# crouch how far her middle must sink first (a high jump is wound up from low down), tip how far she may rear (radians)
 CASES = dict(
     stand=dict(v0=0.0, vx=2.6, rise=0.26, T=1.55),
-    high=dict(v0=0.0, vx=2.2, rise=0.62, T=1.75),
+    high=dict(v0=0.0, vx=2.2, rise=0.62, T=1.95, crouch=0.13, tip=1.25),
 )
 
 def prior(case):
@@ -38,6 +39,9 @@ def prior(case):
         (0.16, [0.00,  0.00, 0.20, 0.00,  0.40, -0.50, 0.40,  0.10,  0.00, 0.00]),   # rise
         (0.25, [0.00,  0.00, 0.00, 0.00,  0.00,  0.00, 0.00,  0.00,  0.00, 0.00]),   # stand
     ]
+    if CASES[case].get('crouch'):
+        k[0] = (0.34, [0.00, -0.50, 1.05, 0.05,  1.00, -1.40, 1.30,  0.25, -0.40, 0.20])   # right down on her haunches, chest low
+        k[1] = (0.12, [0.05, -0.20, 0.50, 0.05,  1.05, -1.45, 1.35,  0.15,  0.00, 0.10])
     return np.concatenate([np.log([r[0] for r in k]), np.array([r[1] for r in k]).ravel(), [0.03, 0.03]])
 
 NK = 9
@@ -75,7 +79,7 @@ def rollout(x, case, record=False):
     mujoco.mj_resetData(m, d); d.qpos[:] = q0; d.qvel[0] = c['v0']; mujoco.mj_forward(m, d)
     n = len(tg); sub = int(round(CTRL_DT / m.opt.timestep))
     shift = np.array([0, int(delay[0] / CTRL_DT), int(delay[1] / CTRL_DT)])[lag]
-    effort = 0.0; bad = 0.0; tip = 0.0; air0 = air1 = None; apex = 0.0; vx_off = 0.0; frames = []; first = None; down = []
+    effort = 0.0; bad = 0.0; tip = 0.0; low = z0; air0 = air1 = None; apex = 0.0; vx_off = 0.0; frames = []; first = None; down = []
     for k in range(n):
         d.ctrl[:] = tg[np.maximum(k - shift, 0), col]
         for _ in range(sub): mujoco.mj_step(m, d)
@@ -85,7 +89,8 @@ def rollout(x, case, record=False):
             if b in paws: on.add(paws[b])
             elif b not in soft: bad += 1
         effort += float(np.sum((d.actuator_force / m.actuator_forcerange[:, 1]) ** 2)) * CTRL_DT
-        com = d.subtree_com[1]; tip += max(0.0, abs(d.qpos[2]) - 0.75) * CTRL_DT
+        com = d.subtree_com[1]; tip += max(0.0, abs(d.qpos[2]) - c.get('tip', 0.75)) * CTRL_DT
+        if air0 is None: low = min(low, float(com[2]))
         if not on:
             if air0 is None and k * CTRL_DT > 0.2: air0 = k; vx_off = float(d.subtree_linvel[1][0]) if False else float(d.qvel[0])
             if air0 is not None and air1 is None: apex = max(apex, com[2] - z0)
@@ -94,16 +99,16 @@ def rollout(x, case, record=False):
         if record: frames.append((dog.points(m, d), sorted(on), float(d.qpos[2]), [float(v) for v in com]))
         down.append(len(on))
     pitch, vend = float(d.qpos[2]), d.qvel[:3].copy()
-    J = 0.02 * effort + 0.05 * bad + 40 * tip
+    J = 0.02 * effort + 0.05 * bad + 40 * tip + 3000 * max(0.0, c.get('crouch', 0) - (z0 - low)) ** 2
     if air0 is None or air1 is None: J += 50 + 20 * (c['rise'] - apex) ** 2
     else:
-        J += 60 * (apex - c['rise']) ** 2 + 2.0 * (vx_off - c['vx']) ** 2
+        J += 120 * (apex - c["rise"]) ** 2 + 2.0 * (vx_off - c['vx']) ** 2
         if not all(p.startswith('fpaw') for p in first): J += 3                 # a dog lands on her forepaws
     J += 6 * pitch ** 2 + 20 * (d.subtree_com[1][2] - z0) ** 2 + 0.3 * vend[0] ** 2 + 2 * vend[1] ** 2 + 0.3 * vend[2] ** 2
     J += 2 * (4 - down[-1])                                                      # and ends on all four
     kn = x[NK:NK + NK * NJ].reshape(NK, NJ); J += 0.01 * float(np.sum(np.diff(kn, axis=0) ** 2))
     info = dict(J=J, apex=apex, vx=vx_off, takeoff=None if air0 is None else air0 * CTRL_DT, land=None if air1 is None else air1 * CTRL_DT,
-                first=first, bad=bad, effort=effort, pitch_end=pitch, v_end=float(vend[0]))
+                first=first, crouch=z0 - low, bad=bad, effort=effort, pitch_end=pitch, v_end=float(vend[0]))
     return (J, info, frames) if record else J
 
 def _cost(a): return rollout(a[0], a[1])
@@ -123,7 +128,7 @@ def search(case, gens=120, pop=192, seed=0, x0=None):
             if g % 10 == 0 or g == gens - 1: print(g, round(float(Js[o[0]]), 3), round(best, 3), flush=True)
     return bx
 
-def strip(frames, path, every=25, cols=8, w=260, h=200, sc=230):
+def strip(frames, path, every=25, cols=8, w=260, h=330, sc=230):
     from PIL import Image, ImageDraw
     fs = frames[::every]; rows = (len(fs) + cols - 1) // cols
     im = Image.new('RGB', (cols * w, rows * h), '#F4F1EA'); dr = ImageDraw.Draw(im)

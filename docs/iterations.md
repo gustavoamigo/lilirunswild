@@ -113,3 +113,9 @@ Each iteration: what was built → what to test → feedback received → what t
 
 **Checked by script**: the search converges and the captures land forepaws first and end standing; the page loads without errors; in the game, a trotting jump lands on the bench and on the table, and a jump in the open stays low. **Not checked**: by eye in motion; the car; a jump started right beside a bench (she bumps its side during the run-up and misses).
 
+**Feedback on the captures**: both really good, but the high jump is wrong: she needs to crouch to get more momentum.
+
+**Decision**: the high jump must sink her middle 13 cm before take-off and may rear further. She now drops chest and haunches, rocks back and drives up: middle rises 54 cm (was 45), 0.65 s in the air.
+
+**Checked by script**: sinks 12.7 cm, lands forepaws first, ends standing. **Not checked**: by eye in motion. She shuffles one hind paw forward under her as she sinks, and the asked rise of 62 cm is not reached.
+

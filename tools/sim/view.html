@@ -29,7 +29,7 @@ function mark() { for (const b of el('speeds').children) b.className = +b.datase
 async function load(k) {
   clip = await (await fetch(`out/${k}.json`)).json(); t = 0; mark();
   const i = clip.info;
-  el('info').textContent = `Leaves the ground at ${i.takeoff.toFixed(2)} s going ${i.vx.toFixed(1)} m/s, her middle rises ${(i.apex * 100).toFixed(0)} cm, lands at ${i.land.toFixed(2)} s.`;
+  el('info').textContent = `Sinks ${(i.crouch * 100).toFixed(0)} cm first. Leaves the ground at ${i.takeoff.toFixed(2)} s going ${i.vx.toFixed(1)} m/s, her middle rises ${(i.apex * 100).toFixed(0)} cm, lands at ${i.land.toFixed(2)} s.`;
 }
 function frame(now) {
   requestAnimationFrame(frame);
