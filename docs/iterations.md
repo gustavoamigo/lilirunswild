@@ -142,3 +142,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the tail is good now; do the same for the creases in her body.
 
 **Decision**: chest, back, belly and rump are one skin (`torsoGeo` in `src/models.js`): the outline of the old shapes, smoothed along her length. Its rump end follows the rear of the spine and its chest end the front, blended between them every frame (`bendBody`), so it bends with her instead of hinging. Neck, head, ears and legs are still separate shapes. **Checked by script**: strips of standing, trotting, a standing leap and a running leap; no page errors. **Not checked**: by eye in motion, tight turns, shake, sit, the toon style.
+
+**Feedback**: buggy: two flat plates, endlessly tall, stand through her body.
+
+**Decision**: the body's outline was sampled half a unit past each end, where no shape covers it, so the two end rings of the skin were stretched off to infinity. The skin now ends inside the shapes, and building it fails loudly if a slice is uncovered. The plates were in the earlier check strips and were taken for studio scenery. **Checked by script**: her standing, seen from eight directions round her: no plates. **Not checked**: in motion by eye.

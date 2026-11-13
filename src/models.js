@@ -28,6 +28,7 @@ function torsoGeo(eggs, x0, x1) {
   for (let i = 0; i <= N; i++) {
     const x = lerp(x0, x1, i / N); let t = -1e9, b = 1e9, w = 0;
     for (const [cx, cy, rx, ry, rz] of eggs) { const u = (x - cx) / rx; if (Math.abs(u) < 1) { const k = Math.sqrt(1 - u * u); t = Math.max(t, cy + ry * k); b = Math.min(b, cy - ry * k); w = Math.max(w, rz * k); } }
+    if (t < b) throw new Error('torsoGeo: nothing covers x = ' + x);
     top.push(t); bot.push(b); wid.push(w);
   }
   const smooth = (a) => a.map((_, i) => { let v = 0, n = 0; for (let j = -7; j <= 7; j++) { const q = a[clamp(i + j, 0, N)], k = 8 - Math.abs(j); v += q * k; n += k; } return v / n; });
@@ -147,7 +148,7 @@ export function makeDog() {
 
   // Her body is one skin. Its rump end is carried by the rear of the spine and its chest end by the front, and it
   // bends smoothly between them (bendBody).
-  const body = mesh([{ geo: torsoGeo([[-2, 45, 34, 19, 17.5], [0, 29, 26, 7, 11], [-26, 46, 20, 20, 18.5], [22, 45, 21, 22, 19]], -46.5, 43.5), color: COAT, at: [0, 0, 0], scale: [1, 1, 1] }]);
+  const body = mesh([{ geo: torsoGeo([[-2, 45, 34, 19, 17.5], [0, 29, 26, 7, 11], [-26, 46, 20, 20, 18.5], [22, 45, 21, 22, 19]], -45.9, 42.9), color: COAT, at: [0, 0, 0], scale: [1, 1, 1] }]);
   body.frustumCulled = false;
   const bodyAt = body.geometry.attributes.position, bodyN = body.geometry.attributes.normal, body0 = bodyAt.array.slice(), bodyN0 = bodyN.array.slice();
   const _mf = new THREE.Matrix4(), _mr = new THREE.Matrix4();
