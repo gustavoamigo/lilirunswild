@@ -162,3 +162,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: dogs bow their head down a little when they shake.
 
 **Decision**: her head is bowed (0.32 rad down) through the shake instead of held nose up. **Checked by script**: side strip. **Not checked**: at full speed by eye.
+
+**Feedback**: the body shakes in the opposite direction to the head.
+
+**Decision**: the body's rock and the skin's roll now go against the head's roll instead of following it a little late. **Checked by script**: front strip. **Not checked**: at full speed by eye.

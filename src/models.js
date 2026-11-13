@@ -171,7 +171,7 @@ export function makeDog() {
       bodyN.array[i + 1] = (R[1] * nx + R[5] * ny + R[9] * nz) * v + (F[1] * nx + F[5] * ny + F[9] * nz) * w;
       bodyN.array[i + 2] = (R[2] * nx + R[6] * ny + R[10] * nz) * v + (F[2] * nx + F[6] * ny + F[10] * nz) * w;
       if (sT < 1.5) {                                                               // her skin rolls round her as she shakes
-        const th = 0.8 * shakeAt(sT, 0.2 + (43 - x) / 89 * 0.6), c = Math.cos(th), sn = Math.sin(th);
+        const th = -0.8 * shakeAt(sT, 0.1 + (43 - x) / 89 * 0.4), c = Math.cos(th), sn = Math.sin(th);
         const py = bodyAt.array[i + 1] - SPINE_Y, pz = bodyAt.array[i + 2], qy = bodyN.array[i + 1], qz = bodyN.array[i + 2];
         bodyAt.array[i + 1] = SPINE_Y + py * c - pz * sn; bodyAt.array[i + 2] = py * sn + pz * c + th * 4;
         bodyN.array[i + 1] = qy * c - qz * sn; bodyN.array[i + 2] = qy * sn + qz * c;
@@ -435,7 +435,7 @@ export function makeDog() {
     shakeT = p.shake > 0 ? shakeT + dt : 9; if (p.shake > 0 && shakeT > 8) shakeT = 0;
     const shk = shakeAt(shakeT, 0);
     // the shake takes her whole body: it rocks over her planted paws, chest first and rump after
-    const roll = P.roll + shakeAt(shakeT, 0.35) * 0.2;
+    const roll = P.roll - shakeAt(shakeT, 0.15) * 0.2;      // against the head: as it rolls one way, her body goes the other
     lean.rotation.x = roll;
     // at a gallop the back works like a spring: it doubles up as the hind legs come through under her
     // and straightens out as she reaches forward
