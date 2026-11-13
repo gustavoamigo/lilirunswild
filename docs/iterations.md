@@ -154,3 +154,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: a slow-motion clip of a spaniel shaking (not kept in the repo): nose held up and nearly still, the head rolling far each way about it, the ears thrown straight out and up, for well over a second.
 
 **Decision**: matched to it: nose up (the last note said lowered; it was not), head roll 1.35 rad each way, 1.4 s long, body skin roll 0.8 rad, and the ears are thrown outwards from the head and upwards while she shakes (`fling` in `swingEars`). **Checked by script**: a strip every 0.15 s set beside the clip's frames. **Not checked**: at full speed by eye; forelegs are not braced wide as in the clip.
+
+**Feedback**: the shake is a movement of the whole body; that should have been taken from the clip.
+
+**Decision**: looked at the clip frame by frame for the body, not just the head: the chest and shoulders rock from side to side over planted paws, the trunk twists after the head, the dog sits lower. Now her whole body rolls over her paws (0.2 rad, the legs taking it up), the front of the spine swings one way and the rear the other a moment later, and she sinks lower, on top of the skin's roll. **Checked by script**: strips from the side and from the front every 0.07 s; paws stay on their spots. **Not checked**: at full speed by eye; forelegs still not braced wide apart.

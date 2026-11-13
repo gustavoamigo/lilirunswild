@@ -347,7 +347,7 @@ export function makeDog() {
     } else if (p.point > 0.5) {                          // a bird! One paw up, tail out straight, stock still
       T.fr = 0.55; T.rf = 21; T.wr = 1; T.wag = 0.02; T.tailUp = -0.1; T.pitch = -0.04;
     } else if (p.shake > 0) {                            // a good shake: the head twists one way and the other, and the twist runs down her back
-      T.hp = 0.32; T.tailUp = 0.3; T.wag = 0; T.y = -3;
+      T.hp = 0.32; T.tailUp = 0.3; T.wag = 0; T.y = -6;
     } else if (sp < 30) { T.wag = 0.55 + (p.happy ? 0.25 : 0); T.wagHz = p.happy ? 17 : 12; }
     if (p.barkT > 0) { T.jaw = 0.75; T.hp += 0.3; }
     if (p.spring > 0 && !p.still) T.gal = 1;              // a run-up is bounds, not a trot
@@ -434,15 +434,17 @@ export function makeDog() {
     tilt.rotation.z = pitch; tilt.position.y = HIP_Y + bob;
     shakeT = p.shake > 0 ? shakeT + dt : 9; if (p.shake > 0 && shakeT > 8) shakeT = 0;
     const shk = shakeAt(shakeT, 0);
-    lean.rotation.x = P.roll;
+    // the shake takes her whole body: it rocks over her planted paws, chest first and rump after
+    const roll = P.roll + shakeAt(shakeT, 0.35) * 0.2;
+    lean.rotation.x = roll;
     // at a gallop the back works like a spring: it doubles up as the hind legs come through under her
     // and straightens out as she reaches forward
     const flex = P.flex + gl * a * 0.25 * Math.cos(s2 + 0.3);
-    const fy = -P.bend, ry = P.bend * 0.6 + wagNow * 0.12 * (a < 0.2 ? 1 : 0);     // the whole bottom wiggles when the tail really goes
-    fore.rotation.y = fy; rear.rotation.y = ry + shakeAt(shakeT, 0.75) * 0.06; fore.rotation.z = -flex; rear.rotation.z = flex;
+    const fy = -P.bend + shakeAt(shakeT, 0.3) * 0.13, ry = shakeAt(shakeT, 0.75) * 0.16 + P.bend * 0.6 + wagNow * 0.12 * (a < 0.2 ? 1 : 0);     // the whole bottom wiggles when the tail really goes
+    fore.rotation.y = fy; rear.rotation.y = ry; fore.rotation.z = -flex; rear.rotation.z = flex;
     bendBody(shakeT);
 
-    const cp = Math.cos(pitch), sn = Math.sin(pitch), cr = Math.cos(P.roll), sr = Math.sin(P.roll);
+    const cp = Math.cos(pitch), sn = Math.sin(pitch), cr = Math.cos(roll), sr = Math.sin(roll);
     for (let i = 0; i < 4; i++) {
       const L = legs[i], yw = L.front ? fy : ry, cy = Math.cos(yw), sy = Math.sin(yw);
       // the joint: carried by the spine's bend, the swing about the hips and the lean, in that order
