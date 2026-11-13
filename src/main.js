@@ -29,7 +29,7 @@ if (STUDIO) {
 const dog = {
   x: world.start.x, y: world.start.y, z: 0, vx: 0, vy: 0, vz: 0, heading: -Math.PI / 2,
   state: 'idle', stT: 0,            // idle (on his feet) | paws (up on someone) | daze | hop (in or out of the car) | drive
-  air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0, skid: false, push: false, shake: 0, fidget: 0,
+  air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0, skid: false, sweepT: 9, ptrX: 0, ptrY: 0, push: false, shake: 0, fidget: 0,
   lookYaw: 0, lookPitch: 0, seen: null, thought: 0, point: 0,
   barkT: 0, landT: 0, bow: 0, idleT: 0, happy: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
 };
@@ -115,13 +115,19 @@ function updateDog(dt) {
   if (p.state === 'drive') return;                    // the car carries him (updateCar)
   if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 0.9; p.state = 'idle'; } }
 
-  const st = p.state === 'idle' ? steering(p.x, p.y, 34) : ZERO;
-  watchBirds(st, dt);
+  let st = p.state === 'idle' ? steering(p.x, p.y, 34) : ZERO;
   const sp0 = Math.hypot(p.vx, p.vy);
+  // A pointer that sits near her means "come here, slowly". One that is being swept past her on its way to the
+  // other side is near her too, for a moment, and means nothing of the kind: while it is moving and she is
+  // galloping she keeps going flat out, so the reversal finds her at full speed and she has to brake.
+  p.sweepT = input.pointerDown && Math.hypot(input.sx - p.ptrX, input.sy - p.ptrY) > 350 * dt ? 0 : p.sweepT + dt;
+  p.ptrX = input.sx; p.ptrY = input.sy;
+  if (p.zoom && input.pointerDown && p.sweepT < 0.3 && sp0 > 1) st = st.mag ? { x: st.x, y: st.y, mag: 1 } : { x: p.vx / sp0, y: p.vy / sp0, mag: 1 };
+  watchBirds(st, dt);
   if (st.mag || p.air) p.shake = 0;
 
   // ---- zoomies: keep running flat out and he tips over into a mad gallop ----
-  if (st.mag > 0.85 && sp0 > 250) p.runT += dt; else if (st.mag < 0.5) p.runT = 0;
+  if (st.mag > 0.85 && sp0 > 250) p.runT += dt; else p.runT = 0;
   const chase = p.seen && st.mag > 0.5 && st.x * Math.cos(p.birdDir) + st.y * Math.sin(p.birdDir) > 0.75;
   if (chase) p.runT = Math.max(p.runT, ZOOM_AFTER);
   if (studio.gait === 'trot') p.runT = 0; else if (studio.gait === 'gallop' && st.mag > 0.5 && !p.push) p.runT = ZOOM_AFTER;
@@ -130,9 +136,9 @@ function updateDog(dt) {
 
   // ---- about-turn at a gallop: she cannot curve round, so she throws out the brakes and slides until she is
   // slow enough to get her feet back, steps round the way she turns at a trot, and pushes off into the gallop ----
-  if (!p.skid && p.zoom && !p.air && sp0 > 400 && st.mag > 0.5 && (p.vx * st.x + p.vy * st.y) / sp0 < -0.5) { p.skid = true; A.skid(); }
+  if (!p.skid && p.zoom && !p.air && sp0 > 330 && st.mag > 0.25 && (p.vx * st.x + p.vy * st.y) / sp0 < -0.4) { p.skid = true; A.skid(); }
   if (p.skid) {
-    const back = st.mag > 0.5 && (sp0 < 60 || p.vx * st.x + p.vy * st.y < sp0 * 0.3);
+    const back = st.mag > 0.25 && (sp0 < 60 || p.vx * st.x + p.vy * st.y < sp0 * 0.3);
     if (p.air || p.state !== 'idle' || !back) p.skid = false;
     else {
       const slow = Math.max(0, sp0 - BRAKE * dt), f = sp0 > 0 ? slow / sp0 : 0;
@@ -143,9 +149,10 @@ function updateDog(dt) {
   }
   if (p.push) {
     const want = Math.atan2(st.y, st.x);
-    if (p.air || p.state !== 'idle' || st.mag < 0.5) p.push = false;
+    if (p.air || p.state !== 'idle' || st.mag < 0.25) p.push = false;
     else if (Math.abs(angDiff(want, p.heading)) < 0.45) {                          // round: off she goes
-      p.push = false; p.runT = ZOOM_AFTER; p.zoom = true; p.vx = Math.cos(want) * 330; p.vy = Math.sin(want) * 330; dust(p.x, p.y, 6, { speed: 120 }); A.whoosh();
+      p.push = false;
+      if (st.mag > 0.85) { p.runT = ZOOM_AFTER; p.zoom = true; p.vx = Math.cos(want) * 330; p.vy = Math.sin(want) * 330; dust(p.x, p.y, 6, { speed: 120 }); A.whoosh(); }
     } else { p.runT = 0; p.zoom = false; }
   }
 

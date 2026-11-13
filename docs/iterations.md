@@ -65,3 +65,13 @@ Each iteration: what was built → what to test → feedback received → what t
 - Shake: after a bonk, when left standing (alternating with the bow), and on a studio button. Read "head spinning" as the shake; to be confirmed.
 
 **Checked by script**: frame sheets of the gallop from above (ears out and in), the brake, turn and push-off, the shake; game run with a jump and a reversal; bonk; no errors. **Not checked**: in motion; touch layout and the car were not re-run.
+
+## Iteration 5: the brake with the mouse
+
+**Feedback**: the brake is not consistent. Holding the mouse to run and sliding the pointer to the opposite side, she often follows the pointer round instead of braking.
+
+**Cause**: pointer steering weakens as the pointer nears her. A slide across her passes close, so she slowed and dropped out of the gallop before the pointer was behind her; only an instant jump of the pointer braked.
+
+**Decision**: a pointer that is moving is not an arrival. While it moves, a galloping dog keeps full speed (see `docs/tech.md`).
+
+**Checked by script**: reversals stepped frame by frame in the studio, straight across her and in an arc round her, taking 0.06 to 0.9 s, ending far and near: all brake, turn and push off, except a slow arc (0.45 s or more) to a point close by, which she curves to. Before, only the instant jump braked. A pointer held still on screen: no brake. Stop trials unchanged (8 of 24 with a paw up at a quarter second). **Not checked**: touch; by eye in motion.
