@@ -182,3 +182,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: in the game the trot is too jumpy and clunky; she looks as if she is hurt; her legs look shorter and she needs a diet.
 
 **Decision**: the trot plays only part of the simulated tilt, bend and bounce and takes a longer stride (130); its two half-strides are made mirror images in the export, so no limp; her height while running stays about standing height instead of the simulated dog's crouch; her body is slimmer (belly and sides in, back line unchanged). **Checked by script**: strips at a trot and a gallop, the turnaround views standing, a jump from a run, no errors. **Not checked**: by eye in motion; the skin against the legs in the shake, sit and other poses with the slimmer body.
+
+**Feedback**: the tail is not natural when she runs or trots; was the tail's movement copied?
+
+**Decision**: it was not: she kept wagging side to side at a fixed rate whatever her legs did. The simulated tail's swing is now exported with each stride and played: carried out behind, rising and falling with the stride, hardly wagging. **Checked by script**: strips at a trot and a gallop, no errors. **Not checked**: by eye in motion; whether 0.4 of the simulated swing is the right amount.

@@ -266,12 +266,14 @@ export function makeDog() {
 
   // One moment of the simulated stride at phase f (0 to 1, round and round): the trot and the gallop, mixed by gl.
   const G = new Float32Array(STRIDE);
+  let gTail = 0;                         // how far the stride has swung her tail up
   function stride(f, gl) {
-    G.fill(0);
+    G.fill(0); gTail = 0;
     for (const [name, w] of [['trot', 1 - gl], ['gallop', gl]]) {
       if (w < 0.001) continue;
       const m = GAITS[name], keep = KEEP[name], q = frac(f) * m.n, i = Math.floor(q) % m.n, e = q - Math.floor(q), o = i * STRIDE, o1 = (i + 1) % m.n * STRIDE;
-      for (let j = 0; j < STRIDE; j++) { const v = lerp(m.f[o + j], m.f[o1 + j], e); G[j] += (j < 3 ? (j < 2 ? m.mid[j] : 0) + (v - m.mid[j]) * keep[j] : v) * w; }      // her height: about where she stands, not the simulated dog's crouch
+      for (let j = 0; j < STRIDE; j++) { const v = lerp(m.f[o + j], m.f[o1 + j], e); G[j] += (j < 3 ? (j < 2 ? m.mid[j] : 0) + (v - m.mid[j]) * keep[j] : v) * w; }
+      gTail += lerp(m.tail[i], m.tail[(i + 1) % m.n], e) * w;      // her height: about where she stands, not the simulated dog's crouch
     }
   }
 
@@ -512,8 +514,10 @@ export function makeDog() {
     head.rotation.x = (p.state === 'daze' ? Math.sin(t * 9) * 0.25 : (p.tiltHead || 0) * 0.35) + shk * 1.35 + Math.sin(s2) * 0.07 * a;
     jaw.rotation.z = -Math.max(P.jaw, P.tongue * (0.3 + Math.sin(t * 15) * 0.07));
     tongue.scale.x = 4 + P.tongue * 6; tongue.position.x = 9 + P.tongue * 7; tongue.visible = P.tongue > 0.05 || P.jaw > 0.2;
-    tail.rotation.z = P.tailUp;
-    tail.rotation.y = wagNow + P.bend * 0.8 + shakeAt(shakeT, 1) * 0.7; tail.rotation.x = shakeAt(shakeT, 0.9) * 0.6;
+    // running, her tail streams out behind and swings with the stride as the simulated one did (less far: that one
+    // hangs from a soft spring), and it hardly wags
+    tail.rotation.z = lerp(P.tailUp, 0.15 + gTail * 0.4, gw);
+    tail.rotation.y = wagNow * (1 - 0.8 * gw) + P.bend * 0.8 + shakeAt(shakeT, 1) * 0.7; tail.rotation.x = shakeAt(shakeT, 0.9) * 0.6;
 
     blink = (t % 3.7) < 0.12 || p.state === 'daze' || shakeT < 1.25 ? 0.15 : 1;
     eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); });
