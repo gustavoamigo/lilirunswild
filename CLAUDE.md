@@ -1,6 +1,6 @@
 # Lili Runs Wild
 
-A 3D browser game: a small open town, and the player is a very active golden cocker spaniel. Like GTA in shape (roam, cause chaos, take a car), but nobody gets hurt: he jumps up at people, knocks things over, chases birds and drives. Built on the architecture of [wheek](https://github.com/gustavoamigo/wheek).
+A 3D browser game: a small open town, and the player is a very active liver and white spaniel (Lili). Like GTA in shape (roam, cause chaos, take a car), but nobody gets hurt: he jumps up at people, knocks things over, chases birds and drives. Built on the architecture of [wheek](https://github.com/gustavoamigo/wheek).
 
 Status: **movement prototype**. No missions, no title screen, no saved progress yet.
 

@@ -71,7 +71,7 @@ function mesh(parts, shadow = true) { const m = new THREE.Mesh(merged(parts), vc
 function group(x, y, z, ...kids) { const g = new THREE.Group(); g.position.set(x, y, z); if (kids.length) g.add(...kids); return g; }
 
 // ------------------------------------------------------------------ dog --
-// A golden English cocker spaniel: long curly ears, a domed head, feathered legs and a tail
+// Lili, a liver and white spaniel: white all over but for the brown sides of her head, long brown ears, a domed head, feathered legs and a tail
 // that never stops. The body is built round the hips: the whole front swings up and down
 // about them (rearing up to greet someone, bowing to play, sitting to drive), and the spine
 // bends sideways in the middle when turning.
@@ -80,7 +80,8 @@ function group(x, y, z, ...kids) { const g = new THREE.Group(); g.position.set(x
 // stands there it does not move, whatever the body does above it; when its turn comes it is
 // lifted and put down ahead of where its shoulder is going. So the paws never slide, the
 // stride always matches the ground covered, and a turn on the spot is walked round.
-const COAT = '#D9A05B', EAR = '#B5753A', FEATHER = '#EFCB96', DARK = '#2B2024';
+// white with a little warmth, so that she does not burn out in the sun; the feathering is whiter still
+const COAT = '#F1ECE3', FEATHER = '#FFFDF8', LIVER = '#5E3829', EAR = '#4C2B20', NOSE = '#7E5146';
 const HIP_X = -26, HIP_Y = 36, SPINE_X = -2, SPINE_Y = 46;
 const SEG = 17.5, PAW_Y = 4.4;                          // each leg is two bones this long; a standing paw's middle is this high
 // fl fr hl hr: where each leg joins the body, and where its paw stands when at rest
@@ -104,9 +105,9 @@ export function makeDog() {
   g.add(mesh([blob(COAT, -2, 45, 0, 34, 19, 17.5), blob(FEATHER, 0, 29, 0, 26, 7, 11)]));
   rearIn.add(mesh([blob(COAT, -26, 46, 0, 20, 20, 18.5)]));
   foreIn.add(mesh([blob(COAT, 22, 45, 0, 21, 22, 19), blob(FEATHER, 37, 39, 0, 9, 14, 12), blob(COAT, 37, 60, 0, 13, 19, 13, [0, 0, -0.6])]));
-  const collar = new THREE.Mesh(new THREE.TorusGeometry(12.5, 3, 8, 20), mat('#E0453A'));
+  const collar = new THREE.Mesh(new THREE.TorusGeometry(12.5, 3, 8, 20), mat('#E9B9B4'));
   collar.rotation.set(Math.PI / 2, 0, 0); const collarG = group(39, 62, 0, collar); collarG.rotation.z = -0.6;
-  const tag = ball('#FFD23F', 3.2, 3.2, 1.5, 49, 53, 0);
+  const tag = ball('#C4CAD3', 3.2, 3.2, 1.5, 49, 53, 0);
 
   // head
   const head = group(46, 72, 0);
@@ -114,7 +115,10 @@ export function makeDog() {
   head.add(mesh([
     blob(COAT, 4, 4, 0, 16, 15, 15), blob(COAT, 2, 12, 0, 11, 9, 11),
     blob(COAT, 22, -1, 0, 13, 8.5, 9), blob(FEATHER, 20, -6, 5, 9, 5.5, 5), blob(FEATHER, 20, -6, -5, 9, 5.5, 5),
-    blob(DARK, 34.5, 2.5, 0, 4.5, 3.8, 5.2),
+    blob(NOSE, 34.5, 2.5, 0, 4.5, 3.8, 5.2),
+    // the brown is a patch over each eye and ear, with a white blaze left between them from her nose to the back of her head
+    ...[1, -1].flatMap((s) => [blob(LIVER, 3, 5, s * 7.5, 15.5, 14.5, 9.5), blob(LIVER, 1, 12, s * 6.5, 10.5, 8, 6),
+      blob(LIVER, 28, 0, s * 8.2, 1.3, 1.3, 1), blob(LIVER, 24.5, -2.5, s * 9, 1.1, 1.1, 1), blob(LIVER, 29, -4, s * 7.2, 1, 1, 1)]),   // freckles
   ]));
   const eyes = [1, -1].map((s) => {
     const e = group(14.5, 8, s * 9.6, ball(mat('#2A1C14', { roughness: 0.25 }), 3.7, 3.9, 3.2, 0, 0, 0, false), ball('#ffffff', 1.1, 1.1, 1.1, 2.4, 1.6, s * 0.9, false));
