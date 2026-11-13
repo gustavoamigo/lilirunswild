@@ -347,7 +347,7 @@ export function makeDog() {
     } else if (p.point > 0.5) {                          // a bird! One paw up, tail out straight, stock still
       T.fr = 0.55; T.rf = 21; T.wr = 1; T.wag = 0.02; T.tailUp = -0.1; T.pitch = -0.04;
     } else if (p.shake > 0) {                            // a good shake: the head twists one way and the other, and the twist runs down her back
-      T.hp = 0.32; T.tailUp = 0.3; T.wag = 0; T.y = -6;
+      T.hp = -0.32; T.tailUp = 0.3; T.wag = 0; T.y = -6;
     } else if (sp < 30) { T.wag = 0.55 + (p.happy ? 0.25 : 0); T.wagHz = p.happy ? 17 : 12; }
     if (p.barkT > 0) { T.jaw = 0.75; T.hp += 0.3; }
     if (p.spring > 0 && !p.still) T.gal = 1;              // a run-up is bounds, not a trot

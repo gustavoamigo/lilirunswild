@@ -158,3 +158,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the shake is a movement of the whole body; that should have been taken from the clip.
 
 **Decision**: looked at the clip frame by frame for the body, not just the head: the chest and shoulders rock from side to side over planted paws, the trunk twists after the head, the dog sits lower. Now her whole body rolls over her paws (0.2 rad, the legs taking it up), the front of the spine swings one way and the rear the other a moment later, and she sinks lower, on top of the skin's roll. **Checked by script**: strips from the side and from the front every 0.07 s; paws stay on their spots. **Not checked**: at full speed by eye; forelegs still not braced wide apart.
+
+**Feedback**: dogs bow their head down a little when they shake.
+
+**Decision**: her head is bowed (0.32 rad down) through the shake instead of held nose up. **Checked by script**: side strip. **Not checked**: at full speed by eye.
