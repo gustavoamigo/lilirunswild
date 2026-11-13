@@ -10,6 +10,17 @@ const SPH_LO = new THREE.SphereGeometry(1, 12, 9);
 const BOX = new THREE.BoxGeometry(1, 1, 1);
 const CYL = new THREE.CylinderGeometry(1, 1, 1, 16);
 const CONE = new THREE.CylinderGeometry(0.42, 1, 1, 16);
+// One skin for Lili's tail (the tip is at -x): it thins towards the tip, and the feathering is the same surface drawn down
+// into a fringe underneath, deepest in the middle. Two shapes laid together showed as two tails.
+const TAIL = (() => {
+  const g = new THREE.SphereGeometry(1, 24, 16), P = g.attributes.position;
+  for (let i = 0; i < P.count; i++) {
+    const x = P.getX(i), y = P.getY(i), t = (x + 1) / 2, thin = 0.5 + 0.5 * Math.sqrt(t), fringe = y < 0 ? 1 + 1.7 * Math.sin(Math.PI * Math.min(1, t * 1.15)) : 1;
+    P.setXYZ(i, x, y * thin * fringe, P.getZ(i) * thin * (y < 0 ? 1 - 0.45 * -y : 1));
+  }
+  g.computeVertexNormals();
+  return g;
+})();
 const matCache = new Map();
 // One material factory for the whole game, so the art style can be switched in one place.
 let toonRamp;
@@ -145,7 +156,7 @@ export function makeDog() {
     const segs = [[8, 4.4], [9.5, 5.2], [10.5, 5.8], [8.5, 5]].map(([w, th], i) => { const m = mesh([blob(EAR, i === 3 ? 2 : 0, -EAR_SEG / 2, s * (1 + i * 0.5), w, EAR_SEG * 1.05, th)]); head.add(m); return m; });
     return { s, segs, top: new THREE.Vector3(-1, 11, s * 13.5), pts: null, was: null };
   });
-  const tail = group(-43, 52, 0, mesh([blob(COAT, -18, 2, 0, 22, 4.6, 4.6), blob(LIVER, -3, 3, 0, 7.5, 4.4, 4.9), blob(FEATHER, -21, 0.2, 0, 19, 5.2, 2.6), blob(FEATHER, -38, 2, 0, 5, 3.4, 2.8)]));
+  const tail = group(-43, 52, 0, mesh([{ ...blob(COAT, -18, 2, 0, 22, 4.4, 4.6), geo: TAIL }, blob(LIVER, -3, 3, 0, 7.5, 4.4, 4.9)]));
   foreIn.add(collarG, tag, head); rearIn.add(tail);
 
   // legs: three bones and a paw. Each bone hangs down from its joint, so its angle is how far it is swung forward.
