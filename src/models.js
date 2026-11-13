@@ -145,7 +145,7 @@ export function makeDog() {
     const segs = [[8, 4.4], [9.5, 5.2], [10.5, 5.8], [8.5, 5]].map(([w, th], i) => { const m = mesh([blob(EAR, i === 3 ? 2 : 0, -EAR_SEG / 2, s * (1 + i * 0.5), w, EAR_SEG * 1.05, th)]); head.add(m); return m; });
     return { s, segs, top: new THREE.Vector3(-1, 11, s * 13.5), pts: null, was: null };
   });
-  const tail = group(-43, 52, 0, mesh([blob(COAT, -12, 2, 0, 16, 4.6, 4.6), blob(LIVER, -3, 3, 0, 7.5, 4.4, 4.9), blob(FEATHER, -14, -2.5, 0, 13, 6.5, 2.8), blob(FEATHER, -26.5, 2.5, 0, 6, 4, 3)]));
+  const tail = group(-43, 52, 0, mesh([blob(COAT, -18, 2, 0, 22, 4.6, 4.6), blob(LIVER, -3, 3, 0, 7.5, 4.4, 4.9), blob(FEATHER, -21, 0.2, 0, 19, 5.2, 2.6), blob(FEATHER, -38, 2, 0, 5, 3.4, 2.8)]));
   foreIn.add(collarG, tag, head); rearIn.add(tail);
 
   // legs: three bones and a paw. Each bone hangs down from its joint, so its angle is how far it is swung forward.
