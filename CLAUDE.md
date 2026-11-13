@@ -13,6 +13,7 @@ Small iterations with the owner as tester.
 3. **Check it by script before handing over** (see Testing) and say what was and was not checked. Scripts cannot judge feel, sound or frame rate on a real device.
 4. **Hand over the local address and a short numbered test focus**, then wait for feedback.
 5. **Write it down** in `docs/iterations.md`; keep the other docs in step with the code in the same change.
+6. **Keep a memory of how things were done.** Anything made by a process rather than written by hand (a simulated movement, a searched result, a generated file, a sound cut from a recording, a shape matched to a reference clip) gets its method written in `docs/tech.md` in the same change, so it can be redone or extended later without this conversation: the tool and command, what was asked of it and why, what went wrong on the way and what was changed because of it, where the result is saved, and how it gets into the game. Write it while the work is in progress, marked as such, not only once it is finished. Tools and saved results live in the repo (`tools/`), not in a scratch directory; whatever is needed to set them up again is written down too.
 
 ## Design rules
 
@@ -43,5 +44,5 @@ python3 tools/serve.py 8765     # http://localhost:8765/
 | File | Holds |
 |---|---|
 | `docs/game-design.md` | The dog, the town, what he can do, controls |
-| `docs/tech.md` | Files, constants, test helpers |
+| `docs/tech.md` | Files, constants, test helpers, and how generated things were made (the simulated skeleton, captured moves) |
 | `docs/iterations.md` | Iteration log, test focus, feedback, decisions |
