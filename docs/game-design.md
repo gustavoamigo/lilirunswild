@@ -6,7 +6,7 @@ What exists now is the dog and a small town to try him in.
 
 ## The dog
 
-Lili, liver and white: a white body, brown sides to her head with a white blaze between, long wavy brown ears, a brown nose with freckles round it, a pale pink collar with a silver tag, a docked wagging tail, tongue out. Modelled on a photo of her (2026-11-13).
+Lili, liver and white: a white body, brown sides to her head with a white blaze between, long wavy brown ears, a brown nose with freckles round it, a pale pink collar with a silver tag, a brown patch where her tail begins and two small marks on her back, a wagging tail of some length, tongue out. Modelled on a photo of her (2026-11-13).
 
 | He does | How |
 |---|---|

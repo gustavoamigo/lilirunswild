@@ -102,8 +102,9 @@ export function makeDog() {
   const foreIn = group(-SPINE_X, -SPINE_Y, 0), rearIn = group(-SPINE_X, -SPINE_Y, 0);
   fore.add(foreIn); rear.add(rearIn); g.add(fore, rear); tilt.add(g); lean.add(tilt); root.add(lean);
 
-  g.add(mesh([blob(COAT, -2, 45, 0, 34, 19, 17.5), blob(FEATHER, 0, 29, 0, 26, 7, 11)]));
-  rearIn.add(mesh([blob(COAT, -26, 46, 0, 20, 20, 18.5)]));
+  g.add(mesh([blob(COAT, -2, 45, 0, 34, 19, 17.5), blob(FEATHER, 0, 29, 0, 26, 7, 11),
+    blob(LIVER, -6, 62.6, 5, 4.2, 1.8, 2.6, [0, 0.5, 0]), blob(LIVER, 1, 63, 1, 3, 1.6, 2.2, [0, 0.5, 0])]));   // two small marks on her back
+  rearIn.add(mesh([blob(COAT, -26, 46, 0, 20, 20, 18.5), blob(LIVER, -38.5, 58.5, 0, 8, 6.5, 7.5, [0, 0, -0.8])]));   // and a brown patch where the tail begins
   foreIn.add(mesh([blob(COAT, 22, 45, 0, 21, 22, 19), blob(FEATHER, 37, 39, 0, 9, 14, 12), blob(COAT, 37, 60, 0, 13, 19, 13, [0, 0, -0.6])]));
   const collar = new THREE.Mesh(new THREE.TorusGeometry(12.5, 3, 8, 20), mat('#E9B9B4'));
   collar.rotation.set(Math.PI / 2, 0, 0); const collarG = group(39, 62, 0, collar); collarG.rotation.z = -0.6;
@@ -133,7 +134,7 @@ export function makeDog() {
     const segs = [[8, 4.4], [9.5, 5.2], [10.5, 5.8], [8.5, 5]].map(([w, th], i) => { const m = mesh([blob(EAR, i === 3 ? 2 : 0, -EAR_SEG / 2, s * (1 + i * 0.5), w, EAR_SEG * 1.05, th)]); head.add(m); return m; });
     return { s, segs, top: new THREE.Vector3(-1, 11, s * 13.5), pts: null, was: null };
   });
-  const tail = group(-43, 52, 0, mesh([blob(COAT, -8, 2, 0, 11, 4.4, 4.4), blob(FEATHER, -10, -2, 0, 9, 6, 2.8), blob(FEATHER, -17, 2, 0, 5, 4, 3)]));
+  const tail = group(-43, 52, 0, mesh([blob(COAT, -12, 2, 0, 16, 4.6, 4.6), blob(LIVER, -3, 3, 0, 7.5, 4.4, 4.9), blob(FEATHER, -14, -2.5, 0, 13, 6.5, 2.8), blob(FEATHER, -26.5, 2.5, 0, 6, 4, 3)]));
   foreIn.add(collarG, tag, head); rearIn.add(tail);
 
   // legs: an upper and a lower bone and a paw that stays level. The elbows bend back, the knees forward.
