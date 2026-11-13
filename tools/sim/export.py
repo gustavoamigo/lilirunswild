@@ -39,6 +39,13 @@ def move(case, gait=False):
   if gait:
     f = np.array(cols).T[1:]; n = len(f)
     f[:, [0, 1]] = (f[:, [0, 1]] + np.pi) % (2 * np.pi) - np.pi
+    if case == 'trot':
+      # A trot's second half is its first half with left and right changed over. The simulated one is nearly so,
+      # not exactly (one diagonal lands a little later and tips her further), and in the game the difference
+      # reads as a limp. So each half is averaged with the other half, sides changed over.
+      h = n // 2; g = np.roll(f, -h, axis=0).copy(); g[:, 4:8], g[:, 8:12], g[:, 12:16], g[:, 16:20] = g[:, 8:12].copy(), g[:, 4:8].copy(), g[:, 16:20].copy(), g[:, 12:16].copy()
+      bits = f[:, 3].astype(int); gb = g[:, 3].astype(int); gb = ((gb & 1) << 1) | ((gb & 2) >> 1) | ((gb & 4) << 1) | ((gb & 8) >> 1)
+      f = (f + g) / 2; f[:, 3] = bits | gb
     down = []                  # for each paw: where in the stride it comes down, and for what share of it it stays
     for i in range(4):
       on = [(int(v) >> i) & 1 for v in f[:, 3]]

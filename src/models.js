@@ -136,7 +136,11 @@ const TROT_AT = [0, 0.5, 0.5, 0], GALLOP_AT = [0.5, 0.62, 1.0, 0.1];
 const frac = (v) => v - Math.floor(v);
 // The simulated strides (GAITS in moves.js) cover this much ground each in the game. Lili runs far faster for her
 // size than a real dog, so a stride at its true length (72 and 148) would be a blur of legs.
-const TROT_LEN = 110, GALLOP_LEN = 170;
+const TROT_LEN = 130, GALLOP_LEN = 170;
+// How much of each stride's body motion she keeps (tilt, bend of the back, rise and fall), about its average. The
+// simulated trot rocks and doubles its back twice a stride; at Lili's pace that is a judder, so most of it is left out.
+const KEEP = { trot: [0.3, 0.3, 0.6], gallop: [1, 1, 1] };
+for (const k in GAITS) { const m = GAITS[k]; m.mid = [0, 1, 2].map((j) => { let a = 0; for (let i = 0; i < m.n; i++) a += m.f[i * STRIDE + j] / m.n; return a; }); }
 const round = (a, b, w) => a + (frac(b - a + 0.5) - 0.5) * w;      // from a to b the short way round the stride
 const EAR_SEG = 9.5, EAR_G = 1500, EAR_DRAG = 4.5, EAR_SPRING = [16, 7, 4, 3];
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _x = new THREE.Vector3(), _y = new THREE.Vector3(), _z = new THREE.Vector3(), _inv = new THREE.Matrix4(), _rot = new THREE.Matrix4(), Z_AXIS = new THREE.Vector3(0, 0, 1), X_AXIS = new THREE.Vector3(1, 0, 0);
@@ -152,7 +156,7 @@ export function makeDog() {
 
   // Her body is one skin. Its rump end is carried by the rear of the spine and its chest end by the front, and it
   // bends smoothly between them (bendBody).
-  const body = mesh([{ geo: torsoGeo([[-2, 45, 34, 19, 17.5], [0, 29, 26, 7, 11], [-26, 46, 20, 20, 18.5], [22, 45, 21, 22, 19]], -45.9, 42.9), color: COAT, at: [0, 0, 0], scale: [1, 1, 1] },
+  const body = mesh([{ geo: torsoGeo([[-2, 46.5, 34, 17.5, 16], [0, 32, 26, 6, 10], [-26, 47.5, 20, 18.5, 17], [22, 46.5, 21, 20.5, 17.5]], -45.9, 42.9), color: COAT, at: [0, 0, 0], scale: [1, 1, 1] },
     blob(LIVER, -6, 62.6, 5, 4.2, 1.8, 2.6, [0, 0.5, 0]), blob(LIVER, 1, 63, 1, 3, 1.6, 2.2, [0, 0.5, 0]),   // two small marks on her back
     blob(LIVER, -38.5, 58.5, 0, 8, 6.5, 7.5, [0, 0, -0.8])]);                                              // and a brown patch where the tail begins
   body.frustumCulled = false;
@@ -264,10 +268,10 @@ export function makeDog() {
   const G = new Float32Array(STRIDE);
   function stride(f, gl) {
     G.fill(0);
-    for (const [m, w] of [[GAITS.trot, 1 - gl], [GAITS.gallop, gl]]) {
+    for (const [name, w] of [['trot', 1 - gl], ['gallop', gl]]) {
       if (w < 0.001) continue;
-      const q = frac(f) * m.n, i = Math.floor(q) % m.n, e = q - Math.floor(q), o = i * STRIDE, o1 = (i + 1) % m.n * STRIDE;
-      for (let j = 0; j < STRIDE; j++) G[j] += lerp(m.f[o + j], m.f[o1 + j], e) * w;
+      const m = GAITS[name], keep = KEEP[name], q = frac(f) * m.n, i = Math.floor(q) % m.n, e = q - Math.floor(q), o = i * STRIDE, o1 = (i + 1) % m.n * STRIDE;
+      for (let j = 0; j < STRIDE; j++) { const v = lerp(m.f[o + j], m.f[o1 + j], e); G[j] += (j < 3 ? (j < 2 ? m.mid[j] : 0) + (v - m.mid[j]) * keep[j] : v) * w; }      // her height: about where she stands, not the simulated dog's crouch
     }
   }
 
