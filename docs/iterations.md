@@ -81,8 +81,8 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: three recordings of Lili. Cut into 30 events and named by a classifier; the owner listened and chose three from the first recording: events 6, 7 and 9. None had her breathing.
 
 **Decisions**
-- Event 9 (0.43 s) is the bark, replacing the soundfont sample.
-- Events 6 and 7 (about 1 s, low grumbles) alternate with the play bow. Which sound goes where was not specified; this is a first guess.
+- First guess, wrong: event 9 as the bark. Owner: none of them is a bark; all three are the "grururururu" she makes when playing at pulling something. The soundfont bark is back.
+- The three growls play in turn with the play bow until there is something to pull.
 - The studio shows the unchosen clips as buttons (local only).
 
 **Checked by script**: the three files load and decode, bark and bow raise no errors. **Not checked**: by ear.

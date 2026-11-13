@@ -209,7 +209,7 @@ function updateDog(dt) {
   // ---- nothing to do? Ask for a game. ----
   if (p.state === 'idle' && !st.mag && !p.air && !p.point) {
     p.idleT += dt;
-    if (p.idleT > 4.5) { p.idleT = 0; if (p.fidget++ % 2) p.shake = 1; else { p.bow = 1.3; A.grumble(); } }
+    if (p.idleT > 4.5) { p.idleT = 0; if (p.fidget++ % 2) p.shake = 1; else { p.bow = 1.3; A.playGrowl(); } }
   } else p.idleT = 0;
 }
 
@@ -581,7 +581,7 @@ const POSES = {
     dog.vx = -hx * 170; dog.vy = -hy * 170; dog.state = 'daze'; dog.stT = 0.75; dog.runT = 0; dog.zoom = false;
     A.bonk(); stars(dog.x + hx * 20, dog.y + hy * 20, dog.z + 70, 7);
   },
-  bow() { dog.bow = 1.3; dog.idleT = 0; A.grumble(); },
+  bow() { dog.bow = 1.3; dog.idleT = 0; A.playGrowl(); },
   shake() { dog.shake = 1; dog.idleT = 0; },
   point() { studio.point = !studio.point; },
 };

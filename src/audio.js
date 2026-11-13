@@ -1,4 +1,4 @@
-// Sounds are synthesised with WebAudio, all but Lili's own voice.
+// Sounds are synthesised with WebAudio, all but the bark and Lili's own play growl.
 let ac = null, master, sfx, noiseBuf, eng = null;
 let muted = false;
 
@@ -68,23 +68,24 @@ function noise(when, dur, o = {}) {
 }
 
 // ---- the dog ----
-// Her voice is recorded (sounds/CREDITS.md): it is Lili herself. A synthesised bark never sounded like a dog.
+// Recorded sounds (sounds/CREDITS.md): a soundfont bark, because a synthesised one never sounded like a dog,
+// and Lili herself, growling the way she does when she is pulling on something in play.
 const voice = {};
 function loadVoice() {
-  for (const k of ['bark', 'grumble-1', 'grumble-2']) {
-    fetch(new URL(`../sounds/lili-${k}.wav`, import.meta.url)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((b) => { voice[k] = b; }).catch(() => {});
+  for (const k of ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3']) {
+    fetch(new URL(`../sounds/${k}.wav`, import.meta.url)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((b) => { voice[k] = b; }).catch(() => {});
   }
 }
-function say(k, vol) {
+function say(k, vol, rate = 1) {
   if (!ac || !voice[k]) return;
   const src = ac.createBufferSource(), g = ac.createGain();
-  src.buffer = voice[k]; g.gain.value = vol;
+  src.buffer = voice[k]; src.playbackRate.value = rate; g.gain.value = vol;
   src.connect(g); g.connect(sfx); src.start();
 }
-export function bark() { say('bark', 0.9); }
-// the grumble that goes with the play bow: "come on, then"
-let grumbles = 0;
-export function grumble() { say(grumbles++ % 2 ? 'grumble-2' : 'grumble-1', 0.7); }
+export function bark() { say('bark', 0.9, 1.2); }   // a spaniel: a bit higher than the recording
+// her play growl, three takes in turn. There is nothing to pull on yet, so it goes with the play bow.
+let growls = 0;
+export function playGrowl() { say('lili-growl-' + (growls++ % 3 + 1), 0.7); }
 // an excited little yip: "a bird!"
 // Studio: audition a recording. Decoded on first use and kept.
 const clips = new Map();

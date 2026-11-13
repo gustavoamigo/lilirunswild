@@ -1,6 +1,6 @@
 # Tech
 
-Three.js r170 (vendored), plain ES modules, no build step, and no asset files but her voice: the bark and the grumble with the play bow are recordings of Lili (`sounds/lili-*.wav`, see `sounds/CREDITS.md`), because a synthesised bark did not sound like a dog. Same architecture as wheek.
+Three.js r170 (vendored), plain ES modules, no build step, and no asset files but sounds (`sounds/CREDITS.md`): the bark is a soundfont sample, because a synthesised bark did not sound like a dog, and `sounds/lili-growl-*.wav` are Lili's own play growl, the sound she makes pulling on something. There is nothing to pull on yet, so for now it plays with the play bow. Same architecture as wheek.
 
 ## Files
 
