@@ -89,8 +89,9 @@ if __name__ == '__main__':
           '// it comes down and for what share of the stride it stays. T: seconds a stride took, v: metres a second.',
           '// len: game units of ground a stride covers. tail, neck, head: each frame, how far each has swung up from where it is at a stand.',
           'export const GAITS = {']
-  for case in ('trot', 'gallop'):
-    out.append(f'  {case}: {json.dumps(move(case, True), separators=(",", ":"))},')
+  # the game's gallop is gallop_fast (5.5 m/s): the one the owner judged good in the game
+  for name, case in (('trot', 'trot'), ('gallop', 'gallop_fast')):
+    out.append(f'  {name}: {json.dumps(move(case, True), separators=(",", ":"))},')
   out.append('};')
   open(f'{HERE}/../../src/moves.js', 'w').write('\n'.join(out) + '\n')
   print('wrote src/moves.js')

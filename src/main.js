@@ -10,9 +10,11 @@ import { buildTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js
 import { CAR } from './models.js';
 import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
 
-const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560, BRAKE = 1500;
-// a spaniel's trot and flat-out run for her size (84 game units to the metre: 2.5 and 3.8 m/s), so her legs play the simulated strides at their own tempo
-const TROT = 210, ZOOM = 320, ZOOM_AFTER = 0.9;      // run flat out for this long and he gets the zoomies
+const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560;
+// a spaniel's trot and flat-out run for her size (84 game units to the metre: 2.5 and 5.5 m/s); flat out is the simulated gallop's own speed
+const TROT = 210, ZOOM = 460, ZOOM_AFTER = 0.9;      // run flat out for this long and he gets the zoomies
+// the about-turn's slide takes a third of a second from flat out, down to SKID_END, whatever her top speed
+const BRAKE = ZOOM * 2.3, SKID_END = ZOOM * 0.23;
 const BONK = ZOOM * 0.73;                                    // faster than this into something solid and he sees stars
 const CAR_TOP = 900;
 
@@ -165,7 +167,7 @@ function updateDog(dt) {
       const slow = Math.max(0, sp0 - BRAKE * dt), f = sp0 > 0 ? slow / sp0 : 0;
       p.vx *= f; p.vy *= f; p.runT = ZOOM_AFTER;
       p.dustT -= dt; if (p.dustT <= 0) { p.dustT = 0.035; dust(p.x + Math.cos(p.heading) * 30, p.y + Math.sin(p.heading) * 30, 2, { speed: 90 }); }
-      if (slow < 150) { p.skid = false; p.push = true; }
+      if (slow < SKID_END) { p.skid = false; p.push = true; }
     }
   }
   if (p.push) {
