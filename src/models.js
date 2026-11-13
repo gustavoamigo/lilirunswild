@@ -21,6 +21,27 @@ const TAIL = (() => {
   g.computeVertexNormals();
   return g;
 })();
+// One skin for Lili's body, from rump to chest. It is the outline of the egg shapes it replaces (each [x, y, rx, ry, rz]),
+// smoothed along her length so that there is no crease where one ended and the next began.
+function torsoGeo(eggs, x0, x1) {
+  const N = 80, top = [], bot = [], wid = [];
+  for (let i = 0; i <= N; i++) {
+    const x = lerp(x0, x1, i / N); let t = -1e9, b = 1e9, w = 0;
+    for (const [cx, cy, rx, ry, rz] of eggs) { const u = (x - cx) / rx; if (Math.abs(u) < 1) { const k = Math.sqrt(1 - u * u); t = Math.max(t, cy + ry * k); b = Math.min(b, cy - ry * k); w = Math.max(w, rz * k); } }
+    top.push(t); bot.push(b); wid.push(w);
+  }
+  const smooth = (a) => a.map((_, i) => { let v = 0, n = 0; for (let j = -7; j <= 7; j++) { const q = a[clamp(i + j, 0, N)], k = 8 - Math.abs(j); v += q * k; n += k; } return v / n; });
+  const T = smooth(top), B = smooth(bot), W = smooth(wid), at = (a, f) => { const i = Math.min(N - 1, Math.floor(f * N)), e = f * N - i; return lerp(a[i], a[i + 1], e); };
+  const g = new THREE.SphereGeometry(1, 28, 40), P = g.attributes.position;
+  for (let i = 0; i < P.count; i++) {
+    // the sphere's poles lie along her length; each ring of it becomes one slice of her
+    const a = P.getY(i), f = (a + 1) / 2, r = Math.sqrt(Math.max(1 - a * a, 1e-6)), ends = Math.min(1, r * 2.2);
+    const mid = (at(T, f) + at(B, f)) / 2, half = (at(T, f) - at(B, f)) / 2;
+    P.setXYZ(i, lerp(x0, x1, f), mid + half * ends * P.getX(i) / r, -at(W, f) * ends * P.getZ(i) / r);   // mirrored, so that the faces still point outwards
+  }
+  g.computeVertexNormals();
+  return g;
+}
 const matCache = new Map();
 // One material factory for the whole game, so the art style can be switched in one place.
 let toonRamp;
@@ -124,10 +145,30 @@ export function makeDog() {
   const foreIn = group(-SPINE_X, -SPINE_Y, 0), rearIn = group(-SPINE_X, -SPINE_Y, 0);
   fore.add(foreIn); rear.add(rearIn); g.add(fore, rear); tilt.add(g); lean.add(tilt); root.add(lean);
 
-  g.add(mesh([blob(COAT, -2, 45, 0, 34, 19, 17.5), blob(FEATHER, 0, 29, 0, 26, 7, 11),
-    blob(LIVER, -6, 62.6, 5, 4.2, 1.8, 2.6, [0, 0.5, 0]), blob(LIVER, 1, 63, 1, 3, 1.6, 2.2, [0, 0.5, 0])]));   // two small marks on her back
-  rearIn.add(mesh([blob(COAT, -26, 46, 0, 20, 20, 18.5), blob(LIVER, -38.5, 58.5, 0, 8, 6.5, 7.5, [0, 0, -0.8])]));   // and a brown patch where the tail begins
-  foreIn.add(mesh([blob(COAT, 22, 45, 0, 21, 22, 19), blob(FEATHER, 37, 39, 0, 9, 14, 12), blob(COAT, 37, 60, 0, 13, 19, 13, [0, 0, -0.6])]));
+  // Her body is one skin. Its rump end is carried by the rear of the spine and its chest end by the front, and it
+  // bends smoothly between them (bendBody).
+  const body = mesh([{ geo: torsoGeo([[-2, 45, 34, 19, 17.5], [0, 29, 26, 7, 11], [-26, 46, 20, 20, 18.5], [22, 45, 21, 22, 19]], -46.5, 43.5), color: COAT, at: [0, 0, 0], scale: [1, 1, 1] }]);
+  body.frustumCulled = false;
+  const bodyAt = body.geometry.attributes.position, bodyN = body.geometry.attributes.normal, body0 = bodyAt.array.slice(), bodyN0 = bodyN.array.slice();
+  const _mf = new THREE.Matrix4(), _mr = new THREE.Matrix4();
+  function bendBody() {
+    fore.updateMatrix(); rear.updateMatrix(); foreIn.updateMatrix(); rearIn.updateMatrix();
+    const F = _mf.multiplyMatrices(fore.matrix, foreIn.matrix).elements, R = _mr.multiplyMatrices(rear.matrix, rearIn.matrix).elements;
+    for (let i = 0; i < body0.length; i += 3) {
+      const x = body0[i], y = body0[i + 1], z = body0[i + 2], nx = bodyN0[i], ny = bodyN0[i + 1], nz = bodyN0[i + 2];
+      const u = clamp((x + 26) / 48, 0, 1), w = u * u * (3 - 2 * u), v = 1 - w;      // 0 at the hips, 1 at the shoulders
+      bodyAt.array[i] = (R[0] * x + R[4] * y + R[8] * z + R[12]) * v + (F[0] * x + F[4] * y + F[8] * z + F[12]) * w;
+      bodyAt.array[i + 1] = (R[1] * x + R[5] * y + R[9] * z + R[13]) * v + (F[1] * x + F[5] * y + F[9] * z + F[13]) * w;
+      bodyAt.array[i + 2] = (R[2] * x + R[6] * y + R[10] * z + R[14]) * v + (F[2] * x + F[6] * y + F[10] * z + F[14]) * w;
+      bodyN.array[i] = (R[0] * nx + R[4] * ny + R[8] * nz) * v + (F[0] * nx + F[4] * ny + F[8] * nz) * w;
+      bodyN.array[i + 1] = (R[1] * nx + R[5] * ny + R[9] * nz) * v + (F[1] * nx + F[5] * ny + F[9] * nz) * w;
+      bodyN.array[i + 2] = (R[2] * nx + R[6] * ny + R[10] * nz) * v + (F[2] * nx + F[6] * ny + F[10] * nz) * w;
+    }
+    bodyAt.needsUpdate = bodyN.needsUpdate = true;
+  }
+  g.add(body, mesh([blob(LIVER, -6, 62.6, 5, 4.2, 1.8, 2.6, [0, 0.5, 0]), blob(LIVER, 1, 63, 1, 3, 1.6, 2.2, [0, 0.5, 0])]));   // two small marks on her back
+  rearIn.add(mesh([blob(LIVER, -38.5, 58.5, 0, 8, 6.5, 7.5, [0, 0, -0.8])]));   // and a brown patch where the tail begins
+  foreIn.add(mesh([blob(FEATHER, 37, 39, 0, 9, 14, 12), blob(COAT, 37, 60, 0, 13, 19, 13, [0, 0, -0.6])]));
   const collar = new THREE.Mesh(new THREE.TorusGeometry(12.5, 3, 8, 20), mat('#E9B9B4'));
   collar.rotation.set(Math.PI / 2, 0, 0); const collarG = group(39, 62, 0, collar); collarG.rotation.z = -0.6;
   const tag = ball('#C4CAD3', 3.2, 3.2, 1.5, 49, 53, 0);
@@ -384,6 +425,7 @@ export function makeDog() {
     const flex = P.flex + gl * a * 0.25 * Math.cos(s2 + 0.3);
     const fy = -P.bend, ry = P.bend * 0.6 + wagNow * 0.12 * (a < 0.2 ? 1 : 0);     // the whole bottom wiggles when the tail really goes
     fore.rotation.y = fy; rear.rotation.y = ry + shkBody * 0.09; fore.rotation.z = -flex; rear.rotation.z = flex;
+    bendBody();
 
     const cp = Math.cos(pitch), sn = Math.sin(pitch), cr = Math.cos(P.roll), sr = Math.sin(P.roll);
     for (let i = 0; i < 4; i++) {

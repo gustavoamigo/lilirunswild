@@ -138,3 +138,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: length right, but the tail still reads as two sausages laid together; is that because she is built from separate shapes with no skin?
 
 **Decision**: yes: she is ellipsoids set into each other, no single surface. The tail is now the first part with a skin of its own: one surface that thins to the tip, with the feathering drawn down from it as a fringe (`TAIL` in `src/models.js`). The rest of her is still separate shapes. **Checked by script**: side-on screenshots. **Not checked**: in motion, from behind.
+
+**Feedback**: the tail is good now; do the same for the creases in her body.
+
+**Decision**: chest, back, belly and rump are one skin (`torsoGeo` in `src/models.js`): the outline of the old shapes, smoothed along her length. Its rump end follows the rear of the spine and its chest end the front, blended between them every frame (`bendBody`), so it bends with her instead of hinging. Neck, head, ears and legs are still separate shapes. **Checked by script**: strips of standing, trotting, a standing leap and a running leap; no page errors. **Not checked**: by eye in motion, tight turns, shake, sit, the toon style.
