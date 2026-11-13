@@ -1,4 +1,4 @@
-# Zoomies (working title)
+# Lili Runs Wild
 
 A browser game about a very active cocker spaniel loose in a small town. He gallops, jumps on things and people, breaks pots, chases birds and drives a car. Nobody gets hurt.
 

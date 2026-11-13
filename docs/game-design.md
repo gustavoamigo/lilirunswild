@@ -35,7 +35,6 @@ See *Design rules* in `CLAUDE.md`: not violent, he is a dog, the camera never tu
 
 ## Not decided yet
 
-- The name. "Zoomies" is a placeholder.
 - Missions, and what the counters are for.
 - Camera: fixed and looking north, as in wheek. A GTA-style camera behind the car would break "up means away"; to decide when driving matters more.
 - How big the town gets, more cars, traffic, people who react for longer (chasing him, calling him).
