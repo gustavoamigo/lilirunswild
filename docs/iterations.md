@@ -198,3 +198,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: everything looks really bad; we are in the uncanny valley. Go back to the hand-made running from before the simulation.
 
 **Decision**: running is hand-made again, as before the simulated strides; the jumps keep their simulated take-off and flight. Kept from the rounds since: the slower speeds (asked for separately) and the slimmer body (asked for). The hand-made stride is shortened (reach 16 to 28, from 20 to 36) so its tempo suits the slower speeds. The tail wags again while she runs. `GAITS` stays in `src/moves.js`, unused, with the sim tools and results. **Checked by script**: strips at a trot (210) and a gallop (320), jumps from a stand and from a run, no errors. **Not checked**: by eye in motion. Open: whether the slower speeds and the slimmer body stay (asked, not answered).
+
+**Feedback**: the jump from a walk, trot or run is funny, especially the ears starting to flap. Fix it.
+
+**Decision**: in the air the ears ride along: no flutter from the moment she leaves the ground, carried fully with her rise and fall, stiffer and more damped; after landing they ease back over a quarter second instead of slapping. **Checked by script**: the ear tip's height against the head through a jump from a stand, a trot and a run (no more flip over the head at take-off), a strip of a jump from a run, no errors. **Not checked**: by eye in motion; jumps onto the bench, table and car; the shake (its fling is unchanged).
