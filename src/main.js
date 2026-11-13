@@ -626,14 +626,20 @@ function initStudio() {
   };
   window.addEventListener('keydown', (e) => { const f = KEYS[e.code]; if (f && !e.repeat) { f(); refresh(); } });
   window.addEventListener('wheel', (e) => { zoomBy(e.deltaY > 0 ? 1.1 : 0.9); refresh(); }, { passive: true });
-  // Recordings waiting to be chosen: sounds/lili/ is not in the repository, so this row only shows where the files are.
+  // Recordings waiting to be chosen: sounds/lili/ is not in the repository, so this only shows where the files are.
+  // There are thirty of them, so they stay folded away behind one button.
   fetch(new URL('../sounds/lili/index.json', import.meta.url)).then(r => r.ok ? r.json() : []).then((list) => {
     if (!list.length) return;
-    const br = document.createElement('i'); br.style.flexBasis = '100%'; bar.append(br);
+    let open = false; const row = [];
+    const show = () => { for (const e of row) e.style.display = open ? '' : 'none'; };
+    gap(); btn('recordings', () => { open = !open; show(); }, () => open);
+    const br = document.createElement('i'); br.style.flexBasis = '100%'; bar.append(br); row.push(br);
     for (const c of list) {
       const b = btn(c.label, () => { A.playClip(new URL('../sounds/lili/' + c.file, import.meta.url).href); dog.barkT = Math.min(0.5, c.dur); dog.idleT = 0; });
       if (!c.dog) b.style.opacity = 0.55;
+      row.push(b);
     }
+    show(); refresh();
   }).catch(() => {});
   view('low'); refresh();
   G.studio = studio; G.api.pose = (k) => POSES[k]();
