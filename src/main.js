@@ -91,17 +91,20 @@ function jump() {
   dog.state = 'idle'; dog.bow = 0;
   // A dog does not go up from where it stands. She takes a run at it: a few bounds from a standstill, a stride
   // if she is already running, and gathers herself over the last of it (updateDog, src/models.js).
-  dog.spring = lerp(0.3, 0.12, clamp(Math.hypot(dog.vx, dog.vy) / TROT, 0, 1));
+  // From a stand she does it where she is: sinks, drives off her hind legs and goes (a captured move: src/moves.js).
+  const sp = Math.hypot(dog.vx, dog.vy);
+  dog.still = sp < 60;
+  dog.spring = dog.still ? 0.34 : lerp(0.3, 0.12, clamp(sp / TROT, 0, 1));
+  // A long, low leap, about two thirds of her own height. Only with something to get up onto in front of where
+  // she will leave the ground (a bench, the table, the car) does she go for height.
+  const hx = Math.cos(dog.heading), hy = Math.sin(dog.heading), from = dog.still ? 0 : sp * dog.spring, far = from + Math.max(sp, 240) * 0.55;
+  dog.high = false;
+  for (let d = 30; d < far && !dog.high; d += 20) for (const o of [0, 22, -22]) dog.high ||= floorAt(world, dog.x + hx * d - hy * o, dog.y + hy * d + hx * o, 1e4)[0] > dog.z + 30;
 }
 function takeOff() {
   const sp = Math.max(Math.hypot(dog.vx, dog.vy), 240);
   dog.vx = Math.cos(dog.heading) * sp; dog.vy = Math.sin(dog.heading) * sp;
-  // A long, low leap, about two thirds of her own height. Only with something to get up onto in front of her
-  // (a bench, the table, the car) does she go for height.
-  const hx = Math.cos(dog.heading), hy = Math.sin(dog.heading);
-  let high = false;
-  for (let d = 30; d < sp * 0.55 && !high; d += 20) for (const o of [0, 22, -22]) high ||= floorAt(world, dog.x + hx * d - hy * o, dog.y + hy * d + hx * o, 1e4)[0] > dog.z + 30;
-  dog.vz = high ? JUMP_UP : JUMP_V; dog.air = true;
+  dog.vz = dog.high ? JUMP_UP : JUMP_V; dog.air = true; dog.flight = 2 * dog.vz / GRAV;
   A.jump(); dust(dog.x, dog.y, 4);
 }
 
@@ -136,7 +139,7 @@ function updateDog(dt) {
     if (p.state !== 'idle' || p.air) p.spring = 0;
     else {
       p.spring -= dt; p.skid = p.push = false;
-      st = st.mag ? { x: st.x, y: st.y, mag: 1 } : { x: Math.cos(p.heading), y: Math.sin(p.heading), mag: 1 };
+      st = p.still ? ZERO : st.mag ? { x: st.x, y: st.y, mag: 1 } : { x: Math.cos(p.heading), y: Math.sin(p.heading), mag: 1 };
       if (p.spring <= 0) takeOff();
     }
   }
@@ -204,11 +207,11 @@ function updateDog(dt) {
   if (p.air) {
     p.vz -= GRAV * dt; p.z += p.vz * dt;
     const [fl] = floorAt(world, p.x, p.y, p.z);
-    p.clear = p.z - fl;
+    p.clear = p.z - fl; p.eta = (p.vz + Math.sqrt(p.vz * p.vz + 2 * GRAV * Math.max(p.clear, 0))) / GRAV;   // how long until she is down
     if (p.vz <= 0 && p.z <= fl) { p.z = fl; land(false); if (p.state === 'drive') return; }
   } else {
     const [fl] = floorAt(world, p.x, p.y, p.z);
-    if (fl < p.z - 1) { p.air = true; p.vz = 0; } else p.z = fl;      // ran off the edge of something
+    if (fl < p.z - 1) { p.air = true; p.vz = 0; p.flight = 0; p.high = false; p.eta = Math.sqrt(2 * (p.z - fl) / GRAV); } else p.z = fl;      // ran off the edge of something
     // the model says when a paw comes down (src/models.js)
     if (p.footfall && sp > 60 && G.t - p.stepAt > 0.1) { p.stepAt = G.t; A.step(); }
     p.footfall = false;

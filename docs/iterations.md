@@ -119,3 +119,14 @@ Each iteration: what was built → what to test → feedback received → what t
 
 **Checked by script**: sinks 12.7 cm, lands forepaws first, ends standing. **Not checked**: by eye in motion. She shuffles one hind paw forward under her as she sinks, and the asked rise of 62 cm is not reached.
 
+
+## Iteration 9: real leg bones, and the captures played in the game
+
+**Feedback**: both captures are really good.
+
+**Decisions**
+- Her legs have three bones each, in the skeleton's proportions scaled to her short legs: elbow back under the chest, knee forward, hock behind. This changes how she stands and runs, not only how she jumps.
+- A jump plays a capture: the long leap, or the high jump when there is something to get up onto. From a stand she now jumps from where she is (sinks, drives, goes) instead of taking a few bounds first. From a run only the flight is played, with her tilt scaled down.
+- The game keeps its own flight path; the capture gives the pose, stretched to the time in the air.
+
+**Checked by script**: frame-stepped strips in the studio of a standing leap, a standing high jump and a running leap, and of standing and trotting; no page errors; a trotting jump still lands on the bench and the table (the jump from close to the bench still bumps its side, as before). **Not checked**: by eye in motion, the car hop, falls off an edge, touch.
