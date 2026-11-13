@@ -38,6 +38,17 @@ Constants at the top of `src/main.js`: `TROT` 420, `ZOOM` 640 (after `ZOOM_AFTER
 
 `?style=toon|real`, `?at=x,y` (start there), `?car` (start driving), `?studio` (below).
 
+## How the dog moves (`makeDog` in `src/models.js`)
+
+Nothing is recorded or key-framed, and there is no motion data to load. The legs are solved every frame:
+
+- **Paws stand on the ground.** Each paw has a place in map coordinates. While it stands it does not move; the two-bone leg is bent to reach from the joint to the paw (elbows back, knees forward). A paw that cannot be reached any more lifts.
+- **The stride follows the ground.** The gait cycle advances with the distance the paws have to cover (the average speed of the four rest positions, so turning on the spot counts), never with the clock. When a paw's turn comes it swings to a spot ahead of its shoulder: half of what the shoulder will cover while the paw stands. Trot is diagonal pairs; gallop is hind pair, front pair, then all four off the ground. Faster means a longer stride and a shorter share of it on the ground.
+- **Standing still**, any paw left more than a few units from its rest position steps back under the body.
+- **Poses** (jump, hello, bow, point, daze, driving) hold a paw at an angle and length from its joint instead; each paw blends between the pose and its place on the ground.
+- **Turning.** In `updateDog` the heading turns towards the stick at a limited rate (8.5 rad/s trotting, 5.5 galloping, 4 in the air) and the velocity follows the heading, so a change of direction is a curve; trotting, speed drops with the angle still to turn, so an about-turn is walked round almost on the spot. The model reads the turn rate: the spine bends in the middle, the head and tail lead into the turn, and the body leans in at speed.
+- The model reports `dog.footfall` when a paw lands (the step sound), `dog.gait` (cycle phase) and `dog.feet` (for tests: `x`, `y`, `u` = progress of the step, 1 when standing, `off` = distance from rest).
+
 ## The studio (`?studio`)
 
 For working on how he moves: the dog alone on a ruled floor (a line every 100 units, a darker one every 400), seen from close by. The camera is locked on him, so he runs on the spot and the floor slides past; he is carried back a whole number of squares before he reaches the edge, which cannot be seen. It runs the same `updateDog` and the same model as the game, so what is tuned here is what is played.
@@ -49,7 +60,7 @@ For working on how he moves: the dog alone on a ruled floor (a line every 100 un
 | Time | ×1 ×0.5 ×0.25 ×0.1, pause, step (one 1/60 s frame) | T, P, `.` |
 | Poses | hello (paws up), bonk (daze), bow, point (stays on while he stands) | H N V C |
 
-Run left or right for a side view, toward the camera for the front. The readout shows state, speed, height and stride phase (0–2, one full cycle). Not in the studio: the car and the driving pose. Tests: `__G.studio`, `__G.api.pose('hello'|'bonk'|'bow'|'point')`.
+Run left or right for a side view, toward the camera for the front. The readout shows state, speed, height and stride phase (0–1, one full cycle). Not in the studio: the car and the driving pose. Tests: `__G.studio`, `__G.api.pose('hello'|'bonk'|'bow'|'point')`.
 
 ## Test hooks
 

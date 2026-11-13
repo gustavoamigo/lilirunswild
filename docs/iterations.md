@@ -30,3 +30,15 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: (waiting)
 
 **Added after hand-over**: "Can we create a scene with the dog with more zoom in so we can work on the dog's movement?" → `?studio`: the dog alone on a ruled floor, close camera at three heights, gait lock, slow motion, pause and single frames, pose buttons. Described in `docs/tech.md`. Checked by script: loads with no errors, gallop, hello, view and gait keys, point, half speed. Not checked: wheel zoom, the buttons by touch.
+
+## Iteration 2: movement that touches the ground
+
+**Feedback** (from the studio): the tail wags too fast in the crouch; turning is a block rotating; running is not synchronised to the floor, "like she is running in the air". Suggested looking at datasets (Kirin / AiM3D, DigiDogs).
+
+**Decisions**
+- No dataset. DigiDogs estimates poses from pictures (no motion clips in the repository, non-commercial licence); AiM3D is joint positions for a different skeleton, 876 GB in all, no licence stated, and the project has no assets by rule. The legs are solved instead (see `docs/tech.md`, *How the dog moves*).
+- Legs rebuilt as two bones and a paw; paws planted on the ground; stride driven by distance covered.
+- Heading turns at a limited rate and velocity follows it; spine bend, head lead, lean.
+- Tail: play bow from 3.2 to 1.35 wags a second (wider); hello and happy slowed too; the wag no longer jumps when its speed changes.
+
+**Checked by script**: frame-by-frame sheets of trot, gallop, an about-turn and a quarter turn; bow, hello, point, bonk, jump, rest; game run with jump, driving and leaving the car, touch layout; no errors. **Not checked by eye in motion**: only stills.

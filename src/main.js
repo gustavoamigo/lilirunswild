@@ -29,7 +29,7 @@ if (STUDIO) {
 const dog = {
   x: world.start.x, y: world.start.y, z: 0, vx: 0, vy: 0, vz: 0, heading: -Math.PI / 2,
   state: 'idle', stT: 0,            // idle (on his feet) | paws (up on someone) | daze | hop (in or out of the car) | drive
-  air: false, zoom: false, runT: 0, stride: 0,
+  air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0,
   lookYaw: 0, lookPitch: 0, seen: null, thought: 0, point: 0,
   barkT: 0, landT: 0, bow: 0, idleT: 0, happy: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
 };
@@ -127,10 +127,18 @@ function updateDog(dt) {
   const was = p.zoom; p.zoom = p.runT >= ZOOM_AFTER && p.state === 'idle';
   if (p.zoom && !was) { A.whoosh(); dust(p.x, p.y, 8, { speed: 110 }); }
 
+  // ---- turning: the body comes round at its own pace, towards where she wants to go ----
+  let off = 0;
+  if (st.mag && p.state === 'idle') {
+    off = angDiff(Math.atan2(st.y, st.x), p.heading);
+    const most = (p.air ? 4 : p.zoom ? 5.5 : 8.5) * dt;
+    p.heading += clamp(off * (1 - Math.exp(-dt * 14)), -most, most);
+  }
   if (!p.air) {
-    // He turns on the spot at a trot, but at full gallop he has no brakes: he skids round corners.
-    const top = (p.zoom ? ZOOM : TROT) * st.mag, k = 1 - Math.exp(-dt * (p.state !== 'idle' ? 12 : p.zoom ? 4.5 : 9));
-    p.vx = lerp(p.vx, st.x * top, k); p.vy = lerp(p.vy, st.y * top, k);
+    // She runs the way she is pointing, so a change of direction is a curve: at a trot a tight one
+    // (she slows right down to turn about), at full gallop a wide skid, because she has no brakes.
+    const top = (p.zoom ? ZOOM : TROT) * st.mag * (p.zoom ? 1 : clamp(Math.cos(off), 0.1, 1)), k = 1 - Math.exp(-dt * (p.state !== 'idle' ? 12 : p.zoom ? 4.5 : 9));
+    p.vx = lerp(p.vx, Math.cos(p.heading) * top, k); p.vy = lerp(p.vy, Math.sin(p.heading) * top, k);
     if (p.zoom && sp0 > 380) {
       p.dustT -= dt;
       const slide = (p.vx * st.x + p.vy * st.y) / sp0 < 0.55;
@@ -143,7 +151,6 @@ function updateDog(dt) {
     p.vx = lerp(p.vx, st.x * top, k); p.vy = lerp(p.vy, st.y * top, k);
   }
   const sp = Math.hypot(p.vx, p.vy);
-  if (sp > 25 && p.state === 'idle') p.heading += angDiff(Math.atan2(p.vy, p.vx), p.heading) * (1 - Math.exp(-dt * 14));
   p.x += p.vx * dt; p.y += p.vy * dt;
 
   // ---- up and down ----
@@ -154,9 +161,9 @@ function updateDog(dt) {
   } else {
     const [fl] = floorAt(world, p.x, p.y, p.z);
     if (fl < p.z - 1) { p.air = true; p.vz = 0; } else p.z = fl;      // ran off the edge of something
-    const step = Math.floor(p.stride / Math.PI);
-    p.stride += sp * dt * (p.zoom ? 0.036 : 0.052);
-    if (Math.floor(p.stride / Math.PI) !== step && sp > 60) A.step();
+    // the model says when a paw comes down (src/models.js)
+    if (p.footfall && sp > 60 && G.t - p.stepAt > 0.1) { p.stepAt = G.t; A.step(); }
+    p.footfall = false;
   }
 
   // ---- bumping into solid things ----
@@ -553,7 +560,7 @@ function drawStudio() {
   const sp = Math.hypot(dog.vx, dog.vy);
   const rows = [
     `${dog.state}${dog.air ? ' · air' : ''}${dog.zoom ? ' · zoomies' : ''}${dog.point ? ' · point' : ''}${dog.bow > 0 ? ' · bow' : ''}`,
-    `speed ${sp.toFixed(0)}   height ${dog.z.toFixed(0)}   stride ${((dog.stride / Math.PI) % 2).toFixed(2)}`,
+    `speed ${sp.toFixed(0)}   height ${dog.z.toFixed(0)}   stride ${dog.gait.toFixed(2)}`,
     `gait ${studio.gait}   time ×${studio.paused ? 0 : studio.speed}`,
   ];
   c.font = '600 14px ui-monospace, Menlo, Consolas, monospace'; c.textBaseline = 'top';
