@@ -80,6 +80,14 @@ export function bark() {
   src.connect(g); g.connect(sfx); src.start();
 }
 // an excited little yip: "a bird!"
+// Studio: audition a recording. Decoded on first use and kept.
+const clips = new Map();
+export function playClip(url) {
+  if (!ac) return;
+  const play = (buf) => { const src = ac.createBufferSource(), g = ac.createGain(); src.buffer = buf; g.gain.value = 0.9; src.connect(g); g.connect(sfx); src.start(); };
+  if (clips.has(url)) { play(clips.get(url)); return; }
+  fetch(url).then(r => r.arrayBuffer()).then(b => ac.decodeAudioData(b)).then(b => { clips.set(url, b); play(b); }).catch(() => {});
+}
 export function yip() { tone(700, 0, 0.12, { type: 'triangle', to: 1300, sweep: 0.08, vol: 0.2 }); tone(900, 0.13, 0.12, { type: 'triangle', to: 1500, sweep: 0.08, vol: 0.16 }); }
 export function jump() { tone(280, 0, 0.2, { to: 720, sweep: 0.16, vol: 0.18 }); }
 export function land() { tone(170, 0, 0.1, { to: 90, vol: 0.22 }); noise(0, 0.06, { freq: 500, q: 1.2, vol: 0.1 }); }

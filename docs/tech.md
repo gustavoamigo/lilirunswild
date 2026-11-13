@@ -70,3 +70,5 @@ Run left or right for a side view, toward the camera for the front. The readout 
 ## Test hooks
 
 `window.__G`: `t`, `dog`, `car`, `mess`, `birds`, `world`, `flocks`, `people`, `props`. `__G.api`: `jump()`, `bark()`, `car()`, `knock(i)`, `enterCar()`, `leaveCar()`, `flyAway(i)`.
+
+- **Auditioning recordings in the studio.** If `sounds/lili/index.json` exists (a list of `{file, label, dur, dog}`), the studio shows a second row of buttons, one per clip; pressing one plays it (`playClip` in `src/audio.js`) and opens her mouth. The folder is in `.gitignore`: raw recordings stay on the machine until one is chosen as a game sound.
