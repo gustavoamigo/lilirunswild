@@ -10,7 +10,7 @@ import { buildTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js
 import { CAR } from './models.js';
 import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
 
-const DOG_R = 30, GRAV = 1500, JUMP_V = 540;
+const DOG_R = 30, GRAV = 1500, JUMP_V = 540, BRAKE = 1500;
 const TROT = 420, ZOOM = 640, ZOOM_AFTER = 0.9;      // run flat out for this long and he gets the zoomies
 const BONK = 470;                                    // faster than this into something solid and he sees stars
 const CAR_TOP = 900;
@@ -29,7 +29,7 @@ if (STUDIO) {
 const dog = {
   x: world.start.x, y: world.start.y, z: 0, vx: 0, vy: 0, vz: 0, heading: -Math.PI / 2,
   state: 'idle', stT: 0,            // idle (on his feet) | paws (up on someone) | daze | hop (in or out of the car) | drive
-  air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0,
+  air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0, skid: false,
   lookYaw: 0, lookPitch: 0, seen: null, thought: 0, point: 0,
   barkT: 0, landT: 0, bow: 0, idleT: 0, happy: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
 };
@@ -127,14 +127,31 @@ function updateDog(dt) {
   const was = p.zoom; p.zoom = p.runT >= ZOOM_AFTER && p.state === 'idle';
   if (p.zoom && !was) { A.whoosh(); dust(p.x, p.y, 8, { speed: 110 }); }
 
+  // ---- about-turn at a gallop: she cannot curve round, so she throws out the brakes, slides to a stop
+  // facing the way she was going, spins round on her haunches and launches herself back ----
+  if (!p.skid && p.zoom && !p.air && sp0 > 400 && st.mag > 0.5 && (p.vx * st.x + p.vy * st.y) / sp0 < -0.5) { p.skid = true; A.skid(); }
+  if (p.skid) {
+    const back = st.mag > 0.5 && (sp0 < 60 || p.vx * st.x + p.vy * st.y < sp0 * 0.3);
+    if (p.air || p.state !== 'idle' || !back) p.skid = false;
+    else {
+      const slow = Math.max(0, sp0 - BRAKE * dt), f = sp0 > 0 ? slow / sp0 : 0;
+      p.vx *= f; p.vy *= f; p.runT = ZOOM_AFTER;
+      p.dustT -= dt; if (p.dustT <= 0) { p.dustT = 0.035; dust(p.x + Math.cos(p.heading) * 30, p.y + Math.sin(p.heading) * 30, 2, { speed: 90 }); }
+      const want = Math.atan2(st.y, st.x), off = angDiff(want, p.heading);
+      if (slow < 260) p.heading += clamp(off, -11 * dt, 11 * dt);                 // the spin starts while she is still sliding
+      if (slow < 40 && Math.abs(off) < 0.5) { p.skid = false; p.vx = Math.cos(want) * 330; p.vy = Math.sin(want) * 330; dust(p.x, p.y, 6, { speed: 120 }); }
+    }
+  }
+
   // ---- turning: the body comes round at its own pace, towards where she wants to go ----
   let off = 0;
-  if (st.mag && p.state === 'idle') {
+  if (st.mag && p.state === 'idle' && !p.skid) {
     off = angDiff(Math.atan2(st.y, st.x), p.heading);
     const most = (p.air ? 4 : p.zoom ? 5.5 : 8.5) * dt;
     p.heading += clamp(off * (1 - Math.exp(-dt * 14)), -most, most);
   }
-  if (!p.air) {
+  if (p.skid) { /* sliding: the brakes have her */ }
+  else if (!p.air) {
     // She runs the way she is pointing, so a change of direction is a curve: at a trot a tight one
     // (she slows right down to turn about), at full gallop a wide skid, because she has no brakes.
     const top = (p.zoom ? ZOOM : TROT) * st.mag * (p.zoom ? 1 : clamp(Math.cos(off), 0.1, 1)), k = 1 - Math.exp(-dt * (p.state !== 'idle' ? 12 : p.zoom ? 4.5 : 9));
@@ -559,7 +576,7 @@ const SPEEDS = [1, 0.5, 0.25, 0.1];
 function drawStudio() {
   const sp = Math.hypot(dog.vx, dog.vy);
   const rows = [
-    `${dog.state}${dog.air ? ' · air' : ''}${dog.zoom ? ' · zoomies' : ''}${dog.point ? ' · point' : ''}${dog.bow > 0 ? ' · bow' : ''}`,
+    `${dog.state}${dog.air ? ' · air' : ''}${dog.zoom ? ' · zoomies' : ''}${dog.skid ? ' · brakes' : ''}${dog.point ? ' · point' : ''}${dog.bow > 0 ? ' · bow' : ''}`,
     `speed ${sp.toFixed(0)}   height ${dog.z.toFixed(0)}   stride ${dog.gait.toFixed(2)}`,
     `gait ${studio.gait}   time ×${studio.paused ? 0 : studio.speed}`,
   ];

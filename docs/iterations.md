@@ -42,3 +42,15 @@ Each iteration: what was built → what to test → feedback received → what t
 - Tail: play bow from 3.2 to 1.35 wags a second (wider); hello and happy slowed too; the wag no longer jumps when its speed changes.
 
 **Checked by script**: frame-by-frame sheets of trot, gallop, an about-turn and a quarter turn; bow, hello, point, bonk, jump, rest; game run with jump, driving and leaving the car, touch layout; no errors. **Not checked by eye in motion**: only stills.
+
+## Iteration 3: ears, spine, stopping, the about-turn
+
+**Feedback**: "much better", but the long ears are rigid and should flow; the body is rigid at a gallop, with no movement of the spine; sometimes a leg stays up when she stops; a galloping dog asked to go the other way brakes and pushes off.
+
+**Decisions**
+- Ears are simulated chains, not posed (see `docs/tech.md`).
+- The spine flexes with the gallop cycle; the jump holds it stretched.
+- A swing in progress finishes fast once she is slow. In random run-and-stop trials a paw was still off the ground a quarter of a second after letting go in 16 of 24 before and 8 to 10 of 24 after; none at half a second, before or after. A paw held up for longer was not reproduced in the studio. In the town, the raised front paw near birds is the point pose, on purpose.
+- Opposite direction at a gallop: brake, come round, push off (`dog.skid`). At a trot the about-turn is still walked round.
+
+**Checked by script**: frame sheets of the gallop (spine, ears), the brake and push-off, trot; hello and bonk; game run with a jump and a reversal; driving and leaving the car; no errors. **Not checked by eye in motion**: only stills; the ears' swing and the timing of the brake need a look.

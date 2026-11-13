@@ -47,6 +47,10 @@ Nothing is recorded or key-framed, and there is no motion data to load. The legs
 - **Standing still**, any paw left more than a few units from its rest position steps back under the body.
 - **Poses** (jump, hello, bow, point, daze, driving) hold a paw at an angle and length from its joint instead; each paw blends between the pose and its place on the ground.
 - **Turning.** In `updateDog` the heading turns towards the stick at a limited rate (8.5 rad/s trotting, 5.5 galloping, 4 in the air) and the velocity follows the heading, so a change of direction is a curve; trotting, speed drops with the angle still to turn, so an about-turn is walked round almost on the spot. The model reads the turn rate: the spine bends in the middle, the head and tail lead into the turn, and the body leans in at speed.
+- **About-turn at a gallop.** Asking for the opposite direction (more than 120° off) while galloping sets `dog.skid`: she brakes at `BRAKE` 1500 with the front legs braced and the haunches low, comes round once she is slow, and pushes off the other way at 330, straight back into the gallop. Letting go of the stick, a jump or a bump ends it.
+- **Spine.** The chest and the haunches are two halves hinged in the middle. At a gallop they fold under as the hind paws reach forward and open out as she stretches; the leg joints move with them.
+- **Ears.** Each ear is a chain of four points hanging from the head, simulated every frame (gravity, drag, a weak spring towards hanging straight, kept outside the head). Nothing poses them: they trail when she runs, lift when she drops, and swing on when she stops.
+- **Stopping.** A paw caught in the air when she slows finishes its step at once rather than at the gait's pace.
 - The model reports `dog.footfall` when a paw lands (the step sound), `dog.gait` (cycle phase) and `dog.feet` (for tests: `x`, `y`, `u` = progress of the step, 1 when standing, `off` = distance from rest).
 
 ## The studio (`?studio`)
