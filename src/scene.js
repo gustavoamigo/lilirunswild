@@ -12,6 +12,9 @@ export const view = { w: 1, h: 1, dpr: 1 };
 // The studio (?studio) looks at him from close by. It still never turns: only how far and how high.
 export const studioCam = { dist: 420, elev: 0.3 };
 const FOV = 42, CAM_UP = 500, CAM_BACK = 700;
+// Haze only softens the horizon. It is measured from the camera, so it backs off as the camera does (in the car,
+// on a tall screen): otherwise the town she is driving through goes grey.
+const FOG_NEAR = 2600, FOG_FAR = 6200;
 let renderer, scene, camera, sun, world;
 let fit = 1, zoom = 1;
 const camAim = new THREE.Vector3();
@@ -27,8 +30,8 @@ export function initScene(canvas, w) {
   renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   scene = new THREE.Scene();
   scene.background = new THREE.Color(STYLE.bg);
-  scene.fog = new THREE.Fog(STYLE.bg, 1700, 3900);
-  camera = new THREE.PerspectiveCamera(FOV, 1, 20, 6000);
+  scene.fog = new THREE.Fog(STYLE.bg, FOG_NEAR, FOG_FAR);          // placeCamera moves it out with the camera
+  camera = new THREE.PerspectiveCamera(FOV, 1, 20, 16000);
 
   scene.add(new THREE.HemisphereLight(STYLE.hemi[0], STYLE.hemi[1], STYLE.hemi[2]));
   sun = new THREE.DirectionalLight(STYLE.sun[0], STYLE.sun[1]);
@@ -147,6 +150,7 @@ function placeCamera() {
   }
   const d = fit * zoom;
   camera.position.set(camAim.x, CAM_UP * d, camAim.z + CAM_BACK * d);
+  scene.fog.near = FOG_NEAR * d; scene.fog.far = FOG_FAR * d;
   camera.lookAt(camAim.x, 30, camAim.z - 70 * d);
   camera.updateMatrixWorld();
   sun.position.set(camAim.x + STYLE.sunAt[0], STYLE.sunAt[1], camAim.z + STYLE.sunAt[2]);
