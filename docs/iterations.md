@@ -174,3 +174,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the trot needs to be more jumpy; the regular gallop (longer stride) is the better one.
 
 **Decision**: the trot searched again asking for her middle to rise and fall (about 4 cm), a longer stride (0.36 s) and less time on the ground; the first one is kept as `trot_flat` to compare. The 0.32 s gallop is the one to use. **Checked by script**: numbers and a strip of one stride. **Not checked**: by eye in motion.
+
+**Feedback**: the bouncier trot works.
+
+**Decision**: the simulated trot and gallop are now what she runs in the game from a brisk trot up: paw timing, body tilt, bend and bounce, and how the legs fold come from the strides; paws still plant on the ground without sliding. A stride is stretched to 110 (trot) and 170 (gallop) of ground because she runs faster for her size than the simulated dog. **Checked by script**: strips of 16 frames at a trot and at a gallop in the studio, paw order (diagonal pairs at the trot; hind right, hind left, fore right, fore left at the gallop, with all four off the ground in between), no errors; jumps from a stand and from a run still play. **Not checked**: at full speed by eye; turning, the about-turn and stopping while the strides play; the step sounds' rhythm. Not done: the take-off from a run is still posed by hand.

@@ -23,9 +23,11 @@ WARM = 3
 # v the speed asked for (m/s), T a first guess at the stride time, lag where each leg is in the stride (fl fr hl hr),
 # free whether the search may move those, axial how many times the back and neck repeat in a stride, duty the share
 # of the stride a paw may spend on the ground, Tmin the shortest stride allowed, bounce how far her middle should rise and fall (m, standard deviation;
-# without it she is asked to stay level)
+# without it she is asked to stay level), swap: the hind legs' sides are swapped when the stride is recorded. The skeleton
+# is flat, so left and right are only names; the trot found has the fore and hind paw of the same name down
+# together, which named as it stands would be a pace, not a trot
 CASES = dict(
-    trot=dict(v=2.4, T=0.42, lag=[0.0, 0.5, 0.5, 0.0], free=False, axial=2, duty=(0.25, 0.5), Tmin=0.36, bounce=0.015),
+    trot=dict(v=2.4, T=0.42, lag=[0.0, 0.5, 0.5, 0.0], free=False, axial=2, duty=(0.25, 0.5), Tmin=0.36, bounce=0.015, swap=True),
     gallop=dict(v=5.5, T=0.36, lag=[0.5, 0.62, 0.0, 0.12], free=True, axial=1, duty=(0.15, 0.45), Tmin=0.32),
 )
 
@@ -146,6 +148,9 @@ if __name__ == '__main__':
     if frames:
         strip(frames, f'{here}/out/{case}.png', every=max(1, len(frames) // 16))
         keys = sorted(frames[0][0])
+        if CASES[case].get('swap'):
+            other = lambda n: n[:-1] + ('r' if n[-1] == 'l' else 'l') if n[:-2] in ('sti', 'hock', 'mtp', 'htip', 'hpaw') else n
+            frames = [({other(n): v for n, v in pt.items()}, sorted(other(n) for n in on), pitch, com) for pt, on, pitch, com in frames]
         json.dump(dict(dt=CTRL_DT * 5, case=case, loop=True, info=info, chains=dog.CHAINS, keys=keys,
                        frames=[[round(v, 3) for k in keys for v in pt[k]] for pt, on, pitch, com in frames[::5]],
                        on=[on for pt, on, pitch, com in frames[::5]]), open(f'{here}/out/{case}.json', 'w'))

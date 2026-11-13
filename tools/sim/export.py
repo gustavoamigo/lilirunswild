@@ -17,8 +17,11 @@ LEGS = [('fore', 'l', ['sho', 'elb', 'car', 'mcp', 'ftip'], 'fpaw'), ('fore', 'r
         ('hind', 'l', ['hip', 'sti', 'hock', 'mtp', 'htip'], 'hpaw'), ('hind', 'r', ['hip', 'sti', 'hock', 'mtp', 'htip'], 'hpaw')]
 
 
-def move(case):
+def move(case, gait=False):
   d = json.load(open(f'{HERE}/out/{case}.json'))
+  if gait:                     # a stride starts anywhere, so it is measured against the standing skeleton: the leap's first frame
+    d0 = json.load(open(f'{HERE}/out/stand.json'))
+    d['frames'] = [[v for k in d['keys'] for v in d0['frames'][0][d0['keys'].index(k) * 2:][:2]]] + d['frames']; d['on'] = [d0['on'][0]] + d['on']
   F = np.array(d['frames']).reshape(len(d['frames']), -1, 2)
   at = lambda k: F[:, d['keys'].index(k)]
   up = lambda a, b: np.unwrap(np.arctan2(b[:, 1] - a[:, 1], b[:, 0] - a[:, 0]))        # how far a forward-pointing piece is tipped nose up
@@ -33,6 +36,16 @@ def move(case):
     cols += [down(p[i], p[i + 1]) - body for i in range(3)]
     toe = up(p[3], p[4])
     cols.append(toe - toe[0] - body)
+  if gait:
+    f = np.array(cols).T[1:]; n = len(f)
+    f[:, [0, 1]] = (f[:, [0, 1]] + np.pi) % (2 * np.pi) - np.pi
+    down = []                  # for each paw: where in the stride it comes down, and for what share of it it stays
+    for i in range(4):
+      on = [(int(v) >> i) & 1 for v in f[:, 3]]
+      runs = [(a, next(k for k in range(1, n + 1) if not (on[(a + k) % n] or on[(a + k + 1) % n]))) for a in range(n) if on[a] and not (on[a - 1] or on[a - 2])]
+      a, k = max(runs, key=lambda r: r[1]); down.append([round(a / n, 3), round(k / n, 3)])
+    return dict(dt=d['dt'], n=n, T=round(d['info']['T'], 3), v=round(float(d['info']['v']), 2), down=down,
+                f=[int(v) if j == 3 else round(float(v), 3) for row in f for j, v in enumerate(row)])
   f = np.array(cols).T[::STEP]
   return dict(dt=d['dt'] * STEP, takeoff=round(d['info']['takeoff'], 3), land=round(d['info']['land'], 3), n=len(f),
               f=[int(v) if j == 3 else round(float(v), 3) for row in f for j, v in enumerate(row)])
@@ -56,6 +69,12 @@ if __name__ == '__main__':
   for case in ('stand', 'high'):
     m = move(case)
     out.append(f'  {case}: {json.dumps(m, separators=(",", ":"))},')
+  out.append('};')
+  out += ['// One stride of each gait, to be played round and round. down: for each paw (fl fr hl hr), where in the stride',
+          '// it comes down and for what share of the stride it stays. T: seconds a stride took, v: metres a second.',
+          'export const GAITS = {']
+  for case in ('trot', 'gallop'):
+    out.append(f'  {case}: {json.dumps(move(case, True), separators=(",", ":"))},')
   out.append('};')
   open(f'{HERE}/../../src/moves.js', 'w').write('\n'.join(out) + '\n')
   print('wrote src/moves.js')

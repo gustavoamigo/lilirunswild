@@ -3,7 +3,7 @@
 import * as THREE from '../vendor/three.module.min.js';
 import { STYLE } from './style.js';
 import { clamp, lerp } from './util.js';
-import { MOVES, STRIDE, BONES } from './moves.js';
+import { MOVES, GAITS, STRIDE, BONES } from './moves.js';
 
 const SPH = new THREE.SphereGeometry(1, 24, 16);
 const SPH_LO = new THREE.SphereGeometry(1, 12, 9);
@@ -134,6 +134,10 @@ const wrap = (a) => a - Math.round(a / (Math.PI * 2)) * Math.PI * 2;
 // Gallop: the two hind paws, then the two front paws, then all four in the air.
 const TROT_AT = [0, 0.5, 0.5, 0], GALLOP_AT = [0.5, 0.62, 1.0, 0.1];
 const frac = (v) => v - Math.floor(v);
+// The simulated strides (GAITS in moves.js) cover this much ground each in the game. Lili runs far faster for her
+// size than a real dog, so a stride at its true length (72 and 148) would be a blur of legs.
+const TROT_LEN = 110, GALLOP_LEN = 170;
+const round = (a, b, w) => a + (frac(b - a + 0.5) - 0.5) * w;      // from a to b the short way round the stride
 const EAR_SEG = 9.5, EAR_G = 1500, EAR_DRAG = 4.5, EAR_SPRING = [16, 7, 4, 3];
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _x = new THREE.Vector3(), _y = new THREE.Vector3(), _z = new THREE.Vector3(), _inv = new THREE.Matrix4(), _rot = new THREE.Matrix4(), Z_AXIS = new THREE.Vector3(0, 0, 1), X_AXIS = new THREE.Vector3(1, 0, 0);
 
@@ -256,6 +260,17 @@ export function makeDog() {
     for (let j = 0; j < STRIDE; j++) C[j] = j === 3 ? m.f[o + 3] : lerp(m.f[o + j], m.f[o + STRIDE + j], e);
   }
 
+  // One moment of the simulated stride at phase f (0 to 1, round and round): the trot and the gallop, mixed by gl.
+  const G = new Float32Array(STRIDE);
+  function stride(f, gl) {
+    G.fill(0);
+    for (const [m, w] of [[GAITS.trot, 1 - gl], [GAITS.gallop, gl]]) {
+      if (w < 0.001) continue;
+      const q = frac(f) * m.n, i = Math.floor(q) % m.n, e = q - Math.floor(q), o = i * STRIDE, o1 = (i + 1) % m.n * STRIDE;
+      for (let j = 0; j < STRIDE; j++) G[j] += lerp(m.f[o + j], m.f[o1 + j], e) * w;
+    }
+  }
+
   // Each ear is a little chain with weight. The head drags its top end about; the rest follows late,
   // falls under gravity and is held back by the air, so it streams out behind a run, flies up in a
   // fall (a little: see update), swings forward when she brakes and slaps about when she shakes her head.
@@ -309,7 +324,7 @@ export function makeDog() {
 
   // smoothed pose: everything eases towards its target so states blend into each other
   const P = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: 0, gal: 0, yaw: 0, hp: 0, jaw: 0, tailUp: 0.5, wag: 0.45, wagHz: 12, y: 0, tongue: 0, bend: 0, roll: 0, flex: 0, fly: 0 };
-  let earT = 0, shakeT = 9;
+  let earT = 0, shakeT = 9, gw = 0;
   let last = -1, blink = 0, ph = 0, wagPh = 0, px = 0, py = 0, pz = 0, earCalm = 1, ph0 = 0, turn = 0, fresh = true, flying = false, flew = 0, flight = 1, pitch0 = 0;
 
   function update(p, t) {
@@ -403,15 +418,19 @@ export function makeDog() {
     // The stride: how far a paw stays down, what share of the cycle that is, and so how long one cycle is.
     // The cycle is driven by the ground the paws have to cover, never by the clock.
     const gl = P.gal, fast = clamp(moving / 420, 0, 1);
-    const reach = lerp(20, 36, clamp(moving / 300, 0, 1)), duty = lerp(lerp(0.62, 0.36, fast), 0.3, gl);
-    let rate = moving / (reach / duty);
+    // From a brisk trot up she runs the simulated strides (gw: how much): they say when each paw comes down, for how
+    // long, how her body rides and how each leg folds. Slower than that, and in every pose, the rules below stand.
+    gw = lerp(gw, grounded && !p.skid && !cap ? clamp((moving - 150) / 150, 0, 1) : 0, k);
+    const reach = lerp(20, 36, clamp(moving / 300, 0, 1)), duty0 = lerp(lerp(0.62, 0.36, fast), 0.3, gl);
+    let rate = moving / lerp(reach / duty0, lerp(TROT_LEN, GALLOP_LEN, gl), gw);
     if (rate < 2.4 && worst > 7) rate = 2.4 + worst * 0.06;                        // standing awkwardly: shuffle the paws back under
     else if (moving < 12) rate = 0;
     if (grounded) ph += rate * dt;
     for (let i = 0; i < 4; i++) {
       const L = legs[i];
       if (!grounded || L.want > 0.5) { L.lift = 0; continue; }
-      const f = frac(ph - lerp(TROT_AT[i], GALLOP_AT[i], gl));
+      const gt = GAITS.trot.down[i], gg = GAITS.gallop.down[i];
+      const duty = lerp(duty0, lerp(gt[1], gg[1], gl), gw), f = frac(ph - round(lerp(TROT_AT[i], GALLOP_AT[i], gl), round(gt[0], gg[0], gl), gw));
       if (L.u >= 1 && ((f >= duty && f < duty + (1 - duty) * 0.5 && (L.off > 7 || moving > 40)) || L.off > 44)) { L.u = 0; L.x0 = L.x; L.y0 = L.y; }
       if (L.u < 1) {
         L.u = Math.min(1, L.u + Math.max(rate / (1 - duty), moving < 90 ? 8 : 0) * dt);   // coming to a stop: no paw is left hanging
@@ -427,8 +446,9 @@ export function makeDog() {
 
     // ---- the body rides over them ----
     const a = P.amp, s2 = ph * Math.PI * 2;
-    const pitch = P.pitch + gl * a * Math.cos(s2 - 1.1) * 0.13;
-    const bob = Math.abs(Math.sin(s2)) * 2 * a * (1 - gl) + gl * a * (2 + Math.sin(s2 + 2.6) * 4) + P.y
+    stride(ph, gl);
+    const pitch = P.pitch + lerp(gl * a * Math.cos(s2 - 1.1) * 0.13, G[0], gw);
+    const bob = lerp(Math.abs(Math.sin(s2)) * 2 * a * (1 - gl) + gl * a * (2 + Math.sin(s2 + 2.6) * 4), G[2], gw) + P.y
       - (Math.sin(P.pitch) - Math.sin(pitch0) * (1 - flew)) * 26 * P.fly;   // in the air she turns about her middle, not about her hips (from however she was tilted as she left the ground)
     const wagNow = Math.sin(wagPh += dt * P.wagHz) * P.wag;
     tilt.rotation.z = pitch; tilt.position.y = HIP_Y + bob;
@@ -439,7 +459,7 @@ export function makeDog() {
     lean.rotation.x = roll;
     // at a gallop the back works like a spring: it doubles up as the hind legs come through under her
     // and straightens out as she reaches forward
-    const flex = P.flex + gl * a * 0.25 * Math.cos(s2 + 0.3);
+    const flex = P.flex + lerp(gl * a * 0.25 * Math.cos(s2 + 0.3), G[1], gw);
     const fy = -P.bend + shakeAt(shakeT, 0.3) * 0.13, ry = shakeAt(shakeT, 0.75) * 0.16 + P.bend * 0.6 + wagNow * 0.12 * (a < 0.2 ? 1 : 0);     // the whole bottom wiggles when the tail really goes
     fore.rotation.y = fy; rear.rotation.y = ry; fore.rotation.z = -flex; rear.rotation.z = flex;
     bendBody(shakeT);
@@ -463,15 +483,23 @@ export function makeDog() {
       }
       // ...or where a captured move has it: the bones' angles give the place, and the ground still stops it
       let th = 0, pawTh = 0;
+      const o = 4 + i * 4, body = pitch + (L.front ? -flex : flex), [ba, bb, bc] = L.bones;
+      // ...lifted and folded as the simulated stride has it, while it swings from one spot to the next
+      const wg = gw * (1 - L.w);
+      if (wg > 0.002) {
+        th = G[o + 2] + body; pawTh = G[o + 3] + body;
+        const cy = sy3 - ba * Math.cos(G[o] + body) - bb * Math.cos(G[o + 1] + body) - bc * Math.cos(th);
+        if (L.u < 1) fyy = lerp(fyy, clamp(cy, PAW_Y, PAW_Y + 24), wg * Math.min(1, 3 * Math.sin(L.u * Math.PI)));
+      }
       L.c = lerp(L.c, cap, 1 - Math.exp(-dt * 30));
       if (L.c > 0.002) {
-        const o = 4 + i * 4, body = pitch + (L.front ? -flex : flex), [ba, bb, bc] = L.bones, t1 = C[o] + body, t2 = C[o + 1] + body;
-        th = C[o + 2] + body; pawTh = C[o + 3] + body;
+        const t1 = C[o] + body, t2 = C[o + 1] + body;
+        th = lerp(th, C[o + 2] + body, L.c); pawTh = lerp(pawTh, C[o + 3] + body, L.c);
         L.g = lerp(L.g, (C[3] >> i) & 1, 1 - Math.exp(-dt * 60));
         const floor = PAW_Y - (p.air ? p.clear || 0 : 0), cy = sy3 - ba * Math.cos(t1) - bb * Math.cos(t2) - bc * Math.cos(th);
         fx = lerp(fx, x + ba * Math.sin(t1) + bb * Math.sin(t2) + bc * Math.sin(th), L.c); fyy = lerp(fyy, lerp(Math.max(cy, floor), floor, L.g), L.c); fz = lerp(fz, sz3, L.c);
       }
-      solve(L, x, sy3, sz3, fx, fyy, fz, th, pawTh, L.c);
+      solve(L, x, sy3, sz3, fx, fyy, fz, th, pawTh, wg + L.c - wg * L.c);
     }
 
     // head: follows the birds, bobs with the run, nods with each bark
