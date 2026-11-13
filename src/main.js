@@ -125,7 +125,7 @@ function updateDog(dt) {
   p.happy = Math.max(0, p.happy - dt); p.bow = Math.max(0, p.bow - dt); p.shake = Math.max(0, p.shake - dt);
   if (p.state === 'hop') { updateHop(dt); return; }
   if (p.state === 'drive') return;                    // the car carries him (updateCar)
-  if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 0.9; p.state = 'idle'; } }
+  if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 1; p.state = 'idle'; } }
 
   let st = p.state === 'idle' ? steering(p.x, p.y, 34) : ZERO;
   const sp0 = Math.hypot(p.vx, p.vy);

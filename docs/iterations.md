@@ -146,3 +146,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: buggy: two flat plates, endlessly tall, stand through her body.
 
 **Decision**: the body's outline was sampled half a unit past each end, where no shape covers it, so the two end rings of the skin were stretched off to infinity. The skin now ends inside the shapes, and building it fails loudly if a slice is uncovered. The plates were in the earlier check strips and were taken for studio scenery. **Checked by script**: her standing, seen from eight directions round her: no plates. **Not checked**: in motion by eye.
+
+**Feedback**: the shake is really bad; the other movements are realistic; running may need fine tuning.
+
+**Decision**: the shake rocked her whole body like a toy. Now it is a twist about her spine that starts at the head and runs down her back to the tail (`shakeAt`): the head rolls far each way, the skin of her body rolls round her a little later (and the marks on her back with it), the rump and tail last; her paws stay planted and her head is lowered. **Checked by script**: a strip of the shake every 0.12 s; no page errors. **Not checked**: by eye at full speed.

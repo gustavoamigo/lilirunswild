@@ -148,11 +148,17 @@ export function makeDog() {
 
   // Her body is one skin. Its rump end is carried by the rear of the spine and its chest end by the front, and it
   // bends smoothly between them (bendBody).
-  const body = mesh([{ geo: torsoGeo([[-2, 45, 34, 19, 17.5], [0, 29, 26, 7, 11], [-26, 46, 20, 20, 18.5], [22, 45, 21, 22, 19]], -45.9, 42.9), color: COAT, at: [0, 0, 0], scale: [1, 1, 1] }]);
+  const body = mesh([{ geo: torsoGeo([[-2, 45, 34, 19, 17.5], [0, 29, 26, 7, 11], [-26, 46, 20, 20, 18.5], [22, 45, 21, 22, 19]], -45.9, 42.9), color: COAT, at: [0, 0, 0], scale: [1, 1, 1] },
+    blob(LIVER, -6, 62.6, 5, 4.2, 1.8, 2.6, [0, 0.5, 0]), blob(LIVER, 1, 63, 1, 3, 1.6, 2.2, [0, 0.5, 0]),   // two small marks on her back
+    blob(LIVER, -38.5, 58.5, 0, 8, 6.5, 7.5, [0, 0, -0.8])]);                                              // and a brown patch where the tail begins
   body.frustumCulled = false;
   const bodyAt = body.geometry.attributes.position, bodyN = body.geometry.attributes.normal, body0 = bodyAt.array.slice(), bodyN0 = bodyN.array.slice();
   const _mf = new THREE.Matrix4(), _mr = new THREE.Matrix4();
-  function bendBody() {
+  // A shake is a twist about her spine that starts at the head and runs down her back to the tail: each part
+  // rolls one way and the other about five times a second, the next part a little behind it. shakeAt gives the
+  // roll at a place along her (0 her head, 1 the tip of her tail), sT seconds into the shake.
+  const shakeAt = (sT, u) => { const q = clamp((sT - 0.34 * u) / 0.62, 0, 1); return Math.sin(Math.PI * q) ** 0.7 * Math.sin(sT * 30 - 1.9 * u); };
+  function bendBody(sT) {
     fore.updateMatrix(); rear.updateMatrix(); foreIn.updateMatrix(); rearIn.updateMatrix();
     const F = _mf.multiplyMatrices(fore.matrix, foreIn.matrix).elements, R = _mr.multiplyMatrices(rear.matrix, rearIn.matrix).elements;
     for (let i = 0; i < body0.length; i += 3) {
@@ -164,11 +170,16 @@ export function makeDog() {
       bodyN.array[i] = (R[0] * nx + R[4] * ny + R[8] * nz) * v + (F[0] * nx + F[4] * ny + F[8] * nz) * w;
       bodyN.array[i + 1] = (R[1] * nx + R[5] * ny + R[9] * nz) * v + (F[1] * nx + F[5] * ny + F[9] * nz) * w;
       bodyN.array[i + 2] = (R[2] * nx + R[6] * ny + R[10] * nz) * v + (F[2] * nx + F[6] * ny + F[10] * nz) * w;
+      if (sT < 1.2) {                                                               // her skin rolls round her as she shakes
+        const th = 0.6 * shakeAt(sT, 0.2 + (43 - x) / 89 * 0.6), c = Math.cos(th), sn = Math.sin(th);
+        const py = bodyAt.array[i + 1] - SPINE_Y, pz = bodyAt.array[i + 2], qy = bodyN.array[i + 1], qz = bodyN.array[i + 2];
+        bodyAt.array[i + 1] = SPINE_Y + py * c - pz * sn; bodyAt.array[i + 2] = py * sn + pz * c + th * 4;
+        bodyN.array[i + 1] = qy * c - qz * sn; bodyN.array[i + 2] = qy * sn + qz * c;
+      }
     }
     bodyAt.needsUpdate = bodyN.needsUpdate = true;
   }
-  g.add(body, mesh([blob(LIVER, -6, 62.6, 5, 4.2, 1.8, 2.6, [0, 0.5, 0]), blob(LIVER, 1, 63, 1, 3, 1.6, 2.2, [0, 0.5, 0])]));   // two small marks on her back
-  rearIn.add(mesh([blob(LIVER, -38.5, 58.5, 0, 8, 6.5, 7.5, [0, 0, -0.8])]));   // and a brown patch where the tail begins
+  g.add(body);
   foreIn.add(mesh([blob(FEATHER, 37, 39, 0, 9, 14, 12), blob(COAT, 37, 60, 0, 13, 19, 13, [0, 0, -0.6])]));
   const collar = new THREE.Mesh(new THREE.TorusGeometry(12.5, 3, 8, 20), mat('#E9B9B4'));
   collar.rotation.set(Math.PI / 2, 0, 0); const collarG = group(39, 62, 0, collar); collarG.rotation.z = -0.6;
@@ -295,8 +306,8 @@ export function makeDog() {
   }
 
   // smoothed pose: everything eases towards its target so states blend into each other
-  const P = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: 0, gal: 0, yaw: 0, hp: 0, jaw: 0, tailUp: 0.5, wag: 0.45, wagHz: 12, y: 0, tongue: 0, bend: 0, roll: 0, flex: 0, shk: 0, fly: 0 };
-  let earT = 0;
+  const P = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: 0, gal: 0, yaw: 0, hp: 0, jaw: 0, tailUp: 0.5, wag: 0.45, wagHz: 12, y: 0, tongue: 0, bend: 0, roll: 0, flex: 0, fly: 0 };
+  let earT = 0, shakeT = 9;
   let last = -1, blink = 0, ph = 0, wagPh = 0, px = 0, py = 0, pz = 0, earCalm = 1, ph0 = 0, turn = 0, fresh = true, flying = false, flew = 0, flight = 1, pitch0 = 0;
 
   function update(p, t) {
@@ -306,7 +317,7 @@ export function makeDog() {
     // wf, wr, wh: how much the front left, front right and hind paws follow a pose instead of standing on the ground
     const T = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: p.air ? 0 : clamp(sp / 240, 0, 1) * (p.zoom ? 0.95 : 0.6), gal: p.zoom ? 1 : 0,
       yaw: p.lookYaw || 0, hp: p.lookPitch || 0, jaw: 0,
-      tailUp: 0.5, wag: 0.45, wagHz: 12, y: -3 * clamp(sp / 400, 0, 1), tongue: p.zoom ? 1 : 0, bend: 0, roll: 0, flex: 0, shk: 0, fly: 0 };
+      tailUp: 0.5, wag: 0.45, wagHz: 12, y: -3 * clamp(sp / 400, 0, 1), tongue: p.zoom ? 1 : 0, bend: 0, roll: 0, flex: 0, fly: 0 };
     const paddle = Math.sin(t * 17);
     if (p.skid && !p.air) {                              // brakes on: front legs braced out ahead, haunches down, all four paws sliding
       T.pitch = 0.2; T.y = -10; T.fl = 0.62; T.fr = 0.78; T.rf = 34; T.hl = 0.75; T.hr = 0.55; T.rh = 26; T.wf = T.wr = T.wh = 1;
@@ -334,7 +345,7 @@ export function makeDog() {
     } else if (p.point > 0.5) {                          // a bird! One paw up, tail out straight, stock still
       T.fr = 0.55; T.rf = 21; T.wr = 1; T.wag = 0.02; T.tailUp = -0.1; T.pitch = -0.04;
     } else if (p.shake > 0) {                            // a good shake: the head twists one way and the other, and the twist runs down her back
-      T.shk = 1; T.hp = 0.12; T.tailUp = 0.3; T.wag = 0.1; T.y = -2;
+      T.hp = 0.2; T.tailUp = 0.3; T.wag = 0; T.y = -3;
     } else if (sp < 30) { T.wag = 0.55 + (p.happy ? 0.25 : 0); T.wagHz = p.happy ? 17 : 12; }
     if (p.barkT > 0) { T.jaw = 0.75; T.hp += 0.3; }
     if (p.spring > 0 && !p.still) T.gal = 1;              // a run-up is bounds, not a trot
@@ -419,14 +430,15 @@ export function makeDog() {
       - (Math.sin(P.pitch) - Math.sin(pitch0) * (1 - flew)) * 26 * P.fly;   // in the air she turns about her middle, not about her hips (from however she was tilted as she left the ground)
     const wagNow = Math.sin(wagPh += dt * P.wagHz) * P.wag;
     tilt.rotation.z = pitch; tilt.position.y = HIP_Y + bob;
-    const shk = P.shk * Math.sin(t * 30), shkBody = P.shk * Math.sin(t * 30 - 1.2);
-    lean.rotation.x = P.roll + shkBody * 0.1;
+    shakeT = p.shake > 0 ? shakeT + dt : 9; if (p.shake > 0 && shakeT > 8) shakeT = 0;
+    const shk = shakeAt(shakeT, 0);
+    lean.rotation.x = P.roll;
     // at a gallop the back works like a spring: it doubles up as the hind legs come through under her
     // and straightens out as she reaches forward
     const flex = P.flex + gl * a * 0.25 * Math.cos(s2 + 0.3);
     const fy = -P.bend, ry = P.bend * 0.6 + wagNow * 0.12 * (a < 0.2 ? 1 : 0);     // the whole bottom wiggles when the tail really goes
-    fore.rotation.y = fy; rear.rotation.y = ry + shkBody * 0.09; fore.rotation.z = -flex; rear.rotation.z = flex;
-    bendBody();
+    fore.rotation.y = fy; rear.rotation.y = ry + shakeAt(shakeT, 0.75) * 0.06; fore.rotation.z = -flex; rear.rotation.z = flex;
+    bendBody(shakeT);
 
     const cp = Math.cos(pitch), sn = Math.sin(pitch), cr = Math.cos(P.roll), sr = Math.sin(P.roll);
     for (let i = 0; i < 4; i++) {
@@ -459,15 +471,15 @@ export function makeDog() {
     }
 
     // head: follows the birds, bobs with the run, nods with each bark
-    head.rotation.y = -P.yaw + shk * 0.12 + Math.sin(s2 + 1) * 0.05 * a;
+    head.rotation.y = -P.yaw + shk * 0.1 + Math.sin(s2 + 1) * 0.05 * a;
     head.rotation.z = P.hp - pitch * 0.55 + Math.sin(s2 * 2 + 0.6) * 0.05 * a;
-    head.rotation.x = (p.state === 'daze' ? Math.sin(t * 9) * 0.25 : (p.tiltHead || 0) * 0.35) + shk * 0.8 + Math.sin(s2) * 0.07 * a;
+    head.rotation.x = (p.state === 'daze' ? Math.sin(t * 9) * 0.25 : (p.tiltHead || 0) * 0.35) + shk * 1.0 + Math.sin(s2) * 0.07 * a;
     jaw.rotation.z = -Math.max(P.jaw, P.tongue * (0.3 + Math.sin(t * 15) * 0.07));
     tongue.scale.x = 4 + P.tongue * 6; tongue.position.x = 9 + P.tongue * 7; tongue.visible = P.tongue > 0.05 || P.jaw > 0.2;
     tail.rotation.z = P.tailUp;
-    tail.rotation.y = wagNow + P.bend * 0.8 + P.shk * Math.sin(t * 30 - 2.4) * 0.5;
+    tail.rotation.y = wagNow + P.bend * 0.8 + shakeAt(shakeT, 1) * 0.7; tail.rotation.x = shakeAt(shakeT, 0.9) * 0.6;
 
-    blink = (t % 3.7) < 0.12 || p.state === 'daze' || P.shk > 0.3 ? 0.15 : 1;
+    blink = (t % 3.7) < 0.12 || p.state === 'daze' || shakeT < 0.9 ? 0.15 : 1;
     eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); });
     brows.forEach((b, i) => { b.rotation.x = (i ? -1 : 1) * (p.point > 0.5 ? 0.5 : 0.15); b.position.y = 13.4 + (p.barkT > 0 || p.point > 0.5 ? 1.5 : 0); });
 
