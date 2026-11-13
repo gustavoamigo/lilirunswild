@@ -29,7 +29,7 @@ if (STUDIO) {
 const dog = {
   x: world.start.x, y: world.start.y, z: 0, vx: 0, vy: 0, vz: 0, heading: -Math.PI / 2,
   state: 'idle', stT: 0,            // idle (on his feet) | paws (up on someone) | daze | hop (in or out of the car) | drive
-  air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0, skid: false,
+  air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0, skid: false, push: false, shake: 0, fidget: 0,
   lookYaw: 0, lookPitch: 0, seen: null, thought: 0, point: 0,
   barkT: 0, landT: 0, bow: 0, idleT: 0, happy: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
 };
@@ -110,25 +110,26 @@ function bark() {
 function updateDog(dt) {
   const p = dog;
   p.barkT = Math.max(0, p.barkT - dt); p.landT = Math.max(0, p.landT - dt); p.thought = Math.max(0, p.thought - dt);
-  p.happy = Math.max(0, p.happy - dt); p.bow = Math.max(0, p.bow - dt);
+  p.happy = Math.max(0, p.happy - dt); p.bow = Math.max(0, p.bow - dt); p.shake = Math.max(0, p.shake - dt);
   if (p.state === 'hop') { updateHop(dt); return; }
   if (p.state === 'drive') return;                    // the car carries him (updateCar)
-  if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; p.state = 'idle'; } }
+  if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 0.9; p.state = 'idle'; } }
 
   const st = p.state === 'idle' ? steering(p.x, p.y, 34) : ZERO;
   watchBirds(st, dt);
   const sp0 = Math.hypot(p.vx, p.vy);
+  if (st.mag || p.air) p.shake = 0;
 
   // ---- zoomies: keep running flat out and he tips over into a mad gallop ----
   if (st.mag > 0.85 && sp0 > 250) p.runT += dt; else if (st.mag < 0.5) p.runT = 0;
   const chase = p.seen && st.mag > 0.5 && st.x * Math.cos(p.birdDir) + st.y * Math.sin(p.birdDir) > 0.75;
   if (chase) p.runT = Math.max(p.runT, ZOOM_AFTER);
-  if (studio.gait === 'trot') p.runT = 0; else if (studio.gait === 'gallop' && st.mag > 0.5) p.runT = ZOOM_AFTER;
+  if (studio.gait === 'trot') p.runT = 0; else if (studio.gait === 'gallop' && st.mag > 0.5 && !p.push) p.runT = ZOOM_AFTER;
   const was = p.zoom; p.zoom = p.runT >= ZOOM_AFTER && p.state === 'idle';
   if (p.zoom && !was) { A.whoosh(); dust(p.x, p.y, 8, { speed: 110 }); }
 
-  // ---- about-turn at a gallop: she cannot curve round, so she throws out the brakes, slides to a stop
-  // facing the way she was going, spins round on her haunches and launches herself back ----
+  // ---- about-turn at a gallop: she cannot curve round, so she throws out the brakes and slides until she is
+  // slow enough to get her feet back, steps round the way she turns at a trot, and pushes off into the gallop ----
   if (!p.skid && p.zoom && !p.air && sp0 > 400 && st.mag > 0.5 && (p.vx * st.x + p.vy * st.y) / sp0 < -0.5) { p.skid = true; A.skid(); }
   if (p.skid) {
     const back = st.mag > 0.5 && (sp0 < 60 || p.vx * st.x + p.vy * st.y < sp0 * 0.3);
@@ -137,10 +138,15 @@ function updateDog(dt) {
       const slow = Math.max(0, sp0 - BRAKE * dt), f = sp0 > 0 ? slow / sp0 : 0;
       p.vx *= f; p.vy *= f; p.runT = ZOOM_AFTER;
       p.dustT -= dt; if (p.dustT <= 0) { p.dustT = 0.035; dust(p.x + Math.cos(p.heading) * 30, p.y + Math.sin(p.heading) * 30, 2, { speed: 90 }); }
-      const want = Math.atan2(st.y, st.x), off = angDiff(want, p.heading);
-      if (slow < 260) p.heading += clamp(off, -11 * dt, 11 * dt);                 // the spin starts while she is still sliding
-      if (slow < 40 && Math.abs(off) < 0.5) { p.skid = false; p.vx = Math.cos(want) * 330; p.vy = Math.sin(want) * 330; dust(p.x, p.y, 6, { speed: 120 }); }
+      if (slow < 150) { p.skid = false; p.push = true; }
     }
+  }
+  if (p.push) {
+    const want = Math.atan2(st.y, st.x);
+    if (p.air || p.state !== 'idle' || st.mag < 0.5) p.push = false;
+    else if (Math.abs(angDiff(want, p.heading)) < 0.45) {                          // round: off she goes
+      p.push = false; p.runT = ZOOM_AFTER; p.zoom = true; p.vx = Math.cos(want) * 330; p.vy = Math.sin(want) * 330; dust(p.x, p.y, 6, { speed: 120 }); A.whoosh();
+    } else { p.runT = 0; p.zoom = false; }
   }
 
   // ---- turning: the body comes round at its own pace, towards where she wants to go ----
@@ -196,7 +202,7 @@ function updateDog(dt) {
   // ---- nothing to do? Ask for a game. ----
   if (p.state === 'idle' && !st.mag && !p.air && !p.point) {
     p.idleT += dt;
-    if (p.idleT > 4.5) { p.idleT = 0; p.bow = 1.3; }
+    if (p.idleT > 4.5) { p.idleT = 0; if (p.fidget++ % 2) p.shake = 1; else p.bow = 1.3; }
   } else p.idleT = 0;
 }
 
@@ -569,6 +575,7 @@ const POSES = {
     A.bonk(); stars(dog.x + hx * 20, dog.y + hy * 20, dog.z + 70, 7);
   },
   bow() { dog.bow = 1.3; dog.idleT = 0; },
+  shake() { dog.shake = 1; dog.idleT = 0; },
   point() { studio.point = !studio.point; },
 };
 const VIEWS = { low: [420, 0.12], game: [520, 0.62], top: [620, 1.45] };
@@ -576,7 +583,7 @@ const SPEEDS = [1, 0.5, 0.25, 0.1];
 function drawStudio() {
   const sp = Math.hypot(dog.vx, dog.vy);
   const rows = [
-    `${dog.state}${dog.air ? ' · air' : ''}${dog.zoom ? ' · zoomies' : ''}${dog.skid ? ' · brakes' : ''}${dog.point ? ' · point' : ''}${dog.bow > 0 ? ' · bow' : ''}`,
+    `${dog.state}${dog.air ? ' · air' : ''}${dog.zoom ? ' · zoomies' : ''}${dog.skid ? ' · brakes' : ''}${dog.point ? ' · point' : ''}${dog.bow > 0 ? ' · bow' : ''}${dog.shake > 0 ? ' · shake' : ''}`,
     `speed ${sp.toFixed(0)}   height ${dog.z.toFixed(0)}   stride ${dog.gait.toFixed(2)}`,
     `gait ${studio.gait}   time ×${studio.paused ? 0 : studio.speed}`,
   ];
@@ -585,7 +592,7 @@ function drawStudio() {
 }
 function initStudio() {
   document.getElementById('btn-car').remove();
-  document.getElementById('keys').textContent = '1 2 3 view · wheel zoom · G gait · T slow · P pause · . step · H N V C poses';
+  document.getElementById('keys').textContent = '1 2 3 view · wheel zoom · G gait · T slow · P pause · . step · H N V B C poses';
   const bar = document.createElement('div'); bar.id = 'studio'; document.getElementById('ui').append(bar);
   const btn = (label, fn, on) => {
     const b = document.createElement('button'); b.textContent = label; bar.append(b);
@@ -608,7 +615,7 @@ function initStudio() {
     KeyG: () => { studio.gait = { auto: 'trot', trot: 'gallop', gallop: 'auto' }[studio.gait]; },
     KeyT: () => { studio.speed = SPEEDS[(SPEEDS.indexOf(studio.speed) + 1) % SPEEDS.length]; studio.paused = false; },
     KeyP: () => { studio.paused = !studio.paused; }, Period: () => { studio.paused = true; studio.step = true; },
-    KeyH: POSES.hello, KeyN: POSES.bonk, KeyV: POSES.bow, KeyC: POSES.point,
+    KeyH: POSES.hello, KeyN: POSES.bonk, KeyV: POSES.bow, KeyB: POSES.shake, KeyC: POSES.point,
   };
   window.addEventListener('keydown', (e) => { const f = KEYS[e.code]; if (f && !e.repeat) { f(); refresh(); } });
   window.addEventListener('wheel', (e) => { zoomBy(e.deltaY > 0 ? 1.1 : 0.9); refresh(); }, { passive: true });

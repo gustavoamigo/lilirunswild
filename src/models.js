@@ -157,6 +157,8 @@ export function makeDog() {
   function swingEars(dt, jx, jy) {
     head.updateWorldMatrix(true, false); _inv.copy(head.matrixWorld).invert();
     const len = EAR_SEG * _a.setFromMatrixScale(head.matrixWorld).y, n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n, keep = Math.exp(-h * EAR_DRAG);
+    earT += dt;
+    const me = head.matrixWorld.elements, side = Math.hypot(me[8], me[9], me[10]) || 1;
     for (const e of ears) {
       const top = _a.copy(e.top).applyMatrix4(head.matrixWorld);
       if (!e.pts) { e.pts = e.segs.map((_, i) => top.clone().setY(top.y - (i + 1) * len)); e.was = e.pts.map((q) => q.clone()); }
@@ -165,6 +167,10 @@ export function makeDog() {
         for (let i = 0; i < 4; i++) {
           const q = e.pts[i], w = e.was[i];
           _b.copy(q).sub(w).multiplyScalar(keep); w.copy(q); q.add(_b); q.y -= EAR_G * h * h;
+          // the air she runs through: it lifts the ear out sideways and never lets it lie still,
+          // so it flaps up, down, in and out as well as trailing
+          const air = _b.length() / h, f = air * h * h * (i + 1) * 0.25, u = earT * (17 + i * 3) + e.s * 2 + i * 1.9;
+          q.x += (me[8] / side * e.s * 1.1 + Math.sin(u * 1.3) * 1.2) * f; q.y += (me[9] / side * e.s * 1.1 + 0.9 + Math.sin(u) * 1.6) * f; q.z += (me[10] / side * e.s * 1.1 + Math.cos(u * 0.8) * 1.2) * f;
           // an ear is not a string: it has some spring in it, most where it joins the head
           q.lerp(_b.set(top.x, top.y - (i + 1) * len, top.z), 1 - Math.exp(-h * EAR_SPRING[i]));
         }
@@ -195,7 +201,8 @@ export function makeDog() {
   }
 
   // smoothed pose: everything eases towards its target so states blend into each other
-  const P = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: 0, gal: 0, yaw: 0, hp: 0, jaw: 0, tailUp: 0.5, wag: 0.45, wagHz: 9, y: 0, tongue: 0, bend: 0, roll: 0, flex: 0 };
+  const P = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: 0, gal: 0, yaw: 0, hp: 0, jaw: 0, tailUp: 0.5, wag: 0.45, wagHz: 9, y: 0, tongue: 0, bend: 0, roll: 0, flex: 0, shk: 0 };
+  let earT = 0;
   let last = -1, blink = 0, ph = 0, wagPh = 0, px = 0, py = 0, ph0 = 0, turn = 0, fresh = true;
 
   function update(p, t) {
@@ -205,7 +212,7 @@ export function makeDog() {
     // wf, wr, wh: how much the front left, front right and hind paws follow a pose instead of standing on the ground
     const T = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: p.air ? 0 : clamp(sp / 240, 0, 1) * (p.zoom ? 0.95 : 0.6), gal: p.zoom ? 1 : 0,
       yaw: p.lookYaw || 0, hp: p.lookPitch || 0, jaw: 0,
-      tailUp: 0.5, wag: 0.45, wagHz: 9, y: -3 * clamp(sp / 400, 0, 1), tongue: p.zoom ? 1 : 0, bend: 0, roll: 0, flex: 0 };
+      tailUp: 0.5, wag: 0.45, wagHz: 9, y: -3 * clamp(sp / 400, 0, 1), tongue: p.zoom ? 1 : 0, bend: 0, roll: 0, flex: 0, shk: 0 };
     const paddle = Math.sin(t * 17);
     if (p.skid && !p.air) {                              // brakes on: front legs braced out ahead, haunches down, all four paws sliding
       T.pitch = 0.2; T.y = -10; T.fl = 0.62; T.fr = 0.78; T.rf = 34; T.hl = 0.75; T.hr = 0.55; T.rh = 26; T.wf = T.wr = T.wh = 1;
@@ -226,6 +233,8 @@ export function makeDog() {
       T.pitch = -0.4; T.fl = T.fr = 1.5; T.rf = 30; T.wf = T.wr = 1; T.wag = 0.95; T.wagHz = 8.5; T.hp = 0.5; T.tailUp = 0.9;
     } else if (p.point > 0.5) {                          // a bird! One paw up, tail out straight, stock still
       T.fr = 0.55; T.rf = 21; T.wr = 1; T.wag = 0.02; T.tailUp = -0.1; T.pitch = -0.04;
+    } else if (p.shake > 0) {                            // a good shake: the head twists one way and the other, and the twist runs down her back
+      T.shk = 1; T.hp = 0.12; T.tailUp = 0.3; T.wag = 0.1; T.y = -2;
     } else if (sp < 30) { T.wag = 0.55 + (p.happy ? 0.25 : 0); T.wagHz = p.happy ? 13 : 9; }
     if (p.barkT > 0) { T.jaw = 0.75; T.hp += 0.3; }
 
@@ -290,12 +299,13 @@ export function makeDog() {
     const bob = Math.abs(Math.sin(s2)) * 2 * a * (1 - gl) + gl * a * (2 + Math.sin(s2 + 2.6) * 4) + P.y;
     const wagNow = Math.sin(wagPh += dt * P.wagHz) * P.wag;
     tilt.rotation.z = pitch; tilt.position.y = HIP_Y + bob;
-    lean.rotation.x = P.roll;
+    const shk = P.shk * Math.sin(t * 30), shkBody = P.shk * Math.sin(t * 30 - 1.2);
+    lean.rotation.x = P.roll + shkBody * 0.1;
     // at a gallop the back works like a spring: it doubles up as the hind legs come through under her
     // and straightens out as she reaches forward
     const flex = P.flex + gl * a * 0.25 * Math.cos(s2 + 0.3);
     const fy = -P.bend, ry = P.bend * 0.6 + wagNow * 0.12 * (a < 0.2 ? 1 : 0);     // the whole bottom wiggles when the tail really goes
-    fore.rotation.y = fy; rear.rotation.y = ry; fore.rotation.z = -flex; rear.rotation.z = flex;
+    fore.rotation.y = fy; rear.rotation.y = ry + shkBody * 0.09; fore.rotation.z = -flex; rear.rotation.z = flex;
 
     const cp = Math.cos(pitch), sn = Math.sin(pitch), cr = Math.cos(P.roll), sr = Math.sin(P.roll);
     for (let i = 0; i < 4; i++) {
@@ -318,15 +328,15 @@ export function makeDog() {
     }
 
     // head: follows the birds, bobs with the run, nods with each bark
-    head.rotation.y = -P.yaw;
+    head.rotation.y = -P.yaw + shk * 0.12 + Math.sin(s2 + 1) * 0.05 * a;
     head.rotation.z = P.hp - pitch * 0.55 + Math.sin(s2 * 2 + 0.6) * 0.05 * a;
-    head.rotation.x = p.state === 'daze' ? Math.sin(t * 9) * 0.25 : (p.tiltHead || 0) * 0.35;
+    head.rotation.x = (p.state === 'daze' ? Math.sin(t * 9) * 0.25 : (p.tiltHead || 0) * 0.35) + shk * 0.8 + Math.sin(s2) * 0.07 * a;
     jaw.rotation.z = -Math.max(P.jaw, P.tongue * (0.3 + Math.sin(t * 15) * 0.07));
     tongue.scale.x = 4 + P.tongue * 6; tongue.position.x = 9 + P.tongue * 7; tongue.visible = P.tongue > 0.05 || P.jaw > 0.2;
     tail.rotation.z = P.tailUp;
-    tail.rotation.y = wagNow + P.bend * 0.8;
+    tail.rotation.y = wagNow + P.bend * 0.8 + P.shk * Math.sin(t * 30 - 2.4) * 0.5;
 
-    blink = (t % 3.7) < 0.12 || p.state === 'daze' ? 0.15 : 1;
+    blink = (t % 3.7) < 0.12 || p.state === 'daze' || P.shk > 0.3 ? 0.15 : 1;
     eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); });
     brows.forEach((b, i) => { b.rotation.x = (i ? -1 : 1) * (p.point > 0.5 ? 0.5 : 0.15); b.position.y = 13.4 + (p.barkT > 0 || p.point > 0.5 ? 1.5 : 0); });
 

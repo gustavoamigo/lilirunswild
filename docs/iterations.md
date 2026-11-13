@@ -54,3 +54,14 @@ Each iteration: what was built → what to test → feedback received → what t
 - Opposite direction at a gallop: brake, come round, push off (`dog.skid`). At a trot the about-turn is still walked round.
 
 **Checked by script**: frame sheets of the gallop (spine, ears), the brake and push-off, trot; hello and bonk; game run with a jump and a reversal; driving and leaving the car; no errors. **Not checked by eye in motion**: only stills; the ears' swing and the timing of the brake need a look.
+
+## Iteration 4: ears in every direction, stepping about-turn, the shake
+
+**Feedback**: "Much better." The ears only swing back and forth, not in all directions; the brake is good but the turn after it is a rigid body with no leg movement, and should be the normal turn; add the head shake dogs do.
+
+**Decisions**
+- Ears: air lift and flutter that grow with speed, and a small roll of the head with the stride.
+- About-turn: the brake ends while she is still moving and the ordinary trot turn takes over, then the push-off (`dog.push`).
+- Shake: after a bonk, when left standing (alternating with the bow), and on a studio button. Read "head spinning" as the shake; to be confirmed.
+
+**Checked by script**: frame sheets of the gallop from above (ears out and in), the brake, turn and push-off, the shake; game run with a jump and a reversal; bonk; no errors. **Not checked**: in motion; touch layout and the car were not re-run.
