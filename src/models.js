@@ -137,7 +137,12 @@ const frac = (v) => v - Math.floor(v);
 // Running, she plays the simulated strides (GAITS in moves.js) as they are, at their own length: the gait is picked
 // by her speed (trot below GALLOP_FROM, gallop above), and the tempo follows the ground she covers, within these
 // shares of the simulated tempo.
-const GALLOP_FROM = 260, TEMPO = [0.75, 1.5];
+const GALLOP_FROM = 250, TEMPO = [0.75, 1.5];
+// A dog holds its head steady as it runs; the simulated one has no eyes to steady, so its neck and head swing far.
+// She keeps their average carriage and this share of the swing about it.
+const HEAD_KEEP = 0.35;
+const mean = (a) => a.reduce((s, v) => s + v, 0) / a.length;
+for (const k in GAITS) { const m = GAITS[k]; m.neckMid = mean(m.neck); m.headMid = mean(m.head); }
 const HEAD = [46, 72], NECK = [37, 62];                 // the head's joint, and the root of the neck it swings about
 const EAR_SEG = 9.5, EAR_G = 1500, EAR_DRAG = 4.5, EAR_SPRING = [16, 7, 4, 3];
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _x = new THREE.Vector3(), _y = new THREE.Vector3(), _z = new THREE.Vector3(), _inv = new THREE.Matrix4(), _rot = new THREE.Matrix4(), Z_AXIS = new THREE.Vector3(0, 0, 1), X_AXIS = new THREE.Vector3(1, 0, 0);
@@ -271,7 +276,7 @@ export function makeDog() {
       const m = GAITS[name], q = frac(f) * m.n, i = Math.floor(q) % m.n, e = q - Math.floor(q), o = i * STRIDE, o1 = (i + 1) % m.n * STRIDE;
       for (let j = 0; j < STRIDE; j++) { const v = lerp(m.f[o + j], m.f[o1 + j], e); G[j] += v * w; }
       const at = (a) => lerp(a[i], a[(i + 1) % m.n], e) * w;
-      gTail += at(m.tail); gNeck += at(m.neck); gHead += at(m.head);
+      gTail += at(m.tail); gNeck += m.neckMid * w + (at(m.neck) - m.neckMid * w) * HEAD_KEEP; gHead += m.headMid * w + (at(m.head) - m.headMid * w) * HEAD_KEEP;
     }
   }
 
@@ -336,9 +341,9 @@ export function makeDog() {
     const sp = p.state === 'drive' ? 0 : Math.hypot(p.vx, p.vy);
     const seated = p.state === 'drive' || p.state === 'hop';
     // wf, wr, wh: how much the front left, front right and hind paws follow a pose instead of standing on the ground
-    const T = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: p.air ? 0 : clamp(sp / 240, 0, 1) * (p.zoom ? 0.95 : 0.6), gal: p.zoom ? 1 : 0,
+    const T = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: p.air ? 0 : clamp(sp / 120, 0, 1) * (p.zoom ? 0.95 : 0.6), gal: p.zoom ? 1 : 0,
       yaw: p.lookYaw || 0, hp: p.lookPitch || 0, jaw: 0,
-      tailUp: 0.5, wag: 0.45, wagHz: 12, y: -3 * clamp(sp / 400, 0, 1), tongue: p.zoom ? 1 : 0, bend: 0, roll: 0, flex: 0, fly: 0 };
+      tailUp: 0.5, wag: 0.45, wagHz: 12, y: -3 * clamp(sp / 200, 0, 1), tongue: p.zoom ? 1 : 0, bend: 0, roll: 0, flex: 0, fly: 0 };
     const paddle = Math.sin(t * 17);
     if (p.skid && !p.air) {                              // brakes on: front legs braced out ahead, haunches down, all four paws sliding
       T.pitch = 0.2; T.y = -10; T.fl = 0.62; T.fr = 0.78; T.rf = 34; T.hl = 0.75; T.hr = 0.55; T.rh = 26; T.wf = T.wr = T.wh = 1;
@@ -396,7 +401,7 @@ export function makeDog() {
     ph0 = p.heading;
     turn = lerp(turn, dt > 0 ? clamp(dh / dt, -12, 12) : turn, 1 - Math.exp(-dt * 10));
     const grounded = !p.air && !seated && p.state !== 'daze';
-    if (grounded) { T.bend = clamp(turn * 0.07, -0.5, 0.5); T.roll = clamp(turn * sp / 9000, -0.28, 0.28); T.yaw += clamp(turn * 0.09, -0.6, 0.6); }
+    if (grounded) { T.bend = clamp(turn * 0.07, -0.5, 0.5); T.roll = clamp(turn * sp / 4500, -0.28, 0.28); T.yaw += clamp(turn * 0.09, -0.6, 0.6); }
 
     const k = 1 - Math.exp(-dt * 14), ks = 1 - Math.exp(-dt * 7), kc = cap ? 1 - Math.exp(-dt * 45) : k;   // a capture is followed closely: it is already smooth
     for (const n in T) P[n] = lerp(P[n], T[n], n === 'gal' || n === 'tongue' || n === 'wagHz' ? ks : n === 'pitch' || n === 'flex' || n === 'y' ? kc : k);
@@ -421,13 +426,13 @@ export function makeDog() {
     fresh = false;
     // The stride: how far a paw stays down, what share of the cycle that is, and so how long one cycle is.
     // The cycle is driven by the ground the paws have to cover, never by the clock.
-    const gl = P.gal, fast = clamp(moving / 420, 0, 1);
+    const gl = P.gal, fast = clamp(moving / 210, 0, 1);
     // From a brisk walk up she runs the simulated strides (gw: how much), whole: every joint of her legs, back, neck,
     // head and tail as the simulated dog moved them, and her paws where its paws were. Slower than that, and in
     // every pose, the rules below stand and her paws stay on their spots.
     gw = lerp(gw, grounded && !p.skid && !cap ? clamp((moving - 110) / 70, 0, 1) : 0, k);
-    gs = lerp(gs, clamp((moving - GALLOP_FROM) / 60, 0, 1), ks);
-    const reach = lerp(20, 36, clamp(moving / 300, 0, 1)), duty0 = lerp(lerp(0.62, 0.36, fast), 0.3, gl);
+    gs = lerp(gs, clamp((moving - GALLOP_FROM) / 50, 0, 1), ks);
+    const reach = lerp(20, 36, clamp(moving / 150, 0, 1)), duty0 = lerp(lerp(0.62, 0.36, fast), 0.3, gl);
     const sT = lerp(GAITS.trot.T, GAITS.gallop.T, gs), simRate = clamp(moving / lerp(GAITS.trot.len, GAITS.gallop.len, gs), TEMPO[0] / sT, TEMPO[1] / sT);
     let rate = lerp(moving / (reach / duty0), simRate, gw);
     if (rate < 2.4 && worst > 7 && gw < 0.5) rate = 2.4 + worst * 0.06;            // standing awkwardly: shuffle the paws back under

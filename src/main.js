@@ -11,8 +11,9 @@ import { CAR } from './models.js';
 import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
 
 const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560, BRAKE = 1500;
-const TROT = 420, ZOOM = 640, ZOOM_AFTER = 0.9;      // run flat out for this long and he gets the zoomies
-const BONK = 470;                                    // faster than this into something solid and he sees stars
+// a spaniel's trot and flat-out run for her size (84 game units to the metre: 2.5 and 3.8 m/s), so her legs play the simulated strides at their own tempo
+const TROT = 210, ZOOM = 320, ZOOM_AFTER = 0.9;      // run flat out for this long and he gets the zoomies
+const BONK = ZOOM * 0.73;                                    // faster than this into something solid and he sees stars
 const CAR_TOP = 900;
 
 const world = buildTown();
@@ -147,7 +148,7 @@ function updateDog(dt) {
   if (st.mag || p.air) p.shake = 0;
 
   // ---- zoomies: keep running flat out and he tips over into a mad gallop ----
-  if (st.mag > 0.85 && sp0 > 250) p.runT += dt; else p.runT = 0;
+  if (st.mag > 0.85 && sp0 > TROT * 0.6) p.runT += dt; else p.runT = 0;
   const chase = p.seen && st.mag > 0.5 && st.x * Math.cos(p.birdDir) + st.y * Math.sin(p.birdDir) > 0.75;
   if (chase) p.runT = Math.max(p.runT, ZOOM_AFTER);
   if (studio.gait === 'trot') p.runT = 0; else if (studio.gait === 'gallop' && st.mag > 0.5 && !p.push) p.runT = ZOOM_AFTER;
@@ -156,7 +157,7 @@ function updateDog(dt) {
 
   // ---- about-turn at a gallop: she cannot curve round, so she throws out the brakes and slides until she is
   // slow enough to get her feet back, steps round the way she turns at a trot, and pushes off into the gallop ----
-  if (!p.skid && p.zoom && !p.air && sp0 > 330 && st.mag > 0.25 && (p.vx * st.x + p.vy * st.y) / sp0 < -0.4) { p.skid = true; A.skid(); }
+  if (!p.skid && p.zoom && !p.air && sp0 > ZOOM * 0.52 && st.mag > 0.25 && (p.vx * st.x + p.vy * st.y) / sp0 < -0.4) { p.skid = true; A.skid(); }
   if (p.skid) {
     const back = st.mag > 0.25 && (sp0 < 60 || p.vx * st.x + p.vy * st.y < sp0 * 0.3);
     if (p.air || p.state !== 'idle' || !back) p.skid = false;
@@ -172,7 +173,7 @@ function updateDog(dt) {
     if (p.air || p.state !== 'idle' || st.mag < 0.25) p.push = false;
     else if (Math.abs(angDiff(want, p.heading)) < 0.45) {                          // round: off she goes
       p.push = false;
-      if (st.mag > 0.85) { p.runT = ZOOM_AFTER; p.zoom = true; p.vx = Math.cos(want) * 330; p.vy = Math.sin(want) * 330; dust(p.x, p.y, 6, { speed: 120 }); A.whoosh(); }
+      if (st.mag > 0.85) { p.runT = ZOOM_AFTER; p.zoom = true; p.vx = Math.cos(want) * ZOOM * 0.52; p.vy = Math.sin(want) * ZOOM * 0.52; dust(p.x, p.y, 6, { speed: 120 }); A.whoosh(); }
     } else { p.runT = 0; p.zoom = false; }
   }
 
@@ -187,9 +188,9 @@ function updateDog(dt) {
   else if (!p.air) {
     // She runs the way she is pointing, so a change of direction is a curve: at a trot a tight one
     // (she slows right down to turn about), at full gallop a wide skid, because she has no brakes.
-    const top = (p.zoom ? ZOOM : TROT) * st.mag * (p.zoom ? 1 : clamp(Math.cos(off), 0.1, 1)) * (studio.gait === 'trot' ? 0.5 : 1), k = 1 - Math.exp(-dt * (p.state !== 'idle' ? 12 : p.zoom ? 4.5 : 9));
+    const top = (p.zoom ? ZOOM : TROT) * st.mag * (p.zoom ? 1 : clamp(Math.cos(off), 0.1, 1)), k = 1 - Math.exp(-dt * (p.state !== 'idle' ? 12 : p.zoom ? 4.5 : 9));
     p.vx = lerp(p.vx, Math.cos(p.heading) * top, k); p.vy = lerp(p.vy, Math.sin(p.heading) * top, k);
-    if (p.zoom && sp0 > 380) {
+    if (p.zoom && sp0 > ZOOM * 0.6) {
       p.dustT -= dt;
       const slide = (p.vx * st.x + p.vy * st.y) / sp0 < 0.55;
       if (p.dustT <= 0) { p.dustT = slide ? 0.04 : 0.1; dust(p.x - (p.vx / sp0) * 20, p.y - (p.vy / sp0) * 20, slide ? 2 : 1); if (slide && Math.random() < 0.3) A.skid(); }
@@ -243,7 +244,7 @@ function watchBirds(st, dt) {
   if (best && p.state !== 'daze' && p.state !== 'paws') {
     p.birdDir = Math.atan2(best.y - p.y, best.x - p.x);
     // (at a run he only glances: he still has to see where he is going)
-    const most = Math.hypot(p.vx, p.vy) > 200 ? 0.6 : 1.3;
+    const most = Math.hypot(p.vx, p.vy) > TROT * 0.5 ? 0.6 : 1.3;
     yaw = clamp(angDiff(p.birdDir, p.heading), -most, most); pitch = clamp(best.h / 300, 0, 1) * 0.5;
     if (p.seen !== best) { p.seen = best; if (best.state === 'ground' && G.t - (p.yipAt || -9) > 5) { p.yipAt = G.t; p.thought = 1.8; A.yip(); } }
     if (p.state === 'idle' && !st.mag && !p.air && best.state === 'ground' && !p.bow) {
@@ -471,7 +472,7 @@ function updatePeople(dt) {
     if (!onFoot() || dog.state === 'daze' || dd > DOG_R + 28 || dog.z > 120) continue;
     const sp = Math.hypot(dog.vx, dog.vy), nx = (dog.x - o.x) / (dd || 1), ny = (dog.y - o.y) / (dd || 1);
     if (o.cool <= 0 && o.state !== 'hop' && o.state !== 'sit') {
-      if (dog.air || sp > 520) {
+      if (dog.air || sp > ZOOM * 0.8) {
         // a flying hello: they sit down with a bump, he bounces off
         o.state = 'sit'; o.t = 0; o.cool = 4.5; o.heading = toDog;
         A.oof(); stars(o.x, o.y, 150, 7); G.mess++; G.pop = 1;

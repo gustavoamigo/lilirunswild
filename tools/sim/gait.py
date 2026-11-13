@@ -32,10 +32,11 @@ CASES = dict(
 )
 
 # --v=3.5 asks for another speed, so a hard gait can be reached in steps from an easier one (worker processes read
-# the same command line); --from=trot starts from another case's result
+# the same command line); --bounce=0.01 another rise and fall for the trot; --from=trot starts from another case's result
 for _a in sys.argv:
     if _a.startswith('--v='):
         for _k in CASES.values(): _k['v'] = float(_a[4:])
+    if _a.startswith('--bounce='): CASES['trot']['bounce'] = float(_a[9:])
 
 def prior(case):
     #               scap   sho    elb    car    hip    sti    hock  spine  neck   head
