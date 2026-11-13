@@ -17,7 +17,7 @@
 <p id="info"></p>
 <script>
 const cv = document.getElementById('c'), g = cv.getContext('2d');
-const CASES = { stand: 'long leap', high: 'high jump', trot: 'trot', gallop: 'gallop', gallop_quick: 'gallop, quicker steps' };
+const CASES = { stand: 'long leap', high: 'high jump', trot: 'trot', trot_flat: 'trot, flat (first one)', gallop: 'gallop', gallop_quick: 'gallop, quicker steps' };
 let clip = null, t = 0, playing = true, speed = 0.25, last = 0;
 const el = (id) => document.getElementById(id);
 for (const k in CASES) { const b = document.createElement('button'); b.textContent = CASES[k]; b.onclick = () => load(k); b.dataset.k = k; el('cases').append(b); }

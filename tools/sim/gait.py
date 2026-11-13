@@ -22,9 +22,10 @@ WARM = 3
 
 # v the speed asked for (m/s), T a first guess at the stride time, lag where each leg is in the stride (fl fr hl hr),
 # free whether the search may move those, axial how many times the back and neck repeat in a stride, duty the share
-# of the stride a paw may spend on the ground, Tmin the shortest stride allowed
+# of the stride a paw may spend on the ground, Tmin the shortest stride allowed, bounce how far her middle should rise and fall (m, standard deviation;
+# without it she is asked to stay level)
 CASES = dict(
-    trot=dict(v=2.4, T=0.42, lag=[0.0, 0.5, 0.5, 0.0], free=False, axial=2, duty=(0.35, 0.6)),
+    trot=dict(v=2.4, T=0.42, lag=[0.0, 0.5, 0.5, 0.0], free=False, axial=2, duty=(0.25, 0.5), Tmin=0.36, bounce=0.015),
     gallop=dict(v=5.5, T=0.36, lag=[0.5, 0.62, 0.0, 0.12], free=True, axial=1, duty=(0.15, 0.45), Tmin=0.32),
 )
 
@@ -80,7 +81,7 @@ def rollout(x, case, record=False):
     off = np.concatenate([lag, [lag[2]]])[leg]; mul = np.where(leg == 4, k['axial'], 1)
     mujoco.mj_resetData(m, d); d.qpos[:] = q0; d.qvel[0] = k['v']; mujoco.mj_forward(m, d)
     per = int(round(T / CTRL_DT)); n = per * STRIDES; sub = int(round(CTRL_DT / m.opt.timestep))
-    effort = bad = tilt = bob = slip = 0.0; marks = []; frames = []; fell = None; duty = np.zeros(4); names = ['fpaw_l', 'fpaw_r', 'hpaw_l', 'hpaw_r']
+    effort = bad = tilt = bob = slip = 0.0; marks = []; frames = []; zs = []; fell = None; duty = np.zeros(4); names = ['fpaw_l', 'fpaw_r', 'hpaw_l', 'hpaw_r']
     for i in range(n):
         ph = (i / per + off) * mul
         ramp = min(1.0, i / (0.5 * per))                                        # ease in from standing
@@ -95,7 +96,7 @@ def rollout(x, case, record=False):
         if com[2] < 0.62 * z0 or abs(d.qpos[2]) > 0.9: fell = i; break
         if i >= per * WARM:
             effort += float(np.sum((d.actuator_force / m.actuator_forcerange[:, 1]) ** 2)) * CTRL_DT
-            tilt += d.qpos[2] ** 2 * CTRL_DT; bob += (com[2] - z0) ** 2 * CTRL_DT
+            tilt += d.qpos[2] ** 2 * CTRL_DT; bob += (com[2] - z0) ** 2 * CTRL_DT; zs.append(com[2])
             for j, nm in enumerate(names): duty[j] += nm in on
         if i % per == 0: marks.append((i, d.qpos[0], np.concatenate([d.qpos[1:], 0.05 * d.qvel]).copy()))
         if record and i >= per * (STRIDES - 2) and i < per * (STRIDES - 1): frames.append((dog.points(m, d), sorted(on), float(d.qpos[2]), [float(v) for v in com]))
@@ -107,10 +108,12 @@ def rollout(x, case, record=False):
     vs = [(marks[j + 1][1] - marks[j][1]) / T for j in range(WARM, STRIDES)]
     rep = float(np.mean([np.sum((marks[j + 1][2] - marks[j][2]) ** 2) for j in range(WARM, STRIDES)]))
     duty /= per * (STRIDES - WARM)
-    J = 8 * (v - k['v']) ** 2 + 4 * float(np.var(vs)) + 3 * rep + 0.03 * effort / tt + 0.1 * bad + 30 * tilt / tt + 400 * bob / tt
+    J = 8 * (v - k['v']) ** 2 + 4 * float(np.var(vs)) + 3 * rep + 0.03 * effort / tt + 0.1 * bad + 30 * tilt / tt
+    if 'bounce' in k: J += 400 * (np.mean(zs) - z0) ** 2 + 1e4 * (np.std(zs) - k['bounce']) ** 2       # stands tall, with a spring
+    else: J += 400 * bob / tt
     J += 40 * float(np.sum(np.maximum(0, k['duty'][0] - duty) ** 2 + np.maximum(0, duty - k['duty'][1]) ** 2))       # every paw works, none drags
     J += 0.02 * float(np.sum(x[NC:NC * NJ] ** 2))
-    info = dict(J=J, v=v, T=T, lag=[round(float(a), 3) for a in lag], rep=rep, effort=effort / tt, bad=bad, tilt=tilt / tt, duty=[round(float(a), 2) for a in duty])
+    info = dict(J=J, v=v, T=T, lag=[round(float(a), 3) for a in lag], rep=rep, effort=effort / tt, bad=bad, tilt=tilt / tt, duty=[round(float(a), 2) for a in duty], bounce=float(np.std(zs)))
     return (J, info, frames) if record else J
 
 def _cost(a): return rollout(a[0], a[1])
