@@ -302,6 +302,11 @@ export function makeDog() {
       const prev = _p.copy(jx || jy || !e.at ? top : e.at);
       e.at.copy(top);
       const fx = -e.wx * EAR_WIND, fz = -e.wz * EAR_WIND, fl = Math.hypot(fx, EAR_G, fz), wdx = fx / fl, wdy = -EAR_G / fl, wdz = fz / fl;
+      // the air lifts the ear out to its side of her, across the way she is going, whichever way her head is turned
+      const ws = Math.hypot(e.wx, e.wz), hx = me[8] / side * e.s, hz = me[10] / side * e.s;
+      let ox = hx, oz = hz;
+      if (ws > 1) { const ux = e.wx / ws, uz = e.wz / ws, along = hx * ux + hz * uz; ox = hx - along * ux; oz = hz - along * uz; }
+      const ol = Math.hypot(ox, oz) || 1; ox /= ol; oz /= ol;
       for (let k = 0; k < n && dt > 0; k++) {
         const tk = _t.lerpVectors(prev, top, (k + 1) / n), off = _o.subVectors(top, tk);   // the root now, and how far the head has still to go
         for (let i = 0; i < 4; i++) {
@@ -311,7 +316,7 @@ export function makeDog() {
           // the air she runs through: it lifts the ear out sideways and never lets it lie still,
           // so it flaps (slowly: a heavy ear) up, down, in and out as well as trailing
           const air = _b.length() / h, f = air * h * h * (i + 1) * 0.25 * calm, u = earT * (7 + i * 1.5) + e.s * 2 + i * 1.9;
-          q.x += (me[8] / side * e.s * 1.1 + Math.sin(u * 1.3) * 1.2) * f; q.y += (me[9] / side * e.s * 1.1 + 0.9 + Math.sin(u) * 1.6) * f; q.z += (me[10] / side * e.s * 1.1 + Math.cos(u * 0.8) * 1.2) * f;
+          q.x += (ox * 1.1 + Math.sin(u * 1.3) * 1.2) * f; q.y += (0.9 + Math.sin(u) * 1.6) * f; q.z += (oz * 1.1 + Math.cos(u * 0.8) * 1.2) * f;
           // a shake throws the ears straight out from her head, and up
           if (fling > 0) { const k = fling * 5200 * h * h * (i + 1) * e.s / side; q.x += me[8] * k; q.y += me[9] * k + fling * 1500 * h * h; q.z += me[10] * k; }
           // an ear is not a string: it has some spring in it, most where it joins the head
@@ -327,7 +332,9 @@ export function makeDog() {
           // it cannot pass through her head or lie inside her neck
           _b.copy(q).add(off).applyMatrix4(_inv);
           let hit = false;
-          if (_b.z * e.s < 11.5) { _b.z = e.s * 11.5; hit = true; }
+          // beside her face only (her cheeks), or anywhere in a shake: otherwise behind and below the head the ear goes
+          // wherever the wind and her turns take it
+          if (_b.z * e.s < 11.5 && (fling > 0.01 || (_b.x > 0 && _b.x < 24 && _b.y > -8))) { _b.z = e.s * 11.5; hit = true; }
           const dx = _b.x - 4, dy = _b.y - 4, d = Math.hypot(dx, dy, _b.z);
           if (d < 15.5 && d > 0.01) { _b.set(4 + dx / d * 15.5, 4 + dy / d * 15.5, _b.z / d * 15.5); hit = true; }
           if (hit) q.copy(_b).applyMatrix4(head.matrixWorld).sub(off);
