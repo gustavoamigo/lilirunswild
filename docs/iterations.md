@@ -286,3 +286,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the engine is good now. She should breathe heavily while running.
 
 **Decision**: flat out (zoomies) she pants all the way, louder as she gets out of breath and a little quicker than standing; after she slows, as before. **Checked by script**: page loads, a gallop, no errors. **Not checked**: by ear.
+
+**Feedback**: the panting is not continuous, like the engine was.
+
+**Decision**: the same cause (the clip fades in and is silent for its last 0.75 s); the loop now uses only its steady middle. **Checked by script**: the loop's loudness over time has no silent stretch. **Not checked**: by ear.
