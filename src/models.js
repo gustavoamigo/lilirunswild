@@ -144,8 +144,11 @@ const HEAD_KEEP = 0.35;
 const mean = (a) => a.reduce((s, v) => s + v, 0) / a.length;
 const NECK_MID = mean(GAL.neck), HEAD_MID = mean(GAL.head);
 const HEAD = [46, 72], NECK = [37, 62];                 // the head's joint, and the root of the neck it swings about
-const EAR_SEG = 9.5, EAR_G = 1500, EAR_DRAG = 4.5, EAR_SPRING = [16, 7, 4, 3];
-const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _x = new THREE.Vector3(), _y = new THREE.Vector3(), _z = new THREE.Vector3(), _inv = new THREE.Matrix4(), _rot = new THREE.Matrix4(), Z_AXIS = new THREE.Vector3(0, 0, 1), X_AXIS = new THREE.Vector3(1, 0, 0);
+const EAR_SEG = 9.5, EAR_G = 1500, EAR_DRAG = 14, EAR_SPRING = [16, 7, 4, 3];
+// The wind of her own speed pushes the ears back: this much push (units/s²) for each unit/s the head moves, up to
+// WIND_TOP. Flat out (460) it is about as strong as gravity, so they stream back at some 45°; in the car, flatter.
+const EAR_WIND = 3, WIND_TOP = 1000;
+const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _x = new THREE.Vector3(), _y = new THREE.Vector3(), _z = new THREE.Vector3(), _inv = new THREE.Matrix4(), _rot = new THREE.Matrix4(), _p = new THREE.Vector3(), _t = new THREE.Vector3(), _o = new THREE.Vector3(), Z_AXIS = new THREE.Vector3(0, 0, 1), X_AXIS = new THREE.Vector3(1, 0, 0);
 
 export function makeDog() {
   const root = new THREE.Group();                       // position + heading (+ landing squash)
@@ -287,34 +290,47 @@ export function makeDog() {
     const me = head.matrixWorld.elements, side = Math.hypot(me[8], me[9], me[10]) || 1;
     for (const e of ears) {
       const top = _a.copy(e.top).applyMatrix4(head.matrixWorld);
-      if (!e.pts) { e.pts = e.segs.map((_, i) => top.clone().setY(top.y - (i + 1) * len)); e.was = e.pts.map((q) => q.clone()); }
+      if (!e.pts) { e.pts = e.segs.map((_, i) => top.clone().setY(top.y - (i + 1) * len)); e.was = e.pts.map((q) => q.clone()); e.at = top.clone(); e.wx = e.wz = 0; }
       else if (jx || jy || jz) for (let i = 0; i < 4; i++) { e.pts[i].x += jx; e.pts[i].z += jy; e.was[i].x += jx; e.was[i].z += jy; e.pts[i].y += jz; e.was[i].y += jz; }
+      // how fast the head is going over the ground (a jump in position is not speed), smoothed over a few frames
+      if (dt > 0 && !(jx || jy)) {
+        const vx = (top.x - e.at.x) / dt, vz = (top.z - e.at.z) / dt, v = Math.hypot(vx, vz), s = v > WIND_TOP ? WIND_TOP / v : 1, kw = 1 - Math.exp(-dt * 8);
+        e.wx = lerp(e.wx, vx * s, kw); e.wz = lerp(e.wz, vz * s, kw);
+      }
+      // the head moves a whole frame at once, but within the frame the ear's root goes there step by step: dragged
+      // the whole way in the first step, the ear would take it as speed and fly forward (fast in the car)
+      const prev = _p.copy(jx || jy || !e.at ? top : e.at);
+      e.at.copy(top);
+      const fx = -e.wx * EAR_WIND, fz = -e.wz * EAR_WIND, fl = Math.hypot(fx, EAR_G, fz), wdx = fx / fl, wdy = -EAR_G / fl, wdz = fz / fl;
       for (let k = 0; k < n && dt > 0; k++) {
+        const tk = _t.lerpVectors(prev, top, (k + 1) / n), off = _o.subVectors(top, tk);   // the root now, and how far the head has still to go
         for (let i = 0; i < 4; i++) {
           const q = e.pts[i], w = e.was[i];
           _b.copy(q).sub(w).multiplyScalar(keep); w.copy(q); q.add(_b); q.y -= EAR_G * h * h;
+          q.x -= e.wx * EAR_WIND * h * h; q.z -= e.wz * EAR_WIND * h * h;
           // the air she runs through: it lifts the ear out sideways and never lets it lie still,
-          // so it flaps up, down, in and out as well as trailing
-          const air = _b.length() / h, f = air * h * h * (i + 1) * 0.25 * calm, u = earT * (17 + i * 3) + e.s * 2 + i * 1.9;
+          // so it flaps (slowly: a heavy ear) up, down, in and out as well as trailing
+          const air = _b.length() / h, f = air * h * h * (i + 1) * 0.25 * calm, u = earT * (7 + i * 1.5) + e.s * 2 + i * 1.9;
           q.x += (me[8] / side * e.s * 1.1 + Math.sin(u * 1.3) * 1.2) * f; q.y += (me[9] / side * e.s * 1.1 + 0.9 + Math.sin(u) * 1.6) * f; q.z += (me[10] / side * e.s * 1.1 + Math.cos(u * 0.8) * 1.2) * f;
           // a shake throws the ears straight out from her head, and up
           if (fling > 0) { const k = fling * 5200 * h * h * (i + 1) * e.s / side; q.x += me[8] * k; q.y += me[9] * k + fling * 1500 * h * h; q.z += me[10] * k; }
           // an ear is not a string: it has some spring in it, most where it joins the head
-          q.lerp(_b.set(top.x, top.y - (i + 1) * len, top.z), 1 - Math.exp(-h * EAR_SPRING[i] * (1 + 3 * still) * (1 - 0.8 * fling)));
+          // towards hanging where gravity and the wind together would hang it
+          q.lerp(_b.set(tk.x + wdx * (i + 1) * len, tk.y + wdy * (i + 1) * len, tk.z + wdz * (i + 1) * len), 1 - Math.exp(-h * EAR_SPRING[i] * (1 + 3 * still) * (1 - 0.8 * fling)));
         }
         for (let it = 0; it < 2; it++) for (let i = 0; i < 4; i++) {
-          const q = e.pts[i], up = i ? e.pts[i - 1] : top;
+          const q = e.pts[i], up = i ? e.pts[i - 1] : tk;
           q.sub(up).setLength(len).add(up);
           // and it does not fold flat on itself
-          const up2 = i > 1 ? e.pts[i - 2] : i ? top : null;
+          const up2 = i > 1 ? e.pts[i - 2] : i ? tk : null;
           if (up2 && q.distanceTo(up2) < len * 1.6) q.sub(up2).setLength(len * 1.6).add(up2);
           // it cannot pass through her head or lie inside her neck
-          _b.copy(q).applyMatrix4(_inv);
+          _b.copy(q).add(off).applyMatrix4(_inv);
           let hit = false;
           if (_b.z * e.s < 11.5) { _b.z = e.s * 11.5; hit = true; }
           const dx = _b.x - 4, dy = _b.y - 4, d = Math.hypot(dx, dy, _b.z);
           if (d < 15.5 && d > 0.01) { _b.set(4 + dx / d * 15.5, 4 + dy / d * 15.5, _b.z / d * 15.5); hit = true; }
-          if (hit) q.copy(_b).applyMatrix4(head.matrixWorld);
+          if (hit) q.copy(_b).applyMatrix4(head.matrixWorld).sub(off);
         }
       }
       let from = e.top;
