@@ -318,3 +318,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: two more bin sounds, 1342402161 and 1223742836 (metal); all four at random.
 
 **Decision**: a knocked bin plays one of the four. **Not checked**: by ear.
+
+**Feedback**: the cones should sound like the box (the synthesised one).
+
+**Decision**: a knocked cone plays the box's thud. The plates still knock with the old cone sound. **Not checked**: by ear.
