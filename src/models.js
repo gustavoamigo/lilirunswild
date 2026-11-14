@@ -631,8 +631,9 @@ export function makeCar() {
 // hips, knees, ankles, waist, shoulders, elbows, neck. +x is the way they face.
 // Body plans (game units; Lili's back is about 63 high): leg and arm bones, where the shoulders and neck are, the head,
 // and the torso's profile ([height above the waist, half depth, half width]).
-const ADULT = { thigh: 46, shin: 44, foot: 15, hipW: 10.5, shY: 60, shW: 24, upArm: 33, foreArm: 30, hand: 7, neck: 72, headR: 21, limb: 1,
-  torso: [[0, 12, 18], [14, 11.5, 17.5], [30, 13.5, 20], [44, 14.5, 22], [54, 13.5, 22.5], [60, 10, 18], [64, 5.5, 9.5], [66, 2, 3]] };
+// Adults are built like the children, a size up (the owner found the children better: rounder, chunkier, a bigger head)
+const ADULT = { thigh: 35, shin: 34, foot: 14, hipW: 10, shY: 49, shW: 20, upArm: 27, foreArm: 25, hand: 7, neck: 60, headR: 23, limb: 0.95,
+  torso: [[0, 11.7, 17], [11.7, 11, 16.3], [24.7, 13, 18.2], [36.4, 13.7, 20], [44, 13, 20.8], [49.4, 9, 17], [53.3, 4.5, 8.5], [54.6, 2, 2.6]] };
 const CHILD = { thigh: 27, shin: 26, foot: 11, hipW: 7.5, shY: 38, shW: 15.5, upArm: 21, foreArm: 19, hand: 5.5, neck: 46, headR: 19, limb: 0.72,
   torso: [[0, 9, 13], [9, 8.5, 12.5], [19, 10, 14], [28, 10.5, 15.5], [34, 10, 16], [38, 7, 13], [41, 3.5, 6.5], [42, 1.5, 2]] };
 // skin, hair (colour and style: short, long, bun, curls, tails), top (colour, sleeves short or long), bottom (trousers, shorts,
@@ -703,6 +704,9 @@ export function makePerson(look) {
   const S = { y: 0, lean: 0, twist: 0, yaw: 0, roll: 0, hy: 0, hp: 0, sit: 0 };
   for (const n of ['thigh', 'knee', 'ankle', 'sh', 'out', 'elbow']) S[n + 0] = S[n + 1] = 0;
   let last = -1, ph = 0, lx = null, ly = 0, blink = 1;
+  // Standing, the feet stay where they are (fh: the way they point) while the chest and head turn; past STEP_TURN they
+  // step round, one foot and then the other, over STEP_T seconds. Turned as one piece, their feet slid on the ground.
+  let fh = null, stepT = 0, stepFrom = 0, stepBy = 0, offX = 0, offY = 0;   // off: how far the turn about a foot has moved them
   const seed = look * 1.7;
   function update(o, t) {
     const dt = last < 0 ? 0.016 : clamp(t - last, 0, 0.05); last = t;
@@ -749,22 +753,39 @@ export function makePerson(look) {
       T.thigh0 = 0.7; T.thigh1 = 0.3; T.knee0 = T.knee1 = -1.1; T.sh0 = T.sh1 = 2.3; T.out0 = T.out1 = 0.45; T.elbow0 = T.elbow1 = 0.3;
       fast = 30;
     } else if (o.wave > 0) { T.sh0 = 2.2; T.out0 = 0.75; T.elbow0 = 0.5 + Math.sin(t * 12) * 0.35; }       // up and out to the side, not across the face
+    if (fh === null) fh = o.heading;
+    if (o.state !== 'stand' || o.pace) { fh = o.heading; stepT = 0; const d = Math.exp(-dt * 3); offX *= d; offY *= d; }
+    else {
+      if (stepT <= 0 && Math.abs(wrap(o.heading - fh)) > STEP_TURN) { stepT = STEP_T; stepFrom = fh; stepBy = wrap(o.heading - fh); }
+      if (stepT > 0) {
+        stepT = Math.max(0, stepT - dt);
+        const u = 1 - stepT / STEP_T, lift = Math.sin(Math.min(1, (u % 0.5) * 2) * Math.PI), i = u < 0.5 ? 0 : 1;
+        // turning about the foot that stays down, so it does not slide
+        const h0 = fh, zp = legs[1 - i].s * B.hipW; fh = stepFrom + stepBy * (1 - Math.cos(u * Math.PI)) / 2;
+        offX += zp * (Math.sin(fh) - Math.sin(h0)); offY -= zp * (Math.cos(fh) - Math.cos(h0));
+        T['thigh' + i] += 0.3 * lift; T['knee' + i] -= 0.6 * lift; T.y += 1.5 * lift * k;
+        fast = 30;
+      }
+    }
+    const tw = wrap(o.heading - fh);                         // how far the chest and head are turned from the feet
     const kk = 1 - Math.exp(-dt * fast);
     for (const n in T) S[n] = n === 'y' && o.state === 'hop' ? T[n] : lerp(S[n], T[n], kk);
 
     body.position.y = hipH + S.y - S.sit * (hipH - 12 * k);
     hips.rotation.set(S.roll, S.yaw, 0);
-    chest.rotation.set(-S.roll * 0.6, S.twist, -S.lean);
+    chest.rotation.set(-S.roll * 0.6, S.twist + tw * 0.6, -S.lean);
     legs.forEach((g, i) => { g.hip.rotation.z = S['thigh' + i]; g.knee.rotation.z = S['knee' + i]; g.foot.rotation.z = -S['thigh' + i] - S['knee' + i] + S['ankle' + i]; });
     arms.forEach((g, i) => { g.sh.rotation.set(-g.s * S['out' + i], 0, S['sh' + i]); g.elbow.rotation.z = S['elbow' + i]; });
-    head.rotation.set(0, S.hy - S.twist - S.yaw, S.hp + S.lean * 0.6);
+    head.rotation.set(0, S.hy - S.twist - S.yaw + tw * 0.4, S.hp + S.lean * 0.6);
     blink = (t + seed) % 4.1 < 0.12 ? 0.15 : 1;
     eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); });
     smile.visible = !(open.visible = o.state === 'wobble' || o.state === 'hop' || o.state === 'sit');
-    root.position.set(o.x, 0, o.y); root.rotation.y = -o.heading;
+    root.position.set(o.x + offX, 0, o.y + offY); root.rotation.y = -fh;
+    o.feet = legs;                                           // for tests
   }
   return { root, update };
 }
+const STEP_TURN = 0.45, STEP_T = 0.45;
 // A smooth shape from a profile: [y, half depth (x), half width (z)] from the bottom up, eased between the points. The
 // torso and the limbs are each one such shape, so no joint shows as a ball and no seam as a band.
 function profileGeo(pts) {
