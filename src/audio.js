@@ -106,7 +106,8 @@ export function skid() { noise(0, 0.22, { freq: 1700, to: 900, q: 2.5, vol: 0.09
 export function bonk() { tone(220, 0, 0.22, { to: 70, vol: 0.4 }); noise(0, 0.1, { freq: 300, q: 0.8, vol: 0.3 }); tone(1300, 0.1, 0.3, { to: 900, vol: 0.06 }); }
 
 // ---- things he knocks about ----
-export function cone() { tone(520, 0, 0.09, { type: 'triangle', to: 300, vol: 0.2 }); noise(0, 0.05, { freq: 1400, vol: 0.12 }); }
+// a plate knocked but not broken: the box's thud, lighter and higher
+export function plate() { tone(260, 0, 0.09, { to: 150, vol: 0.2 }); noise(0, 0.07, { freq: 1300, q: 0.7, vol: 0.13 }); }
 export function box() { tone(140, 0, 0.12, { to: 80, vol: 0.3 }); noise(0, 0.09, { freq: 600, q: 0.7, vol: 0.2 }); }
 // a bin knocked over (one of four takes)
 export function bin() { say('bin-' + (1 + Math.floor(Math.random() * 4)), 0.55, 0.95 + Math.random() * 0.1); }

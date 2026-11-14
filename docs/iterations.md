@@ -322,3 +322,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the cones should sound like the box (the synthesised one).
 
 **Decision**: a knocked cone plays the box's thud. The plates still knock with the old cone sound. **Not checked**: by ear.
+
+**Feedback**: the plates (knocked, not broken) should sound similar to the box too.
+
+**Decision**: a lighter, higher version of the box's thud for plates; the old cone sound is removed. **Checked by script**: jumping on the table, no errors. **Not checked**: by ear.
