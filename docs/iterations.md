@@ -250,3 +250,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the excited wiggle is too strong and not natural.
 
 **Decision**: the chest no longer swings against the rump and the body no longer rolls; the tail is a little slower and narrower and the rump sways only a little more than in an ordinary wag. **Checked by script**: page loads, a child petting her, no errors. **Not checked**: by eye.
+
+**Feedback**: make it a GTA for children of 6 to 7 that scales easily: a world of reusable tiles for a large open world, missions from a markdown template with dependencies (not linear), simple missions (drive to school, steal a toy from a child, poo on the table, play ball with a person). Unsure about points. Asked for an expert view, with references.
+
+**Decision**: written up as `docs/open-world-design.md` for approval: hand-placed tiles on a text map (not generated), only nearby tiles built; missions as files built from a small vocabulary of actions, targets by tag; no points, timers or failing; picture to-do list, voice, rewards to wear and play with. Four build steps. Nothing built yet.

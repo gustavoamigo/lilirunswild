@@ -37,6 +37,10 @@ Cartoon adults and children, natural in how they walk and stand. Three reactions
 
 See *Design rules* in `CLAUDE.md`: not violent, he is a dog, the camera never turns, one finger is enough.
 
+## Where it is going
+
+A GTA for children of 6 and 7: an open town built from reusable tiles, and missions as files with dependencies, no points or timers. Proposed in `docs/open-world-design.md`, not built yet.
+
 ## Not decided yet
 
 - Missions, and what the counters are for.
