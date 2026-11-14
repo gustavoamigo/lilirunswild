@@ -306,3 +306,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the cups need a breaking sound when they fall on the floor; picks 1216753226 and 1741754685.
 
 **Decision**: the things on the picnic table break with one or the other; the flower pots keep their synthesised smash. **Checked by script**: jumping on the table, no errors. **Not checked**: by ear.
+
+**Feedback**: bug: a knocked-over bin goes into the ground.
+
+**Decision**: bins and cones tipped about the middle of their base, so lying on their side half of them was underground; they now fall over the edge of their base (`FOOT` in `makeProp`). **Checked by script**: a fallen bin and a fallen cone in town, lying on the ground. **Not checked**: the fall itself in motion.

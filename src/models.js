@@ -859,6 +859,7 @@ export function makeBird(color) {
 
 // ---------------------------------------------------------------- props --
 // Each prop is root (place, facing) > tip (falls over about its foot) > spin (tumbles about its middle).
+const FOOT = { bin: 28.5, cone: 18 };
 export function makeProp(kind) {
   const root = new THREE.Group(), tip = new THREE.Group(), spin = new THREE.Group();
   root.add(tip); tip.add(spin);
@@ -870,7 +871,10 @@ export function makeProp(kind) {
     blob('#4FA653', 0, 42, 0, 12, 10, 12), blob('#FF7FA0', 7, 52, 3, 6.5), blob('#FFD23F', -6, 54, -4, 6), blob('#FF7FA0', -2, 50, 8, 5.5), blob('#ffffff', 2, 57, -3, 5)];
   else if (kind === 'plate') parts = [cyl('#ffffff', 0, 1.5, 0, 17, 3), cyl('#E9EDF2', 0, 3, 0, 12, 1), blob('#F6A6C1', 0, 9, 0, 9, 6.5, 9), blob('#E0453A', 0, 16, 0, 3)];
   else { mid = 13; parts = [blob('#D7E84A', 0, 0, 0, 13), { geo: new THREE.TorusGeometry(12.6, 1.2, 6, 20), color: '#ffffff', at: [0, 0, 0], scale: [1, 1, 1], rot: [0.5, 0.4, 0], flat: true }]; }
-  spin.position.y = mid; spin.add(mesh(parts));
+  // A bin or cone falls over its base's edge (FOOT: how far that is from the middle), so it ends up lying on its side on
+  // the ground; tipped about the middle, half of it went into the ground
+  const foot = FOOT[kind] || 0;
+  tip.position.x = foot; spin.position.set(-foot, mid, 0); spin.add(mesh(parts));
   return { root, tip, spin };
 }
 // What is left of something that broke.
