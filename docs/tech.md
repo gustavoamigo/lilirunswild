@@ -8,10 +8,11 @@ Three.js r170 (vendored), plain ES modules, no build step, and no asset files bu
 |---|---|
 | `index.html`, `style.css` | Two canvases (`#game` 3D, `#hud` 2D overlay) and the buttons |
 | `src/main.js` | Game state `G`, the dog, the car, props, people, birds, the overlay, the frame loop |
-| `src/world.js` | The town as data: obstacles, platforms, props, people, flocks; `pushOut`, `floorAt` |
+| `world/map.txt`, `world/tiles/*.js` | The town: a map of tiles, and each kind of tile (see *The town: tiles on a map* below) |
+| `src/world.js` | Reads the map and its tiles into the town as data: obstacles, platforms, props, people, flocks, spots; `pushOut`, `floorAt` |
 | `src/scene.js` | The 3D view: camera, lights, everything placed from the flat map each frame |
 | `src/models.js` | Dog, car, people, birds, props, trees, houses, all assembled from simple shapes |
-| `src/ground.js` | The ground painted into one texture |
+| `src/ground.js` | The ground of each tile painted into its own texture |
 | `src/art.js` | 2D drawing for the overlay (bubbles, counters, icons) |
 | `src/fx.js` | Overlay particles (dust, stars, hearts, leaves) |
 | `src/audio.js` | Synthesised sound (WebAudio) |
@@ -19,6 +20,19 @@ Three.js r170 (vendored), plain ES modules, no build step, and no asset files bu
 | `src/style.js` | `?style=real` (default) or `toon` |
 | `tools/serve.py` | Local server with caching off |
 | `tools/sim/` | Lili's skeleton in a physics engine, to capture movement from instead of posing it (see below) |
+
+## The town: tiles on a map
+
+Built from the design in `docs/open-world-design.md` (step 1 of 4 done: the tiles; not yet the bigger town, loading only nearby tiles, or missions).
+
+- **The map**, `world/map.txt`: a legend (`R = road`: a letter and the tile file it stands for), `bounds x0 y0 x1 y1` (how far she can go; the hedge runs round it), then the grid, one cell per tile, separated by spaces, north at the top. A cell may be turned: `>` a quarter turn clockwise, `>>` half, `<` a quarter anticlockwise. Read by `loadTown()` in `src/world.js` (the game waits for it before starting).
+- **A tile**, `world/tiles/<name>.js`: an ES module whose default export says what is on a 400 × 400 square (`TILE`), in its own coordinates (x east, y south, 0 to 400), before it is turned:
+  - `ground`: shapes, painted in this order: `{ path: [x0, y0, x1, y1] }` (sand, `PATH_HALF` 42 each side), `{ plaza: [x, y, r] }`, `{ road: [x0, y0, x1, y1] }` or `{ road: { arc: [cx, cy, r, a0, a1] } }` (asphalt `ROAD_HALF` 110 each side of the line, then `WALK` 70 of pavement), `{ zebra: [x, y] }` (across a west-east road), `{ bay: [x, y, w, h] }` (a parking bay's lines). The same shapes say what is underfoot (`tileSurface`, and `world.surfaceAt(x, y)` in town coordinates).
+  - things: `lamps: [[x, y]]`, `trees: [[x, y]]`, `benches: [[x, y]]` (west-east), `table: [x, y]` (with four plates), `house: [x, y]`, `props: [[kind, x, y, z?]]` (kinds in `KINDS`), `birds: [[x, y]]` (a flock), `car: [x, y, heading]` (where the car waits; one tile on the map must have it), `people: [{ look, nature, at: [x, y], heading } or { look, nature, walk: [[x, y], [x, y]] }]` (a walk goes to and fro between two points, which may lie in the tiles beyond), `flowers: n` (scattered on the tile's grass), `park: true` (scared birds may come down here), `spots: [[tag, x, y]]` (named places for missions; `start` is where she begins).
+  - Everything on a tile is turned with it. A tile used in several cells puts its things in each, so people and flocks belong on tiles that are used once.
+- **No seams**: grass patches are placed by their position in town (`patches` in `src/ground.js`), so they run across tile edges; a road's dashed line is a whole number of dash lengths per tile, with half a gap at each end, so it runs on whichever way neighbouring tiles are turned. A road reaches a tile's edge at its middle, so roads meet.
+- **The first kit** (15 tiles): `road`, `corner`, `crossing`, `parking`, `parcels`, `roadworks`; `grass`, `house`; `lawn`, `trees`, `path`, `plaza`, `benches`, `pots`, `picnic`. The town is 9 × 7 tiles: houses along the top, a ring road round a 5 × 3 park.
+- Each tile's ground is a separate square of the ground (a canvas texture per tile). All tiles are built at the start for now; building only those near her is step 2.
 
 ## Coordinates and camera
 
@@ -37,7 +51,7 @@ Constants at the top of `src/main.js`: `TROT` 210, `ZOOM` 460 (2.5 and 5.5 m/s a
 
 ## URL parameters
 
-`?style=toon|real`, `?at=x,y` (start there), `?car` (start driving), `?studio` (below), `?studio&people` (the people line-up, below).
+`?style=toon|real`, `?at=x,y` (start there), `?car` (start driving), `?studio` (below), `?studio&people` (the people line-up, below), `?zoom=4` (the camera that many times further back, to look over the map).
 
 ## How the dog moves (`makeDog` in `src/models.js`)
 

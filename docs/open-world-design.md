@@ -1,6 +1,6 @@
 # Open world and missions: design
 
-Status: proposed (2026-11-14), not built. For the owner to approve or change before any code.
+Status: approved; step 1 (tiles) built 2026-11-15, see *The town: tiles on a map* in `docs/tech.md`.
 
 ## What the game becomes
 

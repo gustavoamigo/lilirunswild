@@ -1,82 +1,102 @@
-// The ground is painted once into a big picture and laid flat under the 3D world:
-// grass, the ring road with its pavements, the park's sandy paths and plaza.
+// The ground of one tile, painted into a picture laid flat under it: grass, then its sandy paths and plaza, then its
+// roads with their pavements (the shapes in the tile's `ground`, see world/tiles/). What runs across tile edges is
+// placed so the edges do not show: the grass patches by their place in town, the road's dashes a whole number of
+// times along each tile.
 import * as Art from './art.js';
-import { W, H, ROAD, PARK, PLAZA } from './world.js';
+import { TILE, ROAD_HALF, WALK, PATH_HALF, tileSurface } from './world.js';
 
-export function paintGround(world, res) {
+const GRASS = '#9BD770';
+const seeded = (seed) => () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
+// the grass patches near a tile: two in each 300-unit square of town, the same whichever tile paints them
+function patches(x0, y0) {
+  const out = [];
+  for (let i = Math.floor((x0 - 300) / 300); i <= Math.floor((x0 + TILE + 300) / 300); i++)
+    for (let j = Math.floor((y0 - 300) / 300); j <= Math.floor((y0 + TILE + 300) / 300); j++) {
+      const r = seeded(((i * 73856093) ^ (j * 19349663)) & 0x7fffffff || 1);
+      for (let k = 0; k < 2; k++) out.push({ x: (i + r()) * 300, y: (j + r()) * 300, rx: 90 + r() * 170, ry: 50 + r() * 90, light: r() < 0.5 });
+    }
+  return out;
+}
+// trace a ground shape: a line [x0, y0, x1, y1] or { arc: [cx, cy, r, a0, a1] }
+function trace(c, g) {
+  c.beginPath();
+  if (Array.isArray(g)) { c.moveTo(g[0], g[1]); c.lineTo(g[2], g[3]); } else c.arc(g.arc[0], g.arc[1], g.arc[2], g.arc[3], g.arc[4]);
+}
+const length = (g) => (Array.isArray(g) ? Math.hypot(g[2] - g[0], g[3] - g[1]) : g.arc[2] * (g.arc[4] - g.arc[3]));
+
+export function paintTile(t, res = 1) {
   const cv = document.createElement('canvas');
-  cv.width = Math.round(W * res); cv.height = Math.round(H * res);
-  const c = cv.getContext('2d');
+  cv.width = cv.height = Math.round(TILE * res);
+  const c = cv.getContext('2d'), d = t.def, x0 = t.col * TILE, y0 = t.row * TILE, r = seeded(t.seed % 2147483646 + 1);
   c.scale(res, res);
-  let seed = 11; const r = () => ((seed = (seed * 16807) % 2147483647) / 2147483647);
 
-  c.fillStyle = '#9BD770'; c.fillRect(0, 0, W, H);
-  for (let i = 0; i < 60; i++) {                     // light and dark patches
-    c.fillStyle = r() < 0.5 ? 'rgba(190,240,140,.4)' : 'rgba(110,190,90,.26)';
-    Art.ell(c, r() * W, r() * H, 90 + r() * 170, 50 + r() * 90); c.fill();
+  // ---- grass, in town coordinates ----
+  c.fillStyle = GRASS; c.fillRect(0, 0, TILE, TILE);
+  for (const p of patches(x0, y0)) {
+    c.fillStyle = p.light ? 'rgba(190,240,140,.4)' : 'rgba(110,190,90,.26)';
+    Art.ell(c, p.x - x0, p.y - y0, p.rx, p.ry); c.fill();
   }
   c.lineCap = 'round';
-  for (let i = 0; i < 30000; i++) {                  // tiny grass blades
-    const x = r() * W, y = r() * H, l = 5 + r() * 9;
+  for (let i = 0; i < 480; i++) {                    // tiny grass blades
+    const x = r() * TILE, y = r() * TILE, l = 5 + r() * 9;
     c.strokeStyle = r() < 0.5 ? `rgba(70,150,60,${0.1 + r() * 0.16})` : `rgba(215,250,160,${0.14 + r() * 0.2})`;
     c.lineWidth = 1.6 + r() * 1.4;
     c.beginPath(); c.moveTo(x, y); c.lineTo(x + (r() - 0.5) * 6, y - l); c.stroke();
   }
-  // fade the edges into the plain grass outside the map
-  for (const [x, y, w, h, x0, y0, x1, y1] of [[0, 0, W, 80, 0, 0, 0, 80], [0, H - 80, W, 80, 0, H, 0, H - 80], [0, 0, 80, H, 0, 0, 80, 0], [W - 80, 0, 80, H, W, 0, W - 80, 0]]) {
-    const g = c.createLinearGradient(x0, y0, x1, y1);
-    g.addColorStop(0, '#9BD770'); g.addColorStop(1, 'rgba(155,215,112,0)');
-    c.fillStyle = g; c.fillRect(x, y, w, h);
-  }
 
-  // ---- the park's sandy paths and plaza ----
-  c.lineJoin = 'round';
-  const paths = (w, color) => {
+  // ---- the tile's own shapes, in its own coordinates, turned with it ----
+  c.translate(TILE / 2, TILE / 2); c.rotate(t.rot * Math.PI / 2); c.translate(-TILE / 2, -TILE / 2);
+  const ground = d.ground || [], roads = ground.filter((g) => g.road).map((g) => g.road);
+  const paths = ground.filter((g) => g.path).map((g) => g.path), plazas = ground.filter((g) => g.plaza).map((g) => g.plaza);
+
+  // sandy paths and plaza
+  c.lineCap = 'butt';
+  for (const [w, color] of [[PATH_HALF * 2 + 16, '#D9C28C'], [PATH_HALF * 2, '#EBD9A8']]) {
     c.strokeStyle = color; c.fillStyle = color; c.lineWidth = w;
-    c.beginPath(); c.moveTo(PARK.x0 - 30, PLAZA.y); c.lineTo(PARK.x1 + 30, PLAZA.y); c.moveTo(PLAZA.x, PARK.y0 - 30); c.lineTo(PLAZA.x, PARK.y1 + 30); c.stroke();
-    Art.circ(c, PLAZA.x, PLAZA.y, PLAZA.r + (w - 84) / 2); c.fill();
-  };
-  paths(100, '#D9C28C'); paths(84, '#EBD9A8');
-  for (let i = 0; i < 5000; i++) {                   // pebbles and speckles on the sand
-    const x = PARK.x0 + r() * (PARK.x1 - PARK.x0), y = PARK.y0 + r() * (PARK.y1 - PARK.y0);
-    if (!(Math.abs(y - PLAZA.y) < 38 || Math.abs(x - PLAZA.x) < 38 || Math.hypot(x - PLAZA.x, y - PLAZA.y) < PLAZA.r - 6)) continue;
-    const big = r() < 0.12;
-    c.fillStyle = big ? (r() < 0.5 ? '#CDB98A' : '#F6EBC8') : `rgba(150,120,70,${0.12 + r() * 0.18})`;
-    Art.ell(c, x, y, big ? 5 + r() * 4 : 1.5 + r() * 2, big ? 3.5 + r() * 2 : 1.5 + r() * 1.5); c.fill();
+    for (const g of paths) { trace(c, g); c.stroke(); }
+    for (const [x, y, rad] of plazas) { Art.circ(c, x, y, rad + (w - PATH_HALF * 2) / 2); c.fill(); }
   }
-  c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 6; Art.circ(c, PLAZA.x, PLAZA.y, PLAZA.r - 46); c.stroke();
+  if (paths.length || plazas.length) {
+    for (let i = 0; i < 400; i++) {                  // pebbles and speckles on the sand
+      const x = r() * TILE, y = r() * TILE;
+      if (tileSurface(d, x, y) !== 'path') continue;
+      const big = r() < 0.12;
+      c.fillStyle = big ? (r() < 0.5 ? '#CDB98A' : '#F6EBC8') : `rgba(150,120,70,${0.12 + r() * 0.18})`;
+      Art.ell(c, x, y, big ? 5 + r() * 4 : 1.5 + r() * 2, big ? 3.5 + r() * 2 : 1.5 + r() * 1.5); c.fill();
+    }
+    c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 6;
+    for (const [x, y, rad] of plazas) { Art.circ(c, x, y, rad - 46); c.stroke(); }
+  }
 
-  // ---- the ring road: pavement, kerb, asphalt, middle line ----
-  const ring = () => { c.beginPath(); c.roundRect(ROAD.cx - ROAD.hx, ROAD.cy - ROAD.hy, ROAD.hx * 2, ROAD.hy * 2, ROAD.corner); };
-  const full = (ROAD.half + ROAD.walk) * 2;
-  c.strokeStyle = '#B9B4A8'; c.lineWidth = full + 8; ring(); c.stroke();
-  c.strokeStyle = '#DDD8CC'; c.lineWidth = full; ring(); c.stroke();
-  c.save(); ring(); c.lineWidth = full; c.strokeStyle = 'rgba(0,0,0,0)';       // paving stones
-  c.fillStyle = 'rgba(120,110,95,.16)';
-  for (let x = 240; x < W - 240; x += 46) for (let y = 360; y < H - 160; y += 46) {
-    if (c.isPointInStroke((x + 2) * res, (y + 2) * res)) { c.fillRect(x, y, 44, 2.5); c.fillRect(x, y, 2.5, 44); }
+  // roads: pavement and its stones, kerb, asphalt and its speckles, the dashed middle line
+  if (roads.length) {
+    const full = (ROAD_HALF + WALK) * 2;
+    const band = (w, color) => { c.strokeStyle = color; c.lineWidth = w; for (const g of roads) { trace(c, g); c.stroke(); } };
+    band(full + 8, '#B9B4A8'); band(full, '#DDD8CC');
+    c.fillStyle = 'rgba(120,110,95,.16)';
+    for (let x = 0; x < TILE; x += 50) for (let y = 0; y < TILE; y += 50) if (tileSurface(d, x + 3, y + 3) === 'walk') { c.fillRect(x, y, 48, 2.5); c.fillRect(x, y, 2.5, 48); }
+    band(ROAD_HALF * 2 + 10, '#9A958B'); band(ROAD_HALF * 2, '#6F7480');
+    for (let i = 0; i < 900; i++) {
+      const x = r() * TILE, y = r() * TILE;
+      if (tileSurface(d, x, y) !== 'road') continue;
+      c.fillStyle = r() < 0.5 ? `rgba(40,44,54,${0.1 + r() * 0.14})` : `rgba(210,214,224,${0.08 + r() * 0.1})`;
+      Art.circ(c, x, y, 1.2 + r() * 2.4); c.fill();
+    }
+    c.strokeStyle = '#F4E9B0'; c.lineWidth = 7;
+    for (const g of roads) {
+      // a whole number of dash-and-gap lengths (about 100), each a gap's half, a dash, a gap's half: so the line runs on
+      // into the next tile whichever way either is turned
+      const L = length(g), k = L / Math.max(1, Math.round(L / 100));
+      c.setLineDash([k * 0.56, k * 0.44]); c.lineDashOffset = -k * 0.22; trace(c, g); c.stroke();
+    }
+    c.setLineDash([]);
   }
-  c.restore();
-  c.strokeStyle = '#9A958B'; c.lineWidth = ROAD.half * 2 + 10; ring(); c.stroke();
-  c.strokeStyle = '#6F7480'; c.lineWidth = ROAD.half * 2; ring(); c.stroke();
-  c.save(); ring(); c.lineWidth = ROAD.half * 2 - 8;                             // asphalt speckles
-  for (let i = 0; i < 40000; i++) {
-    const x = r() * W, y = r() * H;
-    if (!c.isPointInStroke(x * res, y * res)) continue;
-    c.fillStyle = r() < 0.5 ? `rgba(40,44,54,${0.1 + r() * 0.14})` : `rgba(210,214,224,${0.08 + r() * 0.1})`;
-    Art.circ(c, x, y, 1.2 + r() * 2.4); c.fill();
+  for (const g of ground) {
+    if (g.zebra) {                                   // zebra crossing over a west-east road
+      c.fillStyle = '#F2F0E8';
+      for (let k = -4; k <= 4; k++) c.fillRect(g.zebra[0] + k * 22 - 7, g.zebra[1] - ROAD_HALF + 8, 14, ROAD_HALF * 2 - 16);
+    }
+    if (g.bay) { c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 6; c.strokeRect(...g.bay); }
   }
-  c.restore();
-  c.strokeStyle = '#F4E9B0'; c.lineWidth = 7; c.lineCap = 'butt'; c.setLineDash([58, 46]); ring(); c.stroke(); c.setLineDash([]);
-  // zebra crossings where the park paths meet the road
-  c.fillStyle = '#F2F0E8';
-  const y0 = ROAD.cy - ROAD.hy, y1 = ROAD.cy + ROAD.hy, x0 = ROAD.cx - ROAD.hx, x1 = ROAD.cx + ROAD.hx;
-  for (let k = -4; k <= 4; k++) {
-    for (const y of [y0, y1]) c.fillRect(PLAZA.x + k * 22 - 7, y - ROAD.half + 8, 14, ROAD.half * 2 - 16);
-    for (const x of [x0, x1]) c.fillRect(x - ROAD.half + 8, PLAZA.y + k * 22 - 7, ROAD.half * 2 - 16, 14);
-  }
-  // a parking bay where the car waits
-  c.strokeStyle = 'rgba(255,255,255,.8)'; c.lineWidth = 6;
-  c.strokeRect(world.car.x - 210, world.car.y - 92, 420, 150);
   return cv;
 }

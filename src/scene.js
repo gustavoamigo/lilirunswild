@@ -3,8 +3,8 @@
 // and behind, and slides after whoever it is following.
 import * as THREE from '../vendor/three.module.min.js';
 import { STYLE } from './style.js';
-import { W, H, BOUNDS } from './world.js';
-import { paintGround } from './ground.js';
+import { W, H, BOUNDS, TILE } from './world.js';
+import { paintTile } from './ground.js';
 import * as M from './models.js';
 import { clamp, lerp, rng } from './util.js';
 
@@ -48,11 +48,15 @@ export function initScene(canvas, w) {
     for (const o of world.people) { const m = M.makePerson(o.look); scene.add(m.root); people.push({ o, m }); }
     resize(); return;
   }
-  const res = renderer.capabilities.maxTextureSize >= 4096 ? 1 : 0.66;
-  const tex = new THREE.CanvasTexture(paintGround(world, res));
-  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-  const ground = new THREE.Mesh(new THREE.PlaneGeometry(W, H), M.surf({ map: tex }));
-  ground.rotation.x = -Math.PI / 2; ground.position.set(W / 2, 0, H / 2); ground.receiveShadow = true; scene.add(ground);
+  // ---- the ground: one painted square per tile ----
+  const tileGeo = new THREE.PlaneGeometry(TILE, TILE);
+  for (const t of world.tiles) {
+    const tex = new THREE.CanvasTexture(paintTile(t));
+    tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
+    const ground = new THREE.Mesh(tileGeo, M.surf({ map: tex }));
+    ground.rotation.x = -Math.PI / 2; ground.position.set((t.col + 0.5) * TILE, 0, (t.row + 0.5) * TILE); ground.receiveShadow = true; scene.add(ground);
+  }
 
   const vc = M.surf({ color: '#ffffff', vertexColors: true });
   // ---- trees: the leaves fade when they would hide whoever the camera follows ----

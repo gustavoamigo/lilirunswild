@@ -1,0 +1,2 @@
+// Plain grass.
+export default {};

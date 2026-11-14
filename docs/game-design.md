@@ -27,7 +27,7 @@ An open red car, one in town. Steer where it should go; steering against the way
 
 ## The town
 
-A park (trees, benches, a picnic table, flower pots, a sandy cross of paths with a plaza) inside a ring road with pavements and zebra crossings, houses beyond, a hedge round the edge. Seven people: four adults and three children; two of them (a woman walking the west lawn and a boy on the east lawn) are nervous of dogs; three flocks of birds.
+Built from tiles on a map (`world/map.txt`): a park (trees, benches, a picnic table, flower pots, a sandy cross of paths with a plaza) inside a ring road with pavements, zebra crossings, road works and a parking bay, houses beyond, a hedge round the edge. Seven people: four adults and three children; two of them (a woman walking the west lawn and a boy on the east lawn) are nervous of dogs; three flocks of birds.
 
 ## People
 

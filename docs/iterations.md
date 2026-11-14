@@ -330,3 +330,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the plates should use the generated crash sound.
 
 **Decision**: knocked or broken, a plate plays the generated cup and plate breaking; the thud for plates is removed. **Checked by script**: jumping on the table, no errors. **Not checked**: by ear.
+
+**Feedback**: implement the plan in the design doc. The park does not need to be exactly the same.
+
+**Decision**: step 1 of 4: the town is now built from 15 kinds of tile on a 9 × 7 map (`world/map.txt`, `world/tiles/`), each painted on its own; the ring road runs through the middle of tiles with quarter-circle corners, the park is 5 × 3 tiles, everything (people, birds, the car, props) belongs to a tile. Walking people go to and fro between two points (any direction, not only west-east). `?zoom=4` pulls the camera back to look over the map. **Checked by script**: the whole town from above and a corner up close (no seams, dashes and roads join), driving, jumping on the table, standing idle, people reacting, no errors. **Not checked**: by eye in play; every tile up close. Next: step 2, a bigger town with only nearby tiles built.

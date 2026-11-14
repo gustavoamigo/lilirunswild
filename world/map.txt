@@ -1,0 +1,29 @@
+# The town: one tile per letter, 400 x 400 game units each, north at the top (docs/open-world-design.md).
+# A tile can be turned: > a quarter turn clockwise, >> half a turn, < a quarter turn anticlockwise.
+# Lili can go as far as `bounds` (x0 y0 x1 y1); a hedge runs round it.
+
+h = house
+. = grass
+R = road
+C = corner
+Z = crossing
+Q = parking
+X = parcels
+W = roadworks
+P = lawn
+T = trees
+p = path
++ = plaza
+B = benches
+F = pots
+K = picnic
+
+bounds 300 410 3300 2500
+
+h  h   h   h   h   h   h   h   h
+.  C   R   Q   Z   R   X   C>  .
+.  R<  P   T   p>  T   P   R>  .
+.  Z<  p   B   +   F   p   Z>  .
+.  R<  K   P   p>  T   P   R>  .
+.  C<  W>> R>> Z>> R>> R>> C>> .
+.  .   .   .   .   .   .   .   .

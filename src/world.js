@@ -1,28 +1,65 @@
-// The town: a fixed, seeded layout. A ring road round a park, with things to knock over,
-// people to greet, birds to chase and one car to borrow.
+// The town is built from tiles laid on a map (world/map.txt, world/tiles/*.js; docs/open-world-design.md): each tile is a
+// 400 x 400 square of town holding its ground and everything on it, in its own coordinates (x east, y south, 0 to 400).
+// buildTown turns and places each tile and gathers what is on them into the lists the rest of the game works from.
 import { rng } from './util.js';
 
-export const W = 3600, H = 2800;
-// How far he can go: just past the outer pavement.
-export const BOUNDS = { x0: 270, y0: 390, x1: 3330, y1: 2610 };
-// The road is a ring (a rounded rectangle). ROAD.half is half the width of the asphalt,
-// ROAD.walk the width of the pavement on each side.
-export const ROAD = { cx: 1800, cy: 1500, hx: 1300, hy: 880, corner: 240, half: 110, walk: 70 };
-export const PARK = { x0: 690, y0: 810, x1: 2910, y1: 2190 };
-export const PLAZA = { x: 1800, y: 1500, r: 150 };
+export const TILE = 400;
+// The size of the town and how far she can go: set from the map by loadTown.
+export let W = 0, H = 0;
+export const BOUNDS = { x0: 0, y0: 0, x1: 0, y1: 0 };
+// Roads: half the asphalt's width, and each pavement's. Park paths: half their width.
+export const ROAD_HALF = 110, WALK = 70, PATH_HALF = 42;
 
-// Signed distance to the middle line of the road: negative inside the ring (park side).
-export function roadDist(x, y) {
-  const qx = Math.abs(x - ROAD.cx) - (ROAD.hx - ROAD.corner), qy = Math.abs(y - ROAD.cy) - (ROAD.hy - ROAD.corner);
-  return Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) + Math.min(Math.max(qx, qy), 0) - ROAD.corner;
+// A shape of the ground (a tile's `ground` entry) as a line [x0, y0, x1, y1] or { arc: [cx, cy, r, a0, a1] }:
+// how far a point is from it.
+function shapeDist(g, x, y) {
+  if (Array.isArray(g)) {
+    const [ax, ay, bx, by] = g, dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    const t = l2 ? Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / l2)) : 0;
+    return Math.hypot(x - ax - t * dx, y - ay - t * dy);
+  }
+  const [cx, cy, r, a0, a1] = g.arc;
+  let a = Math.atan2(y - cy, x - cx); while (a < a0) a += Math.PI * 2;
+  return a <= a1 ? Math.abs(Math.hypot(x - cx, y - cy) - r) : Infinity;
 }
-// What is underfoot: 'road' | 'walk' | 'path' | 'grass'
-export function surfaceAt(x, y) {
-  const d = Math.abs(roadDist(x, y));
-  if (d < ROAD.half) return 'road';
-  if (d < ROAD.half + ROAD.walk) return 'walk';
-  if (roadDist(x, y) < 0 && (Math.abs(y - PLAZA.y) < 42 || Math.abs(x - PLAZA.x) < 42 || Math.hypot(x - PLAZA.x, y - PLAZA.y) < PLAZA.r)) return 'path';
-  return 'grass';
+// What is underfoot at a point of a tile, in its own coordinates: 'road' | 'walk' | 'path' | 'grass'
+export function tileSurface(def, x, y) {
+  let s = 'grass';
+  for (const g of def.ground || []) {
+    if (g.road) { const d = shapeDist(g.road, x, y); if (d < ROAD_HALF) return 'road'; if (d < ROAD_HALF + WALK) s = 'walk'; }
+    if (s === 'grass' && g.path && shapeDist(g.path, x, y) < PATH_HALF) s = 'path';
+    if (s === 'grass' && g.plaza && Math.hypot(x - g.plaza[0], y - g.plaza[1]) < g.plaza[2]) s = 'path';
+  }
+  return s;
+}
+// A tile turned `rot` quarter turns clockwise: where its point (x, y) ends up, still in tile coordinates, and back.
+export function turn(rot, x, y) { for (let k = 0; k < (rot & 3); k++) [x, y] = [TILE - y, x]; return [x, y]; }
+export function unturn(rot, x, y) { for (let k = 0; k < (rot & 3); k++) [x, y] = [y, TILE - x]; return [x, y]; }
+
+// Read the map and every tile it names.
+export async function loadTown() {
+  const text = await (await fetch(new URL('../world/map.txt', import.meta.url))).text();
+  const legend = {}, rows = [];
+  let bounds = null;
+  for (const raw of text.split('\n')) {
+    const line = raw.trim();
+    if (!line || line.startsWith('#')) continue;
+    const m = line.match(/^(\S+)\s*=\s*(\S+)$/);
+    if (m) legend[m[1]] = m[2];
+    else if (line.startsWith('bounds')) bounds = line.split(/\s+/).slice(1).map(Number);
+    else rows.push(line.split(/\s+/));
+  }
+  const defs = {};
+  for (const name of new Set(Object.values(legend))) defs[name] = (await import(new URL(`../world/tiles/${name}.js`, import.meta.url))).default;
+  const tiles = [];
+  rows.forEach((row, r) => row.forEach((cell, c) => {
+    const m = cell.match(/^(.+?)(>>|>|<)?$/), name = legend[m[1]];
+    if (!name) throw new Error(`world/map.txt: no tile for "${m[1]}"`);
+    tiles.push({ col: c, row: r, name, def: defs[name], rot: { '>': 1, '>>': 2, '<': 3 }[m[2]] || 0 });
+  }));
+  W = Math.max(...rows.map((r) => r.length)) * TILE; H = rows.length * TILE;
+  [BOUNDS.x0, BOUNDS.y0, BOUNDS.x1, BOUNDS.y1] = bounds || [0, 0, W, H];
+  return buildTown(tiles);
 }
 
 // Things with a flat top that he can jump onto: a line with a radius (a point, if both ends are the same).
@@ -45,86 +82,80 @@ export const KINDS = {
   ball:  { r: 13, h: 26, tough: 0, fly: 1.5, pop: 300, drag: 0.7, rolls: true },
 };
 
-export function buildTown() {
-  const R = rng(20261112);
-  const obstacles = [], platforms = [], props = [], trees = [], lamps = [], houses = [], flowers = [];
+export function buildTown(tiles) {
+  const obstacles = [], platforms = [], props = [], trees = [], lamps = [], houses = [], flowers = [], flocks = [], people = [], spots = [];
   const prop = (kind, x, y, z = 0) => { const o = { kind, x, y, z, home: { x, y, z }, vx: 0, vy: 0, vz: 0, tip: 0, roll: 0, dir: 0, rest: true, gone: false, wob: 0, messed: false }; props.push(o); return o; };
-
-  // ---- park furniture ----
-  const bench = (x, y) => platforms.push({ kind: 'bench', ax: x - 52, ay: y, bx: x + 52, by: y, r: 24, h: 42, wob: 0 });
-  bench(1500, 1385); bench(2100, 1385); bench(1280, 1615);
-  const table = { kind: 'table', ax: 1150, ay: 1850, bx: 1150, by: 1850, r: 76, h: 60, wob: 0 };
-  platforms.push(table);
-  for (let i = 0; i < 4; i++) { const a = 0.6 + i * 1.57; prop('plate', table.ax + Math.cos(a) * 42, table.ay + Math.sin(a) * 42, table.h); }
-
-  for (let i = 0; i < 7; i++) prop('pot', 1960 + i * 62, 1590);
-  prop('ball', 1900, 1700); prop('ball', 1560, 1250);
-
-  // ---- street things ----
-  for (let i = 0; i < 6; i++) prop('cone', 1560 + i * 74, 2350 + (i % 2) * 34);
-  for (const [x, y] of [[745, 865], [2855, 865], [745, 2135], [2855, 2135], [1700, 775], [2400, 2225]]) prop('bin', x, y);
-  // a stack of parcels on the pavement, one on top
-  prop('box', 1180, 470); prop('box', 1238, 474); prop('box', 1209, 472, 44); prop('box', 1300, 466);
-  prop('box', 2700, 2530); prop('box', 2756, 2526);
-  for (const [x, y] of [[1000, 775], [1800, 775], [2600, 775], [1000, 2225], [1800, 2225], [2600, 2225], [655, 1500], [2945, 1500]]) { lamps.push({ x, y }); obstacles.push({ kind: 'lamp', x, y, r: 9, wob: 0 }); }
-
-  // ---- trees: seeded, kept off the paths, the plaza and the furniture ----
-  const clear = (x, y, room) => surfaceAt(x, y) === 'grass' && Math.abs(y - PLAZA.y) > 110 && Math.abs(x - PLAZA.x) > 110 && Math.hypot(x - PLAZA.x, y - PLAZA.y) > PLAZA.r + 90
-    && platforms.every((o) => platDist(o, x, y) > o.r + room) && props.every((o) => Math.hypot(o.x - x, o.y - y) > room) && trees.every((t) => Math.hypot(t.x - x, t.y - y) > 250);
-  for (let i = 0; i < 600 && trees.length < 15; i++) {
-    const x = PARK.x0 + 90 + R() * (PARK.x1 - PARK.x0 - 180), y = PARK.y0 + 90 + R() * (PARK.y1 - PARK.y0 - 180);
-    if (!clear(x, y, 150) || Math.hypot(x - 1800, y - 1560) < 260) continue;
-    const t = { x, y, s: 0.9 + R() * 0.35, hue: (R() * 4) | 0, seed: R() * 6, wob: 0 };
-    trees.push(t); obstacles.push({ kind: 'tree', x, y, r: 22 * t.s, tree: t });
-  }
-  for (let i = 0; i < 2000 && flowers.length < 150; i++) {
-    const x = PARK.x0 + R() * (PARK.x1 - PARK.x0), y = PARK.y0 + R() * (PARK.y1 - PARK.y0);
-    if (surfaceAt(x, y) === 'grass') flowers.push({ x, y, c: (R() * 4) | 0, s: 0.8 + R() * 0.6 });
-  }
-
-  // ---- houses: a row along the far (north) side, beyond where he can go, so they never hide him ----
   const HOUSE = ['#F7D9A8', '#F4B6A6', '#BFE0F2', '#F6E7A1', '#D8C4EE', '#C9E8B8'], ROOF = ['#C8553D', '#8A5A44', '#5E7C99', '#B5483A'];
-  for (let i = 0, x = 330; x < W - 300; i++) {
-    const w = 250 + R() * 110;
-    houses.push({ x: x + w / 2, y: 215 - R() * 30, w, d: 170, h: 190 + R() * 80, color: HOUSE[i % HOUSE.length], roof: ROOF[(R() * ROOF.length) | 0] });
-    x += w + 50 + R() * 50;
-  }
+  let car = null, table = null;
 
-  const car = { x: 1500, y: 668, heading: 0 };
+  for (const t of tiles) {
+    const d = t.def, x0 = t.col * TILE, y0 = t.row * TILE, R = rng(t.col * 7919 + t.row * 104729 + 17);
+    t.seed = t.col * 7919 + t.row * 104729;
+    // a point of the tile, in town coordinates; a heading, turned with it
+    const at = (x, y) => { const [u, v] = turn(t.rot, x, y); return [x0 + u, y0 + v]; };
+    const head = (h) => h + t.rot * Math.PI / 2;
+    for (const [x, y] of d.lamps || []) { const [X, Y] = at(x, y); lamps.push({ x: X, y: Y }); obstacles.push({ kind: 'lamp', x: X, y: Y, r: 9, wob: 0 }); }
+    for (const [kind, x, y, z] of d.props || []) { const [X, Y] = at(x, y); prop(kind, X, Y, z || 0); }
+    for (const [x, y] of d.trees || []) {
+      const [X, Y] = at(x, y), tr = { x: X, y: Y, s: 0.9 + R() * 0.35, hue: (R() * 4) | 0, seed: R() * 6, wob: 0 };
+      trees.push(tr); obstacles.push({ kind: 'tree', x: X, y: Y, r: 22 * tr.s, tree: tr });
+    }
+    for (const [x, y] of d.benches || []) {
+      const [ax, ay] = at(x - 52, y), [bx, by] = at(x + 52, y);
+      platforms.push({ kind: 'bench', ax, ay, bx, by, r: 24, h: 42, wob: 0 });
+    }
+    if (d.table) {
+      const [X, Y] = at(...d.table);
+      table = { kind: 'table', ax: X, ay: Y, bx: X, by: Y, r: 76, h: 60, wob: 0 }; platforms.push(table);
+      for (let i = 0; i < 4; i++) { const a = 0.6 + i * 1.57; prop('plate', X + Math.cos(a) * 42, Y + Math.sin(a) * 42, table.h); }
+    }
+    if (d.house) {
+      const [X, Y] = at(...d.house), w = 250 + R() * 110;
+      houses.push({ x: X, y: Y - R() * 30, w, d: 170, h: 190 + R() * 80, color: HOUSE[(t.col + t.row) % HOUSE.length], roof: ROOF[(R() * ROOF.length) | 0] });
+    }
+    if (d.car) { const [X, Y] = at(d.car[0], d.car[1]); car = { x: X, y: Y, heading: head(d.car[2]) }; }
+    for (const [x, y] of d.birds || []) {
+      const [X, Y] = at(x, y), i = flocks.length;
+      flocks.push({ x: X, y: Y, h: 0, state: 'ground', t: 0, seed: i * 2.3,
+        birds: Array.from({ length: 5 }, (_, k) => ({ ox: Math.cos(k * 1.3 + i) * (28 + k * 9), oy: Math.sin(k * 1.3 + i) * (22 + k * 7), ph: R() * 6, face: R() * 6, color: k % 3 })) });
+    }
+    for (const p of d.people || []) {
+      const o = { look: p.look, nature: p.nature, heading: head(p.heading || 0), state: 'stand', t: 0, cool: 0, walk: null, seed: people.length * 2 };
+      if (p.walk) { const [a, b] = p.walk.map(([x, y]) => at(x, y)); o.walk = { ax: a[0], ay: a[1], bx: b[0], by: b[1], dir: 1 }; [o.x, o.y] = a; o.state = 'walk'; }
+      else [o.x, o.y] = at(...p.at);
+      people.push(o);
+    }
+    for (const [tag, x, y] of d.spots || []) { const [X, Y] = at(x, y); spots.push({ tag, x: X, y: Y }); }
+    // flowers: on the tile's grass, clear of trees and furniture
+    for (let i = 0, n = 0; i < 200 && n < (d.flowers || 0); i++) {
+      const x = 15 + R() * 370, y = 15 + R() * 370;
+      if (tileSurface(d, x, y) !== 'grass' || (d.trees || []).some(([a, b]) => Math.hypot(a - x, b - y) < 40) || (d.table && Math.hypot(d.table[0] - x, d.table[1] - y) < 90)) continue;
+      const [X, Y] = at(x, y); flowers.push({ x: X, y: Y, c: (R() * 4) | 0, s: 0.8 + R() * 0.6 }); n++;
+    }
+  }
+  if (!car) throw new Error('world/map.txt: no tile has the car');
   // The parked car is a thing he can jump onto (and so into). Its line is moved with the car.
   const carPlat = { kind: 'car', ax: 0, ay: 0, bx: 0, by: 0, r: 66, h: 64, wob: 0 };
   platforms.push(carPlat);
 
-  const flocks = [[1120, 1160], [2460, 1180], [2250, 1960]].map(([x, y], i) => ({
-    x, y, h: 0, state: 'ground', t: 0, seed: i * 2.3,
-    birds: Array.from({ length: 5 }, (_, k) => ({ ox: Math.cos(k * 1.3 + i) * (28 + k * 9), oy: Math.sin(k * 1.3 + i) * (22 + k * 7), ph: R() * 6, face: R() * 6, color: k % 3 })),
-  }));
-  // nature: how they take to dogs (lover, meh, nervous); children like dogs more whatever theirs (see updatePeople)
-  const people = [
-    { look: 0, nature: 'meh', x: 1300, y: 1500, heading: 0, state: 'walk', t: 0, cool: 0, walk: { x0: 900, x1: 2700, y: 1500, dir: 1 }, seed: 0 },
-    { look: 1, nature: 'lover', x: 2300, y: 775, heading: Math.PI / 2, state: 'stand', t: 0, cool: 0, walk: null, seed: 2 },
-    { look: 2, nature: 'nervous', x: 1420, y: 2228, heading: -Math.PI / 2, state: 'stand', t: 0, cool: 0, walk: null, seed: 4 },
-    // two children by the plaza: one standing, one wandering back and forth
-    { look: 3, nature: 'lover', x: 1690, y: 1625, heading: -Math.PI / 2, state: 'stand', t: 0, cool: 0, walk: null, seed: 6 },
-    { look: 4, nature: 'meh', x: 1600, y: 1680, heading: 0, state: 'walk', t: 0, cool: 0, walk: { x0: 1560, x1: 2040, y: 1680, dir: 1 }, seed: 8 },
-    // two who are nervous of dogs: a woman walking the west lawn, a child on the east lawn
-    { look: 5, nature: 'nervous', x: 1000, y: 1250, heading: 0, state: 'walk', t: 0, cool: 0, walk: { x0: 950, x1: 1650, y: 1250, dir: 1 }, seed: 10 },
-    { look: 6, nature: 'nervous', x: 2150, y: 1900, heading: Math.PI, state: 'stand', t: 0, cool: 0, walk: null, seed: 12 },
-  ];
-
+  // the tile at a point, and what is underfoot there
+  const tileAt = (x, y) => tiles.find((t) => t.col === Math.floor(x / TILE) && t.row === Math.floor(y / TILE));
+  const surfaceAt = (x, y) => { const t = tileAt(x, y); if (!t) return 'grass'; const [u, v] = unturn(t.rot, x - t.col * TILE, y - t.row * TILE); return tileSurface(t.def, u, v); };
   // Is this a free bit of open ground (nothing solid within `room`)?
   const freeSpot = (x, y, room = 60) => x > BOUNDS.x0 + room && x < BOUNDS.x1 - room && y > BOUNDS.y0 + room && y < BOUNDS.y1 - room
     && obstacles.every((o) => Math.hypot(o.x - x, o.y - y) > o.r + room) && platforms.every((o) => platDist(o, x, y) > o.r + room);
-  // Where a scared flock comes down: on the grass, well away from whatever scared it.
+  // Where a scared flock comes down: on the grass of a park tile, well away from whatever scared it.
+  const park = tiles.filter((t) => t.def.park);
+  const start = spots.find((s) => s.tag === 'start') || { x: W / 2, y: H / 2 };
   const birdSpot = (avoid) => {
     for (let far = 900; far > 200; far -= 100) for (let i = 0; i < 40; i++) {
-      const x = PARK.x0 + 120 + Math.random() * (PARK.x1 - PARK.x0 - 240), y = PARK.y0 + 120 + Math.random() * (PARK.y1 - PARK.y0 - 240);
-      if (freeSpot(x, y, 90) && avoid.every((a) => Math.hypot(a.x - x, a.y - y) > far)) return { x, y };
+      const t = park[(Math.random() * park.length) | 0], x = t.col * TILE + 60 + Math.random() * 280, y = t.row * TILE + 60 + Math.random() * 280;
+      if (surfaceAt(x, y) === 'grass' && freeSpot(x, y, 90) && avoid.every((a) => Math.hypot(a.x - x, a.y - y) > far)) return { x, y };
     }
-    return { x: PLAZA.x, y: PLAZA.y };
+    return { x: start.x, y: start.y };
   };
 
-  return { start: { x: 1800, y: 1600 }, obstacles, platforms, props, trees, lamps, houses, flowers, flocks, people, car, carPlat, table, freeSpot, birdSpot };
+  return { start: { x: start.x, y: start.y }, tiles, spots, obstacles, platforms, props, trees, lamps, houses, flowers, flocks, people, car, carPlat, table, freeSpot, birdSpot, surfaceAt };
 }
 
 // Slide something round out of anything solid. Returns what it hit hardest into, as

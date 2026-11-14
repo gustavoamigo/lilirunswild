@@ -6,7 +6,7 @@ import * as Art from './art.js';
 import { input, keyVector, steerMag, initInput } from './input.js';
 import { pollPad } from './gamepad.js';
 import { spawn, updateFx, drawFx, burst } from './fx.js';
-import { buildTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js';
+import { loadTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js';
 import { CAR, PERSON_LOOKS, isChild, personVoice } from './models.js';
 import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
 
@@ -18,10 +18,12 @@ const BRAKE = ZOOM * 2.3, SKID_END = ZOOM * 0.23;
 const BONK = ZOOM * 0.73;                                    // faster than this into something solid and he sees stars
 const CAR_TOP = 900;
 
-const world = buildTown();
+const world = await loadTown();
 const params = new URLSearchParams(location.search);
 // ?studio: an empty floor and a close camera, for working on how he moves (see the end of this file)
 const STUDIO = params.has('studio');
+// ?zoom=4: the camera that much further back (for looking over the map)
+const VIEW_ZOOM = Number(params.get('zoom')) || 1;
 const studio = { gait: 'auto', point: false, speed: 1, paused: false, step: false };
 if (STUDIO) {
   world.studio = true;
@@ -489,10 +491,10 @@ function updatePeople(dt) {
     o.glanceYaw = clamp(angDiff(toDog, o.heading), -1.2, 1.2);
     const walkTo = (x, y, v) => { const d = dist(o.x, o.y, x, y) || 1, s = Math.min(d, v * dt); o.x += (x - o.x) / d * s; o.y += (y - o.y) / d * s; face(Math.atan2(y - o.y, x - o.x), 8); return d; };
     if (o.state === 'walk') {
-      const w = o.walk;
-      if (o.x > w.x1) w.dir = -1; if (o.x < w.x0) w.dir = 1;
-      const vy = clamp(w.y - o.y, -40, 40);
-      o.x += w.dir * 70 * dt; o.y += vy * dt; face(Math.atan2(vy, w.dir * 70), 6);
+      // to and fro along their walk (from a to b and back); off it, they head back to the end they were making for
+      const w = o.walk, tx = w.dir > 0 ? w.bx : w.ax, ty = w.dir > 0 ? w.by : w.ay, d = dist(o.x, o.y, tx, ty) || 1;
+      if (d < 6) w.dir = -w.dir;
+      else { o.x += (tx - o.x) / d * 70 * dt; o.y += (ty - o.y) / d * 70 * dt; face(Math.atan2(ty - o.y, tx - o.x), 6); }
     } else if (o.state === 'stand') { if (dd < 420) face(toDog, 5); }
     else if (o.state === 'wobble') { face(toDog, 8); if (o.t > 1.15) respond(o, o.next || 'meh'); }
     else if (o.state === 'sit') { if (o.t > 1.6) respond(o, o.next || 'meh'); }
@@ -614,6 +616,7 @@ function update(dt) {
   const f = G.focus;
   if (dog.state === 'drive') { f.x = car.x; f.y = car.y; f.vx = Math.cos(car.heading) * car.v; f.vy = Math.sin(car.heading) * car.v; f.zoom = 1.2 + 0.4 * Math.abs(car.v) / CAR_TOP; }
   else { f.x = dog.x; f.y = dog.y; f.vx = dog.vx; f.vy = dog.vy; f.zoom = dog.zoom ? 1.12 : 1; }
+  f.zoom *= VIEW_ZOOM;
   btnCar.classList.toggle('hidden', !(dog.state === 'drive' || nearCar()));
 }
 
