@@ -246,3 +246,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: when children pet her she should get excited: wag faster, her body wiggling a little.
 
 **Decision**: petted by a child she wags fast and wide with her tongue out, and her rump and chest swing opposite ways with each wag; petted by an adult she is happy (the quicker wag she had after a hello). Being petted also stops her pointing at birds or bowing. Found on the way: people could stand on each other (two children crouched on the same spot); they now keep apart. **Checked by script**: a child coming over and petting her (excited while petted, then not), the two children 48 to 59 apart while both near her, no errors. **Not checked**: the wiggle by eye in motion.
+
+**Feedback**: the excited wiggle is too strong and not natural.
+
+**Decision**: the chest no longer swings against the rump and the body no longer rolls; the tail is a little slower and narrower and the rump sways only a little more than in an ordinary wag. **Checked by script**: page loads, a child petting her, no errors. **Not checked**: by eye.

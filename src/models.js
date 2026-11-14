@@ -406,8 +406,8 @@ export function makeDog() {
       T.fr = 0.55; T.rf = 21; T.wr = 1; T.wag = 0.02; T.tailUp = -0.1; T.pitch = -0.04;
     } else if (p.shake > 0) {                            // a good shake: the head twists one way and the other, and the twist runs down her back
       T.hp = -0.32; T.tailUp = 0.3; T.wag = 0; T.y = -6;
-    } else if (sp < 30 && p.excited > 0) {               // a child petting her: tail going like mad, the whole of her wiggling with it
-      T.wag = 0.9; T.wagHz = 21; T.tailUp = 0.75; T.tongue = 1; T.wig = 1;
+    } else if (sp < 30 && p.excited > 0) {               // a child petting her: the tail going fast, her bottom wiggling with it, the chest steady
+      T.wag = 0.75; T.wagHz = 18; T.tailUp = 0.75; T.tongue = 1; T.wig = 1;
     } else if (sp < 30) { T.wag = 0.55 + (p.happy ? 0.25 : 0); T.wagHz = p.happy ? 17 : 12; }
     if (p.barkT > 0) { T.jaw = 0.75; T.hp += 0.3; }
     if (p.spring > 0 && !p.still) T.gal = 1;              // a run-up is bounds, not a trot
@@ -503,12 +503,12 @@ export function makeDog() {
     shakeT = p.shake > 0 ? shakeT + dt : 9; if (p.shake > 0 && shakeT > 8) shakeT = 0;
     const shk = shakeAt(shakeT, 0);
     // the shake takes her whole body: it rocks over her planted paws, chest first and rump after
-    const roll = P.roll - shakeAt(shakeT, 0.15) * 0.2 + wagNow * 0.05 * P.wig;      // against the head: as it rolls one way, her body goes the other
+    const roll = P.roll - shakeAt(shakeT, 0.15) * 0.2;      // against the head: as it rolls one way, her body goes the other
     lean.rotation.x = roll;
     // at a gallop the back works like a spring: it doubles up as the hind legs come through under her
     // and straightens out as she reaches forward
     const flex = P.flex + lerp(gl * a * 0.25 * Math.cos(s2 + 0.3), G[1], gw);
-    const fy = -P.bend + shakeAt(shakeT, 0.3) * 0.13 - wagNow * 0.12 * P.wig, ry = shakeAt(shakeT, 0.75) * 0.16 + P.bend * 0.6 + wagNow * (0.12 * (a < 0.2 ? 1 : 0) + 0.22 * P.wig);     // the whole bottom wiggles when the tail really goes; excited, the chest goes the other way
+    const fy = -P.bend + shakeAt(shakeT, 0.3) * 0.13, ry = shakeAt(shakeT, 0.75) * 0.16 + P.bend * 0.6 + wagNow * (0.12 * (a < 0.2 ? 1 : 0) + 0.05 * P.wig);     // the whole bottom wiggles when the tail really goes, a little more when excited
     fore.rotation.y = fy; rear.rotation.y = ry; fore.rotation.z = -flex; rear.rotation.z = flex;
     bendBody(shakeT);
 
