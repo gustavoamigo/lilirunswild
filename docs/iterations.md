@@ -314,3 +314,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the synthesised sound of hitting a bin is horrible; picks 887578184 and 1314752365.
 
 **Decision**: a knocked bin plays one or the other (pitch varied a little). **Checked by script**: page loads, no errors. **Not checked**: by ear.
+
+**Feedback**: two more bin sounds, 1342402161 and 1223742836 (metal); all four at random.
+
+**Decision**: a knocked bin plays one of the four. **Not checked**: by ear.
