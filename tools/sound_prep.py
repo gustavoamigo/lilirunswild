@@ -3,10 +3,11 @@
 Mono, the silence before and after trimmed, a short fade at the end, peak at -1 dB. A loop (--loop) is not trimmed:
 its end is crossfaded into its start so it repeats without a click.
 
-  ~/stable-audio/.venv/bin/python tools/sound_prep.py <seed> <name> [--loop] [--keep S]
+  ~/stable-audio/.venv/bin/python tools/sound_prep.py <seed> <name> [--loop] [--keep=S] [--span=A,B]
 
 <seed> picks the file (the number at the end of its name); <name> is the file written, sounds/<name>.wav.
---keep S keeps at most S seconds after trimming.
+--keep=S keeps at most S seconds after trimming. --span=A,B uses only seconds A to B of the file (for a loop, a stretch
+with no gap in it).
 """
 import glob, os, sys
 import numpy as np
@@ -23,6 +24,8 @@ def main():
   files = glob.glob(f'{OUT}/*_{seed}.wav')
   if len(files) != 1: sys.exit(f'{len(files)} files with seed {seed}')
   x, sr = sf.read(files[0]); x = x.mean(1) if x.ndim > 1 else x
+  span = next((a[7:] for a in sys.argv if a.startswith('--span=')), None)
+  if span: a, b = (float(v) for v in span.split(',')); x = x[int(a * sr):int(b * sr)]
   if loop:
     n = int(0.15 * sr)                                   # crossfade the last 0.15 s into the first
     fade = np.linspace(0, 1, n)

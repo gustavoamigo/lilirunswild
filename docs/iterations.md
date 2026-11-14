@@ -278,3 +278,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: a better bark: seed 1995100440.
 
 **Decision**: it replaces the bark. **Not checked**: by ear.
+
+**Feedback**: the car sound is not continuous.
+
+**Decision**: the generated clip went silent for half a second near its end; the loop now uses only its first two continuous seconds (`--span` in `tools/sound_prep.py`). **Checked by script**: the loop's loudness never drops more than 11 dB below its peak, and the seam is smooth. **Not checked**: by ear.
