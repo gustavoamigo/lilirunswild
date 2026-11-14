@@ -298,3 +298,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: add a woman and a child who get scared, so the screams come up.
 
 **Decision**: two more people, both nervous of dogs: a woman with long red hair walking the west lawn, a boy in green on the east lawn. A bark sends either running, a paws-up hello sends the woman running. Plain "child screaming" generated for the owner to pick (the child still has the synthesised wail). **Checked by script**: bark and paws-up against both, the studio line-up with seven looks, no errors. **Not checked**: by eye in town.
+
+**Feedback**: a longer child's scream, from "5 year old child screaming" (plain "child screaming" did not sound like a child); seed 1997700765.
+
+**Decision**: in the game for all three children (pitch varied a little); the synthesised wail is gone. **Checked by script**: the nervous boy screams and runs at a bark, no errors. **Not checked**: by ear.
