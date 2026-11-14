@@ -148,6 +148,9 @@ const EAR_SEG = 9.5, EAR_G = 1500, EAR_DRAG = 14, EAR_SPRING = [16, 7, 4, 3];
 // The wind of her own speed pushes the ears back: this much push (units/s²) for each unit/s the head moves, up to
 // WIND_TOP. Flat out (460) it is about as strong as gravity, so they stream back at some 45°; in the car, flatter.
 const EAR_WIND = 3, WIND_TOP = 1000;
+// Gusts: the line the wind hangs an ear along wavers, up and down and in and out, by up to this much (radians) at full
+// gallop and more in the car, mostly at the tip, in slow uneven waves
+const GUST = 0.9, GUST_AT = 600;
 const EAR_FLAT = [0.25, 0.6, 0.85, 1];      // for each piece of an ear, how far its flat faces her body's side rather than her head's
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _x = new THREE.Vector3(), _y = new THREE.Vector3(), _z = new THREE.Vector3(), _inv = new THREE.Matrix4(), _rot = new THREE.Matrix4(), _p = new THREE.Vector3(), _side = new THREE.Vector3(), _t = new THREE.Vector3(), _o = new THREE.Vector3(), Z_AXIS = new THREE.Vector3(0, 0, 1), X_AXIS = new THREE.Vector3(1, 0, 0);
 
@@ -309,6 +312,11 @@ export function makeDog() {
       let ox = hx, oz = hz;
       if (ws > 1) { const ux = e.wx / ws, uz = e.wz / ws, along = hx * ux + hz * uz; ox = hx - along * ux; oz = hz - along * uz; }
       const ol = Math.hypot(ox, oz) || 1; ox /= ol; oz /= ol;
+      // the gust now: how far the ear's line is turned up (along the wind's own up, ux uy uz) and out (ox, oz)
+      const g = GUST * Math.min(1.5, ws / GUST_AT) * calm, ph = e.s * 1.7, tt = earT;
+      const gu = g * (0.55 * Math.sin(tt * 6.3 + ph) + 0.3 * Math.sin(tt * 10.7 + ph * 2.1) + 0.15 * Math.sin(tt * 18.2 + ph * 3.3));
+      const go = g * 0.7 * (0.6 * Math.sin(tt * 5.1 + ph * 1.3 + 1) + 0.4 * Math.sin(tt * 13.9 + ph * 0.7 + 2));
+      const ux = -wdx * wdy, uy = 1 - wdy * wdy, uz = -wdz * wdy, ul = Math.hypot(ux, uy, uz) || 1;   // up, square to the line
       for (let k = 0; k < n && dt > 0; k++) {
         const tk = _t.lerpVectors(prev, top, (k + 1) / n), off = _o.subVectors(top, tk);   // the root now, and how far the head has still to go
         for (let i = 0; i < 4; i++) {
@@ -323,7 +331,8 @@ export function makeDog() {
           if (fling > 0) { const k = fling * 5200 * h * h * (i + 1) * e.s / side; q.x += me[8] * k; q.y += me[9] * k + fling * 1500 * h * h; q.z += me[10] * k; }
           // an ear is not a string: it has some spring in it, most where it joins the head
           // towards hanging where gravity and the wind together would hang it
-          q.lerp(_b.set(tk.x + wdx * (i + 1) * len, tk.y + wdy * (i + 1) * len, tk.z + wdz * (i + 1) * len), 1 - Math.exp(-h * EAR_SPRING[i] * (1 + 3 * still) * (1 - 0.8 * fling)));
+          const r = (i + 1) * len, gw = (i + 1) / 4 * r;    // the gust moves the tip most
+          q.lerp(_b.set(tk.x + wdx * r + (ux / ul * gu + ox * go) * gw, tk.y + wdy * r + uy / ul * gu * gw, tk.z + wdz * r + (uz / ul * gu + oz * go) * gw), 1 - Math.exp(-h * EAR_SPRING[i] * (1 + 3 * still) * (1 - 0.8 * fling)));
         }
         for (let it = 0; it < 2; it++) for (let i = 0; i < 4; i++) {
           const q = e.pts[i], up = i ? e.pts[i - 1] : tk;

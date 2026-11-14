@@ -218,3 +218,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: in the car, when she looks at birds, the ears look rigid and follow the head's movement.
 
 **Decision**: measured first: the ear tips do keep trailing back (within a few degrees) while her head turns, so what looked rigid is how the ear pieces are drawn: each flat piece faced out from her head, so the whole ear turned with it. Now only the root piece faces with her head; further down the ear faces out from her body. **Checked by script**: the tip directions in the car with her head turning, strips galloping while she turns her head before and after (the difference is subtle in stills), standing turnaround, no errors. **Not checked**: by eye in motion, which is where it showed. If it still looks rigid, next is softer springs where the ear joins the head.
+
+**Feedback**: it would be cool if her ears had some movement of wind.
+
+**Decision**: gusts: while she moves, the line the wind hangs each ear along wavers up and down and side to side in slow uneven waves, more the faster she goes and most at the tips; each ear has its own. Slow on purpose (the earlier quick flapping was too fast). **Checked by script**: the tip's swing galloping (about double the stride's own swing) and driving (15 to 25° either side), a close strip in the car, no errors. **Not checked**: by eye in motion; whether the gusts are too much at the car's top speed.
