@@ -270,3 +270,11 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: panting: seed 2013129909, at a lower volume.
 
 **Decision**: it replaces the earlier panting loop, at about half the volume. **Not checked**: by ear.
+
+**Feedback**: the car's engine: seed 593775792 (a cartoon one).
+
+**Decision**: the synthesised engine is replaced by that loop, faster and a little louder with speed; panting and engine share one loop player. **Checked by script**: driving, no errors. **Not checked**: by ear.
+
+**Feedback**: a better bark: seed 1995100440.
+
+**Decision**: it replaces the bark. **Not checked**: by ear.

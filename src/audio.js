@@ -1,5 +1,5 @@
 // Sounds are synthesised with WebAudio, but for the recorded and generated ones in sounds/ (loaded in loadVoice).
-let ac = null, master, sfx, noiseBuf, eng = null, pant = null;
+let ac = null, master, sfx, noiseBuf;
 let muted = false;
 
 export function initAudio() {
@@ -69,9 +69,9 @@ function noise(when, dur, o = {}) {
 
 // ---- the dog ----
 // Sounds from files: Lili herself, growling the way she does when she is pulling on something in play (recorded), and
-// generated ones (docs/tech.md, "Generated sounds"): her bark and panting, the car's horn and crash, a man's yell, a woman's scream (two takes).
+// generated ones (docs/tech.md, "Generated sounds"): her bark and panting, the car's engine, horn and crash, a man's yell, a woman's scream (two takes).
 const voice = {};
-const FILES = ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3', 'panting', 'car-horn', 'car-crash', 'man-yell', 'woman-scream-1', 'woman-scream-2'];
+const FILES = ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3', 'panting', 'car-horn', 'car-crash', 'man-yell', 'woman-scream-1', 'woman-scream-2', 'car-engine'];
 function loadVoice() {
   for (const k of FILES) {
     fetch(new URL(`../sounds/${k}.wav`, import.meta.url)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((b) => { voice[k] = b; }).catch(() => {});
@@ -134,30 +134,21 @@ export function yelp() { tone(600, 0, 0.18, { type: 'triangle', to: 1100, sweep:
 export function door() { tone(150, 0, 0.08, { to: 90, vol: 0.3 }); noise(0, 0.05, { freq: 900, vol: 0.2 }); }
 export function horn() { say('car-horn', 0.5); }
 export function crash() { say('car-crash', 0.7); }
-// The engine hums while he is driving: level 0..1 is how fast the car is going.
-export function engine(level, on) {
-  if (!ac) return;
-  if (!eng) {
-    eng = { osc: ac.createOscillator(), lfo: ac.createOscillator(), f: ac.createBiquadFilter(), g: ac.createGain(), lg: ac.createGain() };
-    eng.osc.type = 'sawtooth'; eng.lfo.type = 'sine'; eng.lfo.frequency.value = 23; eng.lg.gain.value = 9;
-    eng.f.type = 'lowpass'; eng.f.frequency.value = 500; eng.g.gain.value = 0;
-    eng.lfo.connect(eng.lg); eng.lg.connect(eng.osc.frequency);
-    eng.osc.connect(eng.f); eng.f.connect(eng.g); eng.g.connect(sfx);
-    eng.osc.start(); eng.lfo.start();
+// A sound file played round and round (loops are made with tools/sound_prep.py --loop), its volume and speed eased
+// towards what is asked; started the first time it is asked for.
+const loops = {};
+function loopAt(k, vol, rate) {
+  if (!ac || !voice[k]) return;
+  let l = loops[k];
+  if (!l) {
+    l = loops[k] = { src: ac.createBufferSource(), g: ac.createGain() };
+    l.src.buffer = voice[k]; l.src.loop = true; l.g.gain.value = 0;
+    l.src.connect(l.g); l.g.connect(sfx); l.src.start();
   }
-  const t = ac.currentTime;
-  eng.osc.frequency.setTargetAtTime(52 + level * 95, t, 0.08);
-  eng.f.frequency.setTargetAtTime(380 + level * 900, t, 0.08);
-  eng.g.gain.setTargetAtTime(on ? 0.07 + level * 0.06 : 0, t, 0.12);
+  l.g.gain.setTargetAtTime(vol, ac.currentTime, 0.2);
+  l.src.playbackRate.setTargetAtTime(rate, ac.currentTime, 0.2);
 }
-// Her panting, a loop: level 0..1 is how out of breath she is.
-export function panting(level) {
-  if (!ac || !voice.panting) return;
-  if (!pant) {
-    pant = { src: ac.createBufferSource(), g: ac.createGain() };
-    pant.src.buffer = voice.panting; pant.src.loop = true; pant.g.gain.value = 0;
-    pant.src.connect(pant.g); pant.g.connect(sfx); pant.src.start();
-  }
-  pant.g.gain.setTargetAtTime(level * 0.18, ac.currentTime, 0.25);
-  pant.src.playbackRate.setTargetAtTime(0.9 + level * 0.2, ac.currentTime, 0.25);
-}
+// The engine while she is driving: level 0..1 is how fast the car is going. It runs faster and a little louder with speed.
+export function engine(level, on) { loopAt('car-engine', on ? 0.25 + level * 0.15 : 0, 0.8 + level * 0.7); }
+// Her panting: level 0..1 is how out of breath she is.
+export function panting(level) { loopAt('panting', level * 0.18, 0.9 + level * 0.2); }
