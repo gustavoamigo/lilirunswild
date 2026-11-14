@@ -37,7 +37,7 @@ Constants at the top of `src/main.js`: `TROT` 210, `ZOOM` 460 (2.5 and 5.5 m/s a
 
 ## URL parameters
 
-`?style=toon|real`, `?at=x,y` (start there), `?car` (start driving), `?studio` (below).
+`?style=toon|real`, `?at=x,y` (start there), `?car` (start driving), `?studio` (below), `?studio&people` (the people line-up, below).
 
 ## How the dog moves (`makeDog` in `src/models.js`)
 
@@ -58,6 +58,14 @@ On the ground nothing is recorded or key-framed; only a jump plays motion data (
 - **Stopping.** A paw caught in the air when she slows finishes its step at once rather than at the gait's pace.
 - The model reports `dog.footfall` when a paw lands (the step sound), `dog.gait` (cycle phase) and `dog.feet` (for tests: `x`, `y`, `u` = progress of the step, 1 when standing, `off` = distance from rest).
 
+## People (`makePerson` in `src/models.js`)
+
+- **Look.** Cartoon, hand-animated, no simulation (the simulated trot on Lili's toy-like body read as uncanny). Big heads, rounded shapes. The torso, the hips and each limb are one smooth shape from a height profile (`profileGeo`, `limbGeo`): built from separate ellipsoids, joints showed as balls and the torso as stacked bands, like a wooden mannequin. Adults stand about 205 high, children about 137 with a bigger head for their size (`ADULT`, `CHILD`: bone lengths, shoulders, neck, torso profile). Each look (`LOOKS`) is skin, hair (colour and style: short, long, bun, curls, tails), top (colour, short or long sleeves), bottom (trousers, shorts, or a flared skirt wider than the hips, so the legs do not poke through) and shoes. Faces: eyes that blink, brows, a nose, ears, blush on children, and two mouths, a smile and an open one (shown while wobbling, sitting down hard or jumping clear; ready for a scream).
+- **Rig.** Hips (sway, turn) > chest (lean, twist) > neck > head; shoulder (swing forward about z, then out about x) > elbow > hand; hip > knee > ankle (the foot is kept about level). +x is the way they face.
+- **Walk.** Driven by the ground covered, a step every 0.55 leg lengths, never by the clock: legs swing ±0.32 rad, a knee folds as its leg swings through, heel down in front and toes off behind, the body rises as the legs pass and dips as a heel lands, hips and shoulders turn against each other, arms swing with the opposite leg, the head stays steady.
+- **Standing.** Weight shifts from one leg to the other, now and then a look about.
+- **Poses** for what happens now: paws up on their chest (rocked back, arms up and out), bumped down to sit, jumping clear of the car, waving (arm up and out to the side). These will become the three reactions (love, indifference, scared and running away) next.
+
 ## The studio (`?studio`)
 
 For working on how he moves: the dog alone on a ruled floor (a line every 100 units, a darker one every 400), seen from close by. The camera is locked on him, so he runs on the spot and the floor slides past; he is carried back a whole number of squares before he reaches the edge, which cannot be seen. It runs the same `updateDog` and the same model as the game, so what is tuned here is what is played.
@@ -69,7 +77,7 @@ For working on how he moves: the dog alone on a ruled floor (a line every 100 un
 | Time | ×1 ×0.5 ×0.25 ×0.1, pause, step (one 1/60 s frame) | T, P, `.` |
 | Poses | hello (paws up), bonk (daze), bow, point (stays on while he stands) | H N V C |
 
-Run left or right for a side view, toward the camera for the front. The readout shows state, speed, height and stride phase (0–1, one full cycle). Not in the studio: the car and the driving pose. Tests: `__G.studio`, `__G.api.pose('hello'|'bonk'|'bow'|'point')`.
+`?studio&people`: every look of person in two rows, standing and facing the camera, and walking on the spot side on (`pace` on the person drives their stride without moving them); R turns them all 45°. Run left or right for a side view, toward the camera for the front. The readout shows state, speed, height and stride phase (0–1, one full cycle). Not in the studio: the car and the driving pose. Tests: `__G.studio`, `__G.api.pose('hello'|'bonk'|'bow'|'point')`.
 
 ## Test hooks
 

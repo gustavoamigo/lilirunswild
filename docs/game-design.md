@@ -27,7 +27,11 @@ An open red car, one in town. Steer where it should go; steering against the way
 
 ## The town
 
-A park (trees, benches, a picnic table, flower pots, a sandy cross of paths with a plaza) inside a ring road with pavements and zebra crossings, houses beyond, a hedge round the edge. Three people (two walk, one stands), three flocks of birds.
+A park (trees, benches, a picnic table, flower pots, a sandy cross of paths with a plaza) inside a ring road with pavements and zebra crossings, houses beyond, a hedge round the edge. Five people: three adults (one walks, two stand) and two children by the plaza (one wanders, one stands); three flocks of birds.
+
+## People
+
+Cartoon adults and children, natural in how they walk and stand. They will have three reactions to Lili: love (when she is gentle), indifference, and fright (they scream and run away). Planned later: Lili steals a child's toy, the child holds on, then gets scared, screams and runs; the same with adults; jumping at people frightens them, gentleness wins them over.
 
 ## Rules that will hold
 

@@ -43,7 +43,11 @@ export function initScene(canvas, w) {
   // ---- ground: endless plain grass, with the painted town laid on top ----
   const far = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), M.surf(world.studio ? { map: studioFloor() } : { color: '#9BD770' }));
   far.rotation.x = -Math.PI / 2; far.position.set(W / 2, -1, H / 2); far.receiveShadow = true; scene.add(far);
-  if (world.studio) { dog = M.makeDog(); scene.add(dog.root); car = { update() {} }; resize(); return; }
+  if (world.studio) {
+    dog = M.makeDog(); scene.add(dog.root); car = { update() {} };
+    for (const o of world.people) { const m = M.makePerson(o.look); scene.add(m.root); people.push({ o, m }); }
+    resize(); return;
+  }
   const res = renderer.capabilities.maxTextureSize >= 4096 ? 1 : 0.66;
   const tex = new THREE.CanvasTexture(paintGround(world, res));
   tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
@@ -164,6 +168,7 @@ export function render(G, dt) {
   if (world.studio) {                                  // locked on, so he runs on the spot and the floor slides by
     camAim.set(f.x, 0, f.y); placeCamera();
     dog.update(G.dog, t);
+    for (const e of people) e.m.update(e.o, t);
     renderer.render(scene, camera);
     return;
   }

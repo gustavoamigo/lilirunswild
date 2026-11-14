@@ -627,46 +627,173 @@ export function makeCar() {
 }
 
 // --------------------------------------------------------------- people --
+// Cartoon people, hand-animated: rounded shapes, big heads (bigger still on children), and joints where people bend:
+// hips, knees, ankles, waist, shoulders, elbows, neck. +x is the way they face.
+// Body plans (game units; Lili's back is about 63 high): leg and arm bones, where the shoulders and neck are, the head,
+// and the torso's profile ([height above the waist, half depth, half width]).
+const ADULT = { thigh: 46, shin: 44, foot: 15, hipW: 10.5, shY: 60, shW: 24, upArm: 33, foreArm: 30, hand: 7, neck: 72, headR: 21, limb: 1,
+  torso: [[0, 12, 18], [14, 11.5, 17.5], [30, 13.5, 20], [44, 14.5, 22], [54, 13.5, 22.5], [60, 10, 18], [64, 5.5, 9.5], [66, 2, 3]] };
+const CHILD = { thigh: 27, shin: 26, foot: 11, hipW: 7.5, shY: 38, shW: 15.5, upArm: 21, foreArm: 19, hand: 5.5, neck: 46, headR: 19, limb: 0.72,
+  torso: [[0, 9, 13], [9, 8.5, 12.5], [19, 10, 14], [28, 10.5, 15.5], [34, 10, 16], [38, 7, 13], [41, 3.5, 6.5], [42, 1.5, 2]] };
+// skin, hair (colour and style: short, long, bun, curls, tails), top (colour, sleeves short or long), bottom (trousers, shorts,
+// skirt), shoes; child or not
 const LOOKS = [
-  { shirt: '#5BA8E6', legs: '#3C4A66', hair: '#6B4226', skin: '#F2C29B' },
-  { shirt: '#F28C5C', legs: '#5C6B4A', hair: '#2B2326', skin: '#C98E66' },
-  { shirt: '#B48BE0', legs: '#4A4A58', hair: '#E3C06A', skin: '#F6D2B0' },
+  { kid: false, skin: '#F2C29B', hair: ['#6B4226', 'short'], top: ['#5BA8E6', 'short'], bottom: ['#3C4A66', 'trousers'], shoes: '#3A2E2A' },
+  { kid: false, skin: '#A86E4C', hair: ['#2B2326', 'bun'], top: ['#F28C5C', 'long'], bottom: ['#4E5E86', 'skirt'], shoes: '#5A3A2A' },
+  { kid: false, skin: '#F6D2B0', hair: ['#C9CBD0', 'short'], top: ['#7FB77E', 'long'], bottom: ['#6A5A48', 'trousers'], shoes: '#2E2A28' },
+  { kid: true, skin: '#E8B58E', hair: ['#E3B04F', 'tails'], top: ['#F27FA8', 'short'], bottom: ['#5B7FC4', 'skirt'], shoes: '#E9545B' },
+  { kid: true, skin: '#7A4E36', hair: ['#1E1A1C', 'curls'], top: ['#F2C14E', 'short'], bottom: ['#3F6E8C', 'shorts'], shoes: '#F2F2F2' },
 ];
+export const PERSON_LOOKS = LOOKS.length;
+export const isChild = (look) => LOOKS[look % LOOKS.length].kid;
+const EYE = '#2A1C14', MOUTH = '#8A3B36';
 export function makePerson(look) {
-  const L = LOOKS[look % LOOKS.length];
-  const root = new THREE.Group(), body = new THREE.Group(); root.add(body);
-  const legGeo = merged([cyl(L.legs, 0, -42, 0, 9.5, 84), blob('#3A2E2A', 5, -88, 0, 14, 6.5, 9.5)]);
-  const armGeo = merged([cyl(L.shirt, 0, -17, 0, 7.5, 34), cyl(L.skin, 0, -46, 0, 5.5, 28), blob(L.skin, 0, -62, 0, 7.5)]);
-  const part = (geo, x, y, z) => { const m = new THREE.Mesh(geo, vc()); m.castShadow = true; return group(x, y, z, m); };
-  const legs = [part(legGeo, 0, 94, 11), part(legGeo, 0, 94, -11)];
-  const arms = [part(armGeo, 0, 160, 31), part(armGeo, 0, 160, -31)];
-  const top = group(0, 94, 0, mesh([
-    blob(L.shirt, 0, 38, 0, 21, 42, 28), blob(L.legs, 0, 4, 0, 19, 14, 25),
-    blob(L.skin, 0, 82, 0, 8, 10, 8),
-    blob(L.skin, 0, 100, 0, 21, 23, 21), blob(L.hair, -4, 107, 0, 22, 19, 22.5), blob(L.skin, 21, 98, 0, 3.5, 3.5, 3.5),
-    blob('#2A1C14', 19, 103, 8, 2.6, 3.2, 2.6), blob('#2A1C14', 19, 103, -8, 2.6, 3.2, 2.6),
-    blob('#C4605A', 19.5, 91, 0, 2.5, 2, 6),
-  ]));
-  arms.forEach((a) => { a.position.y = 66; top.add(a); });
-  body.add(top, ...legs);
-  const S = { legA: 0, legB: 0, armA: 0, armB: 0, lean: 0, y: 0, sit: 0, out: 0 };
+  const L = LOOKS[look % LOOKS.length], B = L.kid ? CHILD : ADULT, k = B.limb;
+  const [top, sleeve] = L.top, [bottom, cut] = L.bottom, [hairC, hairS] = L.hair;
+  const hipH = B.thigh + B.shin + 5;                    // the hip joints' height standing
+  const root = new THREE.Group(), body = group(0, hipH, 0); root.add(body);
+  const hips = new THREE.Group(); body.add(hips);
+  const shape = (geo, color, y = 0) => ({ geo, color, at: [0, y, 0], scale: [1, 1, 1] });
+  hips.add(mesh([shape(profileGeo([[-13 * k, 2, 3], [-8 * k, 10 * k, B.hipW + 6 * k], [2 * k, 12 * k, B.hipW + 8 * k], [12 * k, 11 * k, B.hipW + 6.5 * k], [16 * k, 4, 6]]), bottom)]));
+  if (cut === 'skirt') hips.add(mesh([{ ...cyl(bottom, 0, -13 * k, 0, B.hipW + 11 * k, 32 * k, undefined, B.hipW + 11 * k), geo: SKIRT }]));   // wider than her hips, and flared
+  // legs: hip > knee > ankle. A leg hangs down -y; turning it about z swings it forward.
+  const legs = [1, -1].map((s) => {
+    const shinC = cut === 'trousers' ? bottom : L.skin, thighC = cut === 'trousers' ? bottom : L.skin;
+    const thigh = [shape(limbGeo(B.thigh, 10.2 * k, 7.6 * k), thighC)];
+    if (cut === 'shorts') thigh.push(shape(limbGeo(B.thigh * 0.55, 11 * k, 9.8 * k), bottom));
+    const foot = group(0, -B.shin, 0, mesh([blob(L.shoes, 4.5 * k, -3 * k, 0, B.foot / 2 + 3, 4.6 * k, 6.5 * k)]));
+    const knee = group(0, -B.thigh, 0, mesh([shape(limbGeo(B.shin, 7.4 * k, 5.3 * k), shinC)]), foot);
+    const hip = group(0, 0, s * B.hipW, mesh(thigh), knee);
+    hips.add(hip); return { hip, knee, foot, s };
+  });
+  // the chest turns and leans about the waist
+  const chest = group(0, 4, 0); hips.add(chest);
+  chest.add(mesh([shape(profileGeo(B.torso), top)]));
+  // arms: shoulder > elbow > hand. Swing about z (forward), then out about x.
+  const arms = [1, -1].map((s) => {
+    const long = sleeve === 'long';
+    const hand = group(0, -B.foreArm, 0, mesh([blob(L.skin, 0.5, -B.hand * 0.6, 0, B.hand * 0.8, B.hand, B.hand * 0.65)]));
+    const elbow = group(0, -B.upArm, 0, mesh([shape(limbGeo(B.foreArm, 5.5 * k + 0.6, 4.3 * k + 0.6), long ? top : L.skin)]), hand);
+    const upper = [shape(limbGeo(B.upArm, 7.2 * k + 0.6, 5.7 * k + 0.6), long ? top : L.skin)];
+    if (!long) upper.push(shape(limbGeo(B.upArm * 0.45, 8 * k + 0.6, 7.5 * k + 0.6), top));
+    const sh = group(0, B.shY - 2, s * B.shW, mesh(upper), elbow);
+    chest.add(sh); return { sh, elbow, hand, s };
+  });
+  // head: on a short neck; the face looks along +x
+  const r = B.headR, neck = group(0, B.neck - (L.kid ? 4 : 6), 0, mesh([blob(L.skin, 0, 2, 0, 6.5 * k + 1, 9, 6.5 * k + 1)]));
+  chest.add(neck);
+  const head = group(0, 6, 0); neck.add(head);
+  const face = [blob(L.skin, 0, r, 0, r * 0.98, r, r * 0.95),
+    blob(L.skin, r * 0.97, r * 0.92, 0, r * 0.13, r * 0.12, r * 0.13),                                                               // nose
+    ...[1, -1].map((s) => blob(L.skin, -r * 0.05, r * 0.95, s * r * 0.95, r * 0.16, r * 0.22, r * 0.1))];                               // ears
+  if (L.kid) face.push(...[1, -1].map((s) => blob('#F2A0A0', r * 0.78, r * 0.72, s * r * 0.5, r * 0.16, r * 0.1, r * 0.16)));
+  head.add(mesh(face));
+  head.add(mesh(hairParts(hairC, hairS, r)));
+  const eyes = [1, -1].map((s) => {
+    const e = group(r * 0.86, r * 1.12, s * r * 0.34, ball(mat(EYE, { roughness: 0.3 }), r * 0.1, r * 0.14, r * 0.09, 0, 0, 0, false), ball('#ffffff', r * 0.035, r * 0.035, r * 0.035, r * 0.07, r * 0.05, s * r * 0.02, false));
+    head.add(e); return e;
+  });
+  const brows = [1, -1].map((s) => { const b = mesh([blob(hairS === 'short' && hairC === '#C9CBD0' ? '#9A9CA2' : hairC, 0, 0, 0, r * 0.05, r * 0.035, r * 0.16)], false); b.position.set(r * 0.9, r * 1.36, s * r * 0.34); head.add(b); return b; });
+  // two mouths: a smile, and an open one (for a gasp or a scream) shown in its place
+  const smile = new THREE.Mesh(SMILE, mat(MOUTH)); smile.position.set(r * 0.9, r * 0.66, 0); smile.scale.setScalar(r * 0.22); smile.rotation.set(0, Math.PI / 2, Math.PI);
+  const open = ball(mat(MOUTH), r * 0.06, r * 0.14, r * 0.13, r * 0.94, r * 0.62, 0, false); open.visible = false;
+  head.add(smile, open);
+
+  // smoothed pose
+  const S = { y: 0, lean: 0, twist: 0, yaw: 0, roll: 0, hy: 0, hp: 0, sit: 0 };
+  for (const n of ['thigh', 'knee', 'ankle', 'sh', 'out', 'elbow']) S[n + 0] = S[n + 1] = 0;
+  let last = -1, ph = 0, lx = null, ly = 0, blink = 1;
+  const seed = look * 1.7;
   function update(o, t) {
-    const T = { legA: 0, legB: 0, armA: 0, armB: 0, lean: 0, y: 0, sit: 0, out: 0.06 };
-    const sw = Math.sin(t * 7 + o.seed);
-    if (o.state === 'walk') { T.legA = sw * 0.5; T.legB = -sw * 0.5; T.armA = -sw * 0.4; T.armB = sw * 0.4; }
-    else if (o.state === 'wobble') { const f = Math.sin(t * 19); T.lean = 0.16 + f * 0.05; T.armA = 1.0 + f * 0.7; T.armB = 1.0 - f * 0.7; T.out = 0.7; T.legA = 0.12; T.legB = -0.2; }
-    else if (o.state === 'sit') { T.sit = 1; T.lean = 0.2; T.armA = T.armB = -0.7; T.out = 0.35; }
-    else if (o.state === 'hop') { const k = clamp(o.t / 0.45, 0, 1); T.y = Math.sin(k * Math.PI) * 46; T.armA = T.armB = 2.4; T.out = 0.5; T.legA = 0.5; T.legB = -0.4; }
-    else if (o.wave > 0) { T.armA = 2.7 + Math.sin(t * 12) * 0.35; T.out = 0.3; }
-    for (const n in T) S[n] = lerp(S[n], T[n], n === 'y' ? 1 : 0.22);
-    body.position.y = S.y - S.sit * 80;
-    top.rotation.z = S.lean;
-    legs[0].rotation.z = S.legA + S.sit * 1.45; legs[1].rotation.z = S.legB + S.sit * 1.5;
-    arms[0].rotation.z = S.armA; arms[1].rotation.z = S.armB;
-    arms[0].rotation.x = -S.out; arms[1].rotation.x = S.out;
+    const dt = last < 0 ? 0.016 : clamp(t - last, 0, 0.05); last = t;
+    const moved = lx === null ? 0 : Math.hypot(o.x - lx, o.y - ly); lx = o.x; ly = o.y;
+    const T = { y: 0, lean: 0.04, twist: 0, yaw: 0, roll: 0, hy: 0, hp: 0, sit: 0 };
+    for (const n of ['thigh', 'knee', 'ankle', 'sh', 'out', 'elbow']) T[n + 0] = T[n + 1] = 0;
+    T.out0 = T.out1 = 0.07; T.elbow0 = T.elbow1 = 0.18; T.knee0 = T.knee1 = -0.04;
+    let fast = 14;
+    if (o.state === 'walk' || o.pace) {
+      // the walk: driven by the ground covered, a step every 0.55 leg lengths
+      const step = (B.thigh + B.shin) * 0.55;
+      ph += (o.pace ? o.pace * dt : moved < 50 ? moved : 0) / (2 * step);
+      const s = ph * Math.PI * 2;
+      for (const [i, q] of [[0, 0], [1, Math.PI]]) {
+        const a = s + q, fw = Math.sin(a);
+        T['thigh' + i] = 0.32 * fw;
+        T['knee' + i] = -(0.08 + 0.8 * Math.max(0, Math.cos(a + 0.35)) ** 2);                        // folds as the leg swings through
+        T['ankle' + i] = 0.12 * Math.max(0, -Math.cos(a - 0.4)) - 0.1 * Math.max(0, fw);              // toes off behind, heel first in front
+        T['sh' + i] = -0.32 * fw;                                                                      // the arm goes with the other leg
+        T['elbow' + i] = 0.2 + 0.32 * Math.max(0, -fw);
+      }
+      T.y = 1.6 * k * Math.cos(2 * s);                       // up as the legs pass, down as a heel lands
+      T.yaw = 0.09 * Math.sin(s); T.twist = -0.15 * Math.sin(s); T.roll = 0.025 * Math.cos(s);
+      T.lean = 0.07; T.hp = 0.04;
+      fast = 30;
+    } else {
+      // standing: weight on one leg then the other, breathing, a look about now and then
+      const w = Math.sin(t * 0.55 + seed);
+      T.roll = 0.035 * w; T.knee0 = -0.04 - 0.12 * Math.max(0, w); T.knee1 = -0.04 - 0.12 * Math.max(0, -w);
+      T.thigh0 = 0.06 * Math.max(0, w); T.thigh1 = 0.06 * Math.max(0, -w);
+      T.y = -1.5 * Math.abs(w) * k;
+      T.hy = 0.45 * Math.sin(t * 0.31 + seed * 2) * Math.max(0, Math.sin(t * 0.17 + seed));
+      T.hp = 0.06 * Math.sin(t * 0.23 + seed);
+    }
+    if (o.state === 'wobble') {                              // a dog's paws on their chest: rocked back, arms up and out
+      const f = Math.sin(t * 19);
+      T.lean = -0.22 + f * 0.04; T.knee0 = T.knee1 = -0.25; T.thigh0 = T.thigh1 = 0.12; T.y = -3;
+      T.sh0 = 1.0 + f * 0.5; T.sh1 = 1.0 - f * 0.5; T.out0 = T.out1 = 0.6; T.elbow0 = T.elbow1 = 0.7; T.hp = 0.25;
+    } else if (o.state === 'sit') {                          // bumped down onto the ground
+      T.sit = 1; T.lean = -0.3; T.thigh0 = T.thigh1 = 1.45; T.knee0 = -0.5; T.knee1 = -0.9; T.ankle0 = T.ankle1 = 0.3;
+      T.sh0 = T.sh1 = -0.7; T.out0 = T.out1 = 0.3; T.elbow0 = T.elbow1 = 0.1; T.hp = 0.15;
+    } else if (o.state === 'hop') {                          // jumping clear
+      const q = clamp(o.t / 0.45, 0, 1); T.y = Math.sin(q * Math.PI) * 46 * k;
+      T.thigh0 = 0.7; T.thigh1 = 0.3; T.knee0 = T.knee1 = -1.1; T.sh0 = T.sh1 = 2.3; T.out0 = T.out1 = 0.45; T.elbow0 = T.elbow1 = 0.3;
+      fast = 30;
+    } else if (o.wave > 0) { T.sh0 = 2.2; T.out0 = 0.75; T.elbow0 = 0.5 + Math.sin(t * 12) * 0.35; }       // up and out to the side, not across the face
+    const kk = 1 - Math.exp(-dt * fast);
+    for (const n in T) S[n] = n === 'y' && o.state === 'hop' ? T[n] : lerp(S[n], T[n], kk);
+
+    body.position.y = hipH + S.y - S.sit * (hipH - 12 * k);
+    hips.rotation.set(S.roll, S.yaw, 0);
+    chest.rotation.set(-S.roll * 0.6, S.twist, -S.lean);
+    legs.forEach((g, i) => { g.hip.rotation.z = S['thigh' + i]; g.knee.rotation.z = S['knee' + i]; g.foot.rotation.z = -S['thigh' + i] - S['knee' + i] + S['ankle' + i]; });
+    arms.forEach((g, i) => { g.sh.rotation.set(-g.s * S['out' + i], 0, S['sh' + i]); g.elbow.rotation.z = S['elbow' + i]; });
+    head.rotation.set(0, S.hy - S.twist - S.yaw, S.hp + S.lean * 0.6);
+    blink = (t + seed) % 4.1 < 0.12 ? 0.15 : 1;
+    eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); });
+    smile.visible = !(open.visible = o.state === 'wobble' || o.state === 'hop' || o.state === 'sit');
     root.position.set(o.x, 0, o.y); root.rotation.y = -o.heading;
   }
   return { root, update };
+}
+// A smooth shape from a profile: [y, half depth (x), half width (z)] from the bottom up, eased between the points. The
+// torso and the limbs are each one such shape, so no joint shows as a ball and no seam as a band.
+function profileGeo(pts) {
+  const g = new THREE.SphereGeometry(1, 20, 28), P = g.attributes.position, y0 = pts[0][0], y1 = pts[pts.length - 1][0];
+  const at = (y) => {
+    let i = 0; while (i < pts.length - 2 && pts[i + 1][0] < y) i++;
+    const [ya, xa, za] = pts[i], [yb, xb, zb] = pts[i + 1], e = clamp((y - ya) / (yb - ya || 1), 0, 1), s = (1 - Math.cos(e * Math.PI)) / 2;
+    return [lerp(xa, xb, s), lerp(za, zb, s)];
+  };
+  for (let i = 0; i < P.count; i++) {
+    const v = P.getY(i), r = Math.sqrt(Math.max(1 - v * v, 0)), y = lerp(y0, y1, Math.acos(-clamp(v, -1, 1)) / Math.PI), [rx, rz] = at(y);
+    P.setXYZ(i, r > 1e-6 ? P.getX(i) / r * rx : 0, y, r > 1e-6 ? P.getZ(i) / r * rz : 0);
+  }
+  g.computeVertexNormals();
+  return g;
+}
+// a limb from its joint (y = 0) down: rounded over the joint, r0 there, r1 at the far end, len long
+const limbGeo = (len, r0, r1) => profileGeo([[-len - r1 * 0.9, 0.2, 0.2], [-len - r1 * 0.55, r1 * 0.85, r1 * 0.85], [-len, r1, r1], [-len * 0.5, (r0 + r1) / 2 * 1.04, (r0 + r1) / 2 * 1.04], [0, r0, r0], [r0 * 0.6, r0 * 0.8, r0 * 0.8], [r0 * 0.95, 0.2, 0.2]]);
+// a cone for skirts, wider at the hem
+const SKIRT = new THREE.CylinderGeometry(1, 1.4, 1, 18);
+// a smile: the lower half of a thin ring
+const SMILE = new THREE.TorusGeometry(1, 0.22, 6, 14, Math.PI);
+function hairParts(c, style, r) {
+  const cap = [blob(c, -r * 0.12, r * 1.2, 0, r * 1.02, r * 0.86, r * 1.0), blob(c, r * 0.55, r * 1.62, 0, r * 0.5, r * 0.28, r * 0.75)];
+  if (style === 'short') return cap;
+  if (style === 'bun') return [...cap, blob(c, -r * 0.55, r * 1.85, 0, r * 0.42)];
+  if (style === 'curls') return [...cap, ...[-0.9, -0.4, 0.1, 0.55].flatMap((u) => [1, -1].map((s) => blob(c, r * u, r * (1.55 - Math.abs(u) * 0.35), s * r * 0.62, r * 0.36)))];
+  if (style === 'tails') return [...cap, ...[1, -1].map((s) => blob(c, -r * 0.45, r * 0.9, s * r * 1.08, r * 0.24, r * 0.5, r * 0.24, [s * 0.5, 0, 0]))];
+  return [...cap, blob(c, -r * 0.45, r * 0.6, 0, r * 0.6, r * 0.9, r * 0.95)];      // long
 }
 
 // ---------------------------------------------------------------- birds --

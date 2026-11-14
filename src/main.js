@@ -7,7 +7,7 @@ import { input, keyVector, steerMag, initInput } from './input.js';
 import { pollPad } from './gamepad.js';
 import { spawn, updateFx, drawFx, burst } from './fx.js';
 import { buildTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js';
-import { CAR } from './models.js';
+import { CAR, PERSON_LOOKS } from './models.js';
 import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
 
 const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560;
@@ -28,6 +28,13 @@ if (STUDIO) {
   for (const k of ['obstacles', 'props', 'people', 'flocks', 'trees', 'lamps', 'houses', 'flowers']) world[k].length = 0;
   world.platforms.length = 0; world.car.x = world.car.y = -9000;
   world.start = { x: 1800, y: 1500 };
+  // ?studio&people: every look of person in a line, standing (facing the camera) and walking on the spot (side on);
+  // R turns them all
+  if (params.has('people')) {
+    world.start = { x: 1450, y: 1500 };
+    for (let i = 0; i < PERSON_LOOKS; i++) for (const walk of [false, true])
+      world.people.push({ look: i, x: 1640 + i * 110, y: walk ? 1580 : 1400, heading: walk ? 0 : Math.PI / 2, state: walk ? 'walk' : 'stand', t: 0, cool: 0, seed: i, pace: walk ? 70 : 0 });
+  }
 }
 const dog = {
   x: world.start.x, y: world.start.y, z: 0, vx: 0, vy: 0, vz: 0, heading: -Math.PI / 2,
@@ -526,7 +533,8 @@ function update(dt) {
       if (d) { dog[a] += d; if (input.target) input.target[a] += d; }
     }
     updateFx(dt);
-    G.focus.x = dog.x; G.focus.y = dog.y;
+    for (const o of world.people) o.t += dt;
+    if (world.people.length) { G.focus.x = 1860; G.focus.y = 1490; } else { G.focus.x = dog.x; G.focus.y = dog.y; }
     return;
   }
   updateCar(dt);
@@ -646,6 +654,7 @@ function initStudio() {
     KeyG: () => { studio.gait = { auto: 'trot', trot: 'gallop', gallop: 'auto' }[studio.gait]; },
     KeyT: () => { studio.speed = SPEEDS[(SPEEDS.indexOf(studio.speed) + 1) % SPEEDS.length]; studio.paused = false; },
     KeyP: () => { studio.paused = !studio.paused; }, Period: () => { studio.paused = true; studio.step = true; },
+    KeyR: () => { for (const o of world.people) o.heading += Math.PI / 4; },
     KeyH: POSES.hello, KeyN: POSES.bonk, KeyV: POSES.bow, KeyK: POSES.shake, KeyC: POSES.point,
   };
   window.addEventListener('keydown', (e) => { const f = KEYS[e.code]; if (f && !e.repeat) { f(); refresh(); } });
