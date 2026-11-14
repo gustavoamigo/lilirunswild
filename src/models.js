@@ -366,7 +366,7 @@ export function makeDog() {
   }
 
   // smoothed pose: everything eases towards its target so states blend into each other
-  const P = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: 0, gal: 0, yaw: 0, hp: 0, jaw: 0, tailUp: 0.5, wag: 0.45, wagHz: 12, y: 0, tongue: 0, bend: 0, roll: 0, flex: 0, fly: 0 };
+  const P = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: 0, gal: 0, yaw: 0, hp: 0, jaw: 0, tailUp: 0.5, wag: 0.45, wagHz: 12, y: 0, tongue: 0, bend: 0, roll: 0, flex: 0, fly: 0, wig: 0 };
   let earT = 0, shakeT = 9, gw = 0;
   let last = -1, blink = 0, ph = 0, wagPh = 0, px = 0, py = 0, pz = 0, earCalm = 1, ph0 = 0, turn = 0, fresh = true, flying = false, flew = 0, flight = 1, pitch0 = 0;
 
@@ -377,7 +377,7 @@ export function makeDog() {
     // wf, wr, wh: how much the front left, front right and hind paws follow a pose instead of standing on the ground
     const T = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: p.air ? 0 : clamp(sp / 120, 0, 1) * (p.zoom ? 0.95 : 0.6), gal: p.zoom ? 1 : 0,
       yaw: p.lookYaw || 0, hp: p.lookPitch || 0, jaw: 0,
-      tailUp: 0.5, wag: 0.45, wagHz: 12, y: -3 * clamp(sp / 200, 0, 1), tongue: p.zoom ? 1 : 0, bend: 0, roll: 0, flex: 0, fly: 0 };
+      tailUp: 0.5, wag: 0.45, wagHz: 12, y: -3 * clamp(sp / 200, 0, 1), tongue: p.zoom ? 1 : 0, bend: 0, roll: 0, flex: 0, fly: 0, wig: 0 };
     const paddle = Math.sin(t * 17);
     if (p.skid && !p.air) {                              // brakes on: front legs braced out ahead, haunches down, all four paws sliding
       T.pitch = 0.2; T.y = -10; T.fl = 0.62; T.fr = 0.78; T.rf = 34; T.hl = 0.75; T.hr = 0.55; T.rh = 26; T.wf = T.wr = T.wh = 1;
@@ -406,6 +406,8 @@ export function makeDog() {
       T.fr = 0.55; T.rf = 21; T.wr = 1; T.wag = 0.02; T.tailUp = -0.1; T.pitch = -0.04;
     } else if (p.shake > 0) {                            // a good shake: the head twists one way and the other, and the twist runs down her back
       T.hp = -0.32; T.tailUp = 0.3; T.wag = 0; T.y = -6;
+    } else if (sp < 30 && p.excited > 0) {               // a child petting her: tail going like mad, the whole of her wiggling with it
+      T.wag = 0.9; T.wagHz = 21; T.tailUp = 0.75; T.tongue = 1; T.wig = 1;
     } else if (sp < 30) { T.wag = 0.55 + (p.happy ? 0.25 : 0); T.wagHz = p.happy ? 17 : 12; }
     if (p.barkT > 0) { T.jaw = 0.75; T.hp += 0.3; }
     if (p.spring > 0 && !p.still) T.gal = 1;              // a run-up is bounds, not a trot
@@ -501,12 +503,12 @@ export function makeDog() {
     shakeT = p.shake > 0 ? shakeT + dt : 9; if (p.shake > 0 && shakeT > 8) shakeT = 0;
     const shk = shakeAt(shakeT, 0);
     // the shake takes her whole body: it rocks over her planted paws, chest first and rump after
-    const roll = P.roll - shakeAt(shakeT, 0.15) * 0.2;      // against the head: as it rolls one way, her body goes the other
+    const roll = P.roll - shakeAt(shakeT, 0.15) * 0.2 + wagNow * 0.05 * P.wig;      // against the head: as it rolls one way, her body goes the other
     lean.rotation.x = roll;
     // at a gallop the back works like a spring: it doubles up as the hind legs come through under her
     // and straightens out as she reaches forward
     const flex = P.flex + lerp(gl * a * 0.25 * Math.cos(s2 + 0.3), G[1], gw);
-    const fy = -P.bend + shakeAt(shakeT, 0.3) * 0.13, ry = shakeAt(shakeT, 0.75) * 0.16 + P.bend * 0.6 + wagNow * 0.12 * (a < 0.2 ? 1 : 0);     // the whole bottom wiggles when the tail really goes
+    const fy = -P.bend + shakeAt(shakeT, 0.3) * 0.13 - wagNow * 0.12 * P.wig, ry = shakeAt(shakeT, 0.75) * 0.16 + P.bend * 0.6 + wagNow * (0.12 * (a < 0.2 ? 1 : 0) + 0.22 * P.wig);     // the whole bottom wiggles when the tail really goes; excited, the chest goes the other way
     fore.rotation.y = fy; rear.rotation.y = ry; fore.rotation.z = -flex; rear.rotation.z = flex;
     bendBody(shakeT);
 

@@ -31,7 +31,7 @@ A park (trees, benches, a picnic table, flower pots, a sandy cross of paths with
 
 ## People
 
-Cartoon adults and children, natural in how they walk and stand. Three reactions to Lili: love (they crouch and pet her), indifference (a glance and a shrug), and fright (they scream, run, catch their breath and come back). Who reacts how depends on both their nature (dog lover, not interested, nervous; children like dogs more) and how gentle she is. Planned later: Lili steals a child's toy, the child holds on, then gets scared, screams and runs; the same with adults; jumping at people frightens them, gentleness wins them over.
+Cartoon adults and children, natural in how they walk and stand. Three reactions to Lili: love (they crouch and pet her; a child petting her sets her tail going like mad and her whole body wiggling), indifference (a glance and a shrug), and fright (they scream, run, catch their breath and come back). Who reacts how depends on both their nature (dog lover, not interested, nervous; children like dogs more) and how gentle she is. Planned later: Lili steals a child's toy, the child holds on, then gets scared, screams and runs; the same with adults; jumping at people frightens them, gentleness wins them over.
 
 ## Rules that will hold
 

@@ -41,7 +41,7 @@ const dog = {
   state: 'idle', stT: 0,            // idle (on his feet) | paws (up on someone) | daze | hop (in or out of the car) | drive
   air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0, skid: false, sweepT: 9, ptrX: 0, ptrY: 0, push: false, shake: 0, fidget: 0,
   lookYaw: 0, lookPitch: 0, seen: null, thought: 0, point: 0,
-  barkT: 0, landT: 0, spring: 0, bow: 0, idleT: 0, happy: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
+  barkT: 0, landT: 0, spring: 0, bow: 0, idleT: 0, happy: 0, excited: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
 };
 const car = { ...world.car, v: 0, steer: 0, bump: 0, on: false, rev: false, skidT: 0 };
 const G = { t: 0, mess: 0, birds: 0, pop: 0, dog, car, world, props: world.props, people: world.people, flocks: world.flocks, debris: [], focus: { x: dog.x, y: dog.y, vx: 0, vy: 0, zoom: 1 }, input };
@@ -133,7 +133,7 @@ function bark() {
 function updateDog(dt) {
   const p = dog;
   p.barkT = Math.max(0, p.barkT - dt); p.landT = Math.max(0, p.landT - dt); p.thought = Math.max(0, p.thought - dt);
-  p.happy = Math.max(0, p.happy - dt); p.bow = Math.max(0, p.bow - dt); p.shake = Math.max(0, p.shake - dt);
+  p.happy = Math.max(0, p.happy - dt); p.excited = Math.max(0, p.excited - dt); p.bow = Math.max(0, p.bow - dt); p.shake = Math.max(0, p.shake - dt);
   if (p.state === 'hop') { updateHop(dt); return; }
   if (p.state === 'drive') return;                    // the car carries him (updateCar)
   if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 1.4; p.state = 'idle'; } }
@@ -239,7 +239,7 @@ function updateDog(dt) {
   }
 
   // ---- nothing to do? Ask for a game. ----
-  if (p.state === 'idle' && !st.mag && !p.air && !p.point) {
+  if (p.state === 'idle' && !st.mag && !p.air && !p.point && !p.happy) {
     p.idleT += dt;
     if (p.idleT > 4.5) { p.idleT = 0; if (p.fidget++ % 2) p.shake = 1.4; else p.bow = 1.3; }
   } else p.idleT = 0;
@@ -258,7 +258,7 @@ function watchBirds(st, dt) {
     const most = Math.hypot(p.vx, p.vy) > TROT * 0.5 ? 0.6 : 1.3;
     yaw = clamp(angDiff(p.birdDir, p.heading), -most, most); pitch = clamp(best.h / 300, 0, 1) * 0.5;
     if (p.seen !== best) { p.seen = best; p.pointT = 0; if (best.state === 'ground' && G.t - (p.yipAt || -9) > 5) { p.yipAt = G.t; p.thought = 1.8; A.yip(); } }
-    if (p.state === 'idle' && !st.mag && !p.air && best.state === 'ground' && !p.bow && !p.shake) {
+    if (p.state === 'idle' && !st.mag && !p.air && best.state === 'ground' && !p.bow && !p.shake && !p.happy) {
       // frozen, one paw up, all of him aimed at the bird: for a few seconds, then she relaxes (wags, bows, shakes) and
       // points again a while later, or at once at another flock. Pointing for as long as birds were in sight, she stood
       // stiff in town and never wagged or asked for a game.
@@ -447,7 +447,7 @@ function updateProps(dt) {
 // love, indifference, or fright. A bark or a near miss with the car never wins love, only less fright.
 const WARMTH = { lover: 0.7, meh: 0, nervous: -0.7 }, CHILD_WARMTH = 0.3, LOVE_AT = 0.3, SCARED_AT = -0.35;
 const MANNER = { calm: 0.4, paws: 0.25, bark: -0.7, car: -0.9, crash: -1.2 };
-const RUN = { adult: 230, child: 200 }, RUN_T = 1.8, BREATH_T = 1.4, LOVE_T = 2.6, LOVE_REST = 8;   // after petting her, a while before they would again
+const PERSON_R = 24, RUN = { adult: 230, child: 200 }, RUN_T = 1.8, BREATH_T = 1.4, LOVE_T = 2.6, LOVE_REST = 8;   // after petting her, a while before they would again
 const baseState = (o) => (o.walk ? 'walk' : 'stand');
 const warmth = (o) => WARMTH[o.nature || 'meh'] + (isChild(o.look) ? CHILD_WARMTH : 0);
 function reaction(o, manner, mayLove = true) {
@@ -469,6 +469,14 @@ function startle(o, x, y) {
 }
 function updatePeople(dt) {
   const hx = Math.cos(car.heading), hy = Math.sin(car.heading);
+  // nobody stands inside anybody else (two children both coming to pet her used to crouch on the same spot)
+  const P = world.people;
+  for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+    const a = P[i], b = P[j], d = dist(a.x, a.y, b.x, b.y), min = PERSON_R * 2;
+    if (d >= min || a.state === 'hop' || b.state === 'hop') continue;
+    const nx = d > 0.01 ? (b.x - a.x) / d : 1, ny = d > 0.01 ? (b.y - a.y) / d : 0, push = (min - d) / 2;
+    a.x -= nx * push; a.y -= ny * push; b.x += nx * push; b.y += ny * push;
+  }
   for (const o of world.people) {
     o.t += dt; o.cool = Math.max(0, o.cool - dt); o.wave = Math.max(0, (o.wave || 0) - dt); o.glance = Math.max(0, (o.glance || 0) - dt);
     o.home ||= { x: o.x, y: o.y };
@@ -490,7 +498,11 @@ function updatePeople(dt) {
       if (k >= 1) { if (o.next) respond(o, o.next); else o.state = baseState(o); o.next = null; }
     }
     else if (o.state === 'approach') { if (walkTo(dog.x, dog.y, 80) < 75 || o.t > 3) { o.state = 'love'; o.t = 0; A.aww(); hearts(o.x, o.y, 120); } }
-    else if (o.state === 'love') { face(toDog, 6); if (o.t > LOVE_T) { o.state = baseState(o); o.wave = 1.4; o.t = 0; o.cool = LOVE_REST; } }
+    else if (o.state === 'love') {
+      face(toDog, 6);
+      if (dd < 130) { dog.happy = Math.max(dog.happy, 0.4); if (isChild(o.look)) dog.excited = 0.4; }    // being petted: happy, and by a child, beside herself
+      if (o.t > LOVE_T) { o.state = baseState(o); o.wave = 1.4; o.t = 0; o.cool = LOVE_REST; }
+    }
     else if (o.state === 'scared') {
       // away from her, bending round anything in the way, still away if she follows
       o.runDir += angDiff(toDog + Math.PI, o.runDir) * (1 - Math.exp(-dt * 2));
