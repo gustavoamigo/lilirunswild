@@ -646,6 +646,8 @@ const LOOKS = [
   { kid: false, voice: 'man', skin: '#F6D2B0', hair: ['#C9CBD0', 'short'], top: ['#7FB77E', 'long'], bottom: ['#6A5A48', 'trousers'], shoes: '#2E2A28' },
   { kid: true, skin: '#E8B58E', hair: ['#E3B04F', 'tails'], top: ['#F27FA8', 'short'], bottom: ['#5B7FC4', 'skirt'], shoes: '#E9545B' },
   { kid: true, skin: '#7A4E36', hair: ['#1E1A1C', 'curls'], top: ['#F2C14E', 'short'], bottom: ['#3F6E8C', 'shorts'], shoes: '#F2F2F2' },
+  { kid: false, voice: 'woman', skin: '#EBC3A0', hair: ['#8B3A2A', 'long'], top: ['#4FB0A5', 'short'], bottom: ['#6B4F8C', 'trousers'], shoes: '#3A2E2A' },
+  { kid: true, skin: '#C68B62', hair: ['#5A3A22', 'short'], top: ['#6FC26A', 'short'], bottom: ['#C25B4E', 'shorts'], shoes: '#3A6FC2' },
 ];
 export const PERSON_LOOKS = LOOKS.length;
 export const isChild = (look) => LOOKS[look % LOOKS.length].kid;

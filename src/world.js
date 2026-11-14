@@ -107,6 +107,9 @@ export function buildTown() {
     // two children by the plaza: one standing, one wandering back and forth
     { look: 3, nature: 'lover', x: 1690, y: 1625, heading: -Math.PI / 2, state: 'stand', t: 0, cool: 0, walk: null, seed: 6 },
     { look: 4, nature: 'meh', x: 1600, y: 1680, heading: 0, state: 'walk', t: 0, cool: 0, walk: { x0: 1560, x1: 2040, y: 1680, dir: 1 }, seed: 8 },
+    // two who are nervous of dogs: a woman walking the west lawn, a child on the east lawn
+    { look: 5, nature: 'nervous', x: 1000, y: 1250, heading: 0, state: 'walk', t: 0, cool: 0, walk: { x0: 950, x1: 1650, y: 1250, dir: 1 }, seed: 10 },
+    { look: 6, nature: 'nervous', x: 2150, y: 1900, heading: Math.PI, state: 'stand', t: 0, cool: 0, walk: null, seed: 12 },
   ];
 
   // Is this a free bit of open ground (nothing solid within `room`)?

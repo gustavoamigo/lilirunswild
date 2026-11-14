@@ -600,7 +600,7 @@ function update(dt) {
     }
     updateFx(dt);
     for (const o of world.people) o.t += dt;
-    if (world.people.length) { G.focus.x = 1860; G.focus.y = 1490; } else { G.focus.x = dog.x; G.focus.y = dog.y; }
+    if (world.people.length) { G.focus.x = 1640 + (PERSON_LOOKS - 1) * 55; G.focus.y = 1490; } else { G.focus.x = dog.x; G.focus.y = dog.y; }
     return;
   }
   updateCar(dt);

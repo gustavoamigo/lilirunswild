@@ -294,3 +294,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the panting should stop when she stops running.
 
 **Decision**: she pants only while flat out; it fades within about a quarter second of her slowing. **Checked by script**: page loads, no errors. **Not checked**: by ear.
+
+**Feedback**: add a woman and a child who get scared, so the screams come up.
+
+**Decision**: two more people, both nervous of dogs: a woman with long red hair walking the west lawn, a boy in green on the east lawn. A bark sends either running, a paws-up hello sends the woman running. Plain "child screaming" generated for the owner to pick (the child still has the synthesised wail). **Checked by script**: bark and paws-up against both, the studio line-up with seven looks, no errors. **Not checked**: by eye in town.
