@@ -92,9 +92,9 @@ For working on how he moves: the dog alone on a ruled floor (a line every 100 un
 
 Sound effects can be generated on this machine with Stability AI's Stable Audio 3 Small SFX model (`~/stable-audio/README.md`): `cd ~/stable-audio && .venv/bin/python generate.py "<what it sounds like>" --duration 1 --count 8`, then listen at `http://linuxpc.local:8790/` (start `serve.py` first) and keep the best. It makes effects, not music or speech: no voices, so no screams or words from it.
 
-- **Prompts** like a sound library catalogue: the thing, then character words ("footsteps on grass, small dog, light, close-mic"). Length to match the real sound, 0.5 to 3 s for one-shots. Several variations each, pick by ear.
+- **Prompts** like a sound library catalogue: the thing, then character words ("footsteps on grass, small dog, light, close-mic"). Lengths in **whole seconds only** (1, 2, 3...): at 0.5, 0.8, 1.2 or 1.5 s the model gives full-volume noise (found 2026-11-14 by generating one prompt and seed at each length); make it 1 or 2 s and trim it in the game. Several variations each, pick by ear.
 - **Into the game**: copy the chosen file to `sounds/` with a plain name, trim silence and set the level, play it from `src/audio.js`.
-- **Where it came from**: each sound has a row in `~/stable-audio/out/generation_log.csv` (date, prompt, seed, duration, steps, model revision). For every generated sound kept in the game, add that row's prompt, seed, duration and model revision to `sounds/CREDITS.md`, so it can be made again and its origin is on record. Licence: Stability AI Community License, free while annual revenue is under $1M; the outputs are ours.
+- Each sound has a row in `~/stable-audio/out/generation_log.csv` (date, prompt, seed, duration, steps, model revision). The outputs are ours; the owner decided no credits file is kept in the game.
 
 ## The simulated skeleton (`tools/sim/`)
 
