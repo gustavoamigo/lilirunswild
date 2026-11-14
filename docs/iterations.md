@@ -290,3 +290,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the panting is not continuous, like the engine was.
 
 **Decision**: the same cause (the clip fades in and is silent for its last 0.75 s); the loop now uses only its steady middle. **Checked by script**: the loop's loudness over time has no silent stretch. **Not checked**: by ear.
+
+**Feedback**: the panting should stop when she stops running.
+
+**Decision**: she pants only while flat out; it fades within about a quarter second of her slowing. **Checked by script**: page loads, no errors. **Not checked**: by ear.
