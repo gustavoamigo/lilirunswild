@@ -88,6 +88,14 @@ For working on how he moves: the dog alone on a ruled floor (a line every 100 un
 
 - **Auditioning recordings in the studio.** If `sounds/lili/index.json` exists (a list of `{file, label, dur, dog}`), the studio gets a `recordings` button that unfolds a row of buttons, one per clip (folded by default: there are thirty); pressing one plays it (`playClip` in `src/audio.js`) and opens her mouth. The folder is in `.gitignore`: raw recordings stay on the machine until one is chosen as a game sound.
 
+## Generated sounds (`~/stable-audio`)
+
+Sound effects can be generated on this machine with Stability AI's Stable Audio 3 Small SFX model (`~/stable-audio/README.md`): `cd ~/stable-audio && .venv/bin/python generate.py "<what it sounds like>" --duration 1 --count 8`, then listen at `http://linuxpc.local:8790/` (start `serve.py` first) and keep the best. It makes effects, not music or speech: no voices, so no screams or words from it.
+
+- **Prompts** like a sound library catalogue: the thing, then character words ("footsteps on grass, small dog, light, close-mic"). Length to match the real sound, 0.5 to 3 s for one-shots. Several variations each, pick by ear.
+- **Into the game**: copy the chosen file to `sounds/` with a plain name, trim silence and set the level, play it from `src/audio.js`.
+- **Where it came from**: each sound has a row in `~/stable-audio/out/generation_log.csv` (date, prompt, seed, duration, steps, model revision). For every generated sound kept in the game, add that row's prompt, seed, duration and model revision to `sounds/CREDITS.md`, so it can be made again and its origin is on record. Licence: Stability AI Community License, free while annual revenue is under $1M; the outputs are ours.
+
 ## The simulated skeleton (`tools/sim/`)
 
 Movement posed by hand did not look like a dog. `tools/sim/dog.py` is a springer spaniel's skeleton for MuJoCo, side on: back, neck, head, tail, and for each leg the real bones (shoulder blade, upper arm, forearm, wrist to paw; thigh, shin, hock to paw), with a dog's joint ranges, about 20 kg spread over the bones, and servos limited to a dog's strength. `tools/sim/jump.py` drives the joints from knots over time and searches (cross-entropy, 16 processes, about 3 minutes) for the leap that reaches the asked height and speed, lands forepaws first, ends standing and costs the least effort. The first guess is rough; the result is whatever the physics allows.
