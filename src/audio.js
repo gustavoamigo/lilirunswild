@@ -69,9 +69,9 @@ function noise(when, dur, o = {}) {
 
 // ---- the dog ----
 // Sounds from files: Lili herself, growling the way she does when she is pulling on something in play (recorded), and
-// generated ones (docs/tech.md, "Generated sounds"): her bark and panting, the car's engine, horn and crash, a man's yell, a woman's scream (two takes), a child's scream, crockery breaking (two takes).
+// generated ones (docs/tech.md, "Generated sounds"): her bark and panting, the car's engine, horn and crash, a man's yell, a woman's scream (two takes), a child's scream, crockery breaking (two takes), a bin knocked over (two takes).
 const voice = {};
-const FILES = ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3', 'panting', 'car-horn', 'car-crash', 'man-yell', 'woman-scream-1', 'woman-scream-2', 'child-scream', 'car-engine', 'cup-break-1', 'cup-break-2'];
+const FILES = ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3', 'panting', 'car-horn', 'car-crash', 'man-yell', 'woman-scream-1', 'woman-scream-2', 'child-scream', 'car-engine', 'cup-break-1', 'cup-break-2', 'bin-1', 'bin-2'];
 function loadVoice() {
   for (const k of FILES) {
     fetch(new URL(`../sounds/${k}.wav`, import.meta.url)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((b) => { voice[k] = b; }).catch(() => {});
@@ -108,9 +108,8 @@ export function bonk() { tone(220, 0, 0.22, { to: 70, vol: 0.4 }); noise(0, 0.1,
 // ---- things he knocks about ----
 export function cone() { tone(520, 0, 0.09, { type: 'triangle', to: 300, vol: 0.2 }); noise(0, 0.05, { freq: 1400, vol: 0.12 }); }
 export function box() { tone(140, 0, 0.12, { to: 80, vol: 0.3 }); noise(0, 0.09, { freq: 600, q: 0.7, vol: 0.2 }); }
-export function bin() {
-  for (let i = 0; i < 4; i++) { tone(300 + Math.random() * 500, i * 0.07, 0.2, { type: 'square', to: 180, vol: 0.07 }); noise(i * 0.07, 0.09, { freq: 2600 + Math.random() * 1500, q: 3, vol: 0.2 }); }
-}
+// a bin knocked over (one of two takes)
+export function bin() { say('bin-' + (1 + (Math.random() < 0.5)), 0.55, 0.95 + Math.random() * 0.1); }
 // crockery off the picnic table breaking on the ground (one of two takes)
 export function breakCup() { say('cup-break-' + (1 + (Math.random() < 0.5)), 0.5, 0.95 + Math.random() * 0.1); }
 export function smash() {

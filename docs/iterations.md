@@ -310,3 +310,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: bug: a knocked-over bin goes into the ground.
 
 **Decision**: bins and cones tipped about the middle of their base, so lying on their side half of them was underground; they now fall over the edge of their base (`FOOT` in `makeProp`). **Checked by script**: a fallen bin and a fallen cone in town, lying on the ground. **Not checked**: the fall itself in motion.
+
+**Feedback**: the synthesised sound of hitting a bin is horrible; picks 887578184 and 1314752365.
+
+**Decision**: a knocked bin plays one or the other (pitch varied a little). **Checked by script**: page loads, no errors. **Not checked**: by ear.
