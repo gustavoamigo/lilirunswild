@@ -648,6 +648,9 @@ const LOOKS = [
   { kid: true, skin: '#7A4E36', hair: ['#1E1A1C', 'curls'], top: ['#F2C14E', 'short'], bottom: ['#3F6E8C', 'shorts'], shoes: '#F2F2F2' },
   { kid: false, voice: 'woman', skin: '#EBC3A0', hair: ['#8B3A2A', 'long'], top: ['#4FB0A5', 'short'], bottom: ['#6B4F8C', 'trousers'], shoes: '#3A2E2A' },
   { kid: true, skin: '#C68B62', hair: ['#5A3A22', 'short'], top: ['#6FC26A', 'short'], bottom: ['#C25B4E', 'shorts'], shoes: '#3A6FC2' },
+  { kid: true, skin: '#F6D2B0', hair: ['#B5482A', 'tails'], top: ['#9B6FD8', 'short'], bottom: ['#F2A33A', 'skirt'], shoes: '#4FA653' },
+  { kid: true, skin: '#E8B58E', hair: ['#E8C66A', 'short'], top: ['#4FA3E0', 'long'], bottom: ['#3C4A66', 'trousers'], shoes: '#E9545B' },
+  { kid: false, voice: 'woman', skin: '#F2C29B', hair: ['#D9A441', 'bun'], top: ['#E86A8E', 'long'], bottom: ['#5C6B4A', 'trousers'], shoes: '#3A2E2A' },
 ];
 export const PERSON_LOOKS = LOOKS.length;
 export const isChild = (look) => LOOKS[look % LOOKS.length].kid;
@@ -917,18 +920,35 @@ export function platformGeometry(o) {
 export const lampGeometry = merged([cyl('#4A5560', 0, 100, 0, 4.5, 200), cyl('#4A5560', 0, 5, 0, 10, 10), box('#4A5560', 0, 200, 14, 5, 5, 34), blob('#FFF2B8', 0, 193, 28, 12, 9, 12)]);
 export const flowerGeometry = (color) => merged([cyl('#4FA653', 0, 6, 0, 1.2, 12), blob(color, 0, 13, 0, 5, 3, 5), blob('#FFD23F', 0, 14.5, 0, 2)]);
 
+// A house faces south (its front door at +z) and is turned with its tile (h.dir quarter turns clockwise). Lili's home and
+// the school are houses with something of their own: a round window and a red door; a clock, a double door and a flag.
 export function makeHouse(h) {
   const wall = h.color, w = h.w, d = h.d, hh = h.h;
   const roofGeo = new THREE.CylinderGeometry(0.02, 1, 1, 4, 1).rotateY(Math.PI / 4);
   const parts = [
     box(wall, 0, hh / 2, 0, w, hh, d),
     { geo: roofGeo, color: h.roof, at: [0, hh + 45, 0], scale: [w * 0.78, 90, d * 0.82], flat: true },
-    box('#8A5A3C', -w * 0.22, 46, d / 2 + 1, 44, 92, 4), blob('#FFD23F', -w * 0.22 + 14, 46, d / 2 + 4, 3),
     box('#ffffff', w * 0.18, 78, d / 2 + 1, 76, 66, 4), box('#9FD4F2', w * 0.18, 78, d / 2 + 2.5, 64, 54, 3),
     box('#ffffff', w * 0.18, 78, d / 2 + 4, 4, 54, 2), box('#ffffff', w * 0.18, 78, d / 2 + 4, 64, 4, 2),
     box('#B9B4A8', -w * 0.22, 3, d / 2 + 22, 60, 6, 40),
   ];
-  if (hh > 225) for (const x of [-0.22, 0.18]) parts.push(box('#ffffff', w * x, 178, d / 2 + 1, 62, 52, 4), box('#9FD4F2', w * x, 178, d / 2 + 2.5, 50, 40, 3));
-  const m = mesh(parts); m.position.set(h.x, 0, h.y); m.receiveShadow = true;
+  if (h.kind === 'school') {
+    parts.push(box('#8A5A3C', -w * 0.22, 56, d / 2 + 1, 90, 112, 4), box('#6E4630', -w * 0.22, 56, d / 2 + 3, 3, 112, 2),
+      { geo: CYL, color: '#ffffff', at: [0, hh - 40, d / 2 + 3], scale: [26, 4, 26], rot: [Math.PI / 2, 0, 0], flat: true },
+      box('#2A2A30', 0, hh - 32, d / 2 + 6, 3, 18, 2), box('#2A2A30', 7, hh - 40, d / 2 + 6, 14, 3, 2),
+      cyl('#C9CBD0', w * 0.42, hh + 60, d / 2 - 20, 3, hh * 0.9 + 120), box('#4FA3E0', w * 0.42 + 26, hh + 150, d / 2 - 20, 48, 32, 2));
+  } else {
+    parts.push(box(h.kind === 'home' ? '#D9483B' : '#8A5A3C', -w * 0.22, 46, d / 2 + 1, 44, 92, 4), blob('#FFD23F', -w * 0.22 + 14, 46, d / 2 + 4, 3));
+    if (h.kind === 'home') parts.push({ geo: CYL, color: '#ffffff', at: [0, hh - 50, d / 2 + 1], scale: [24, 4, 24], rot: [Math.PI / 2, 0, 0], flat: true },
+      { geo: CYL, color: '#9FD4F2', at: [0, hh - 50, d / 2 + 2.5], scale: [19, 3, 19], rot: [Math.PI / 2, 0, 0], flat: true });
+  }
+  if (hh > 225) for (const x of [-0.22, 0.18]) if (h.kind !== 'school' || x > 0) parts.push(box('#ffffff', w * x, 178, d / 2 + 1, 62, 52, 4), box('#9FD4F2', w * x, 178, d / 2 + 2.5, 50, 40, 3));
+  const m = mesh(parts); m.position.set(h.x, 0, h.y); m.rotation.y = -(h.dir || 0) * Math.PI / 2; m.receiveShadow = true;
   return m;
 }
+// Lili's kennel, facing south like a house, and her bowl in front of it
+export const kennelGeometry = merged([
+  box('#C8553D', 0, 26, 0, 60, 52, 56), box('#4A2E22', 0, 20, 28.5, 26, 34, 2), blob('#4A2E22', 0, 37, 28.5, 13, 13, 1),
+  { geo: new THREE.CylinderGeometry(0.02, 1, 1, 4, 1).rotateY(Math.PI / 4), color: '#7A4A2A', at: [0, 70, 0], scale: [48, 36, 46], flat: true },
+  cyl('#4FA3E0', 26, 4, 46, 10, 8, undefined, 8), cyl('#B98248', 26, 7, 46, 7, 2),
+]);

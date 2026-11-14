@@ -22,13 +22,14 @@ function shapeDist(g, x, y) {
   let a = Math.atan2(y - cy, x - cx); while (a < a0) a += Math.PI * 2;
   return a <= a1 ? Math.abs(Math.hypot(x - cx, y - cy) - r) : Infinity;
 }
-// What is underfoot at a point of a tile, in its own coordinates: 'road' | 'walk' | 'path' | 'grass'
+// What is underfoot at a point of a tile, in its own coordinates: 'road' | 'walk' | 'path' | 'sand' | 'grass'
 export function tileSurface(def, x, y) {
   let s = 'grass';
   for (const g of def.ground || []) {
     if (g.road) { const d = shapeDist(g.road, x, y); if (d < ROAD_HALF) return 'road'; if (d < ROAD_HALF + WALK) s = 'walk'; }
     if (s === 'grass' && g.path && shapeDist(g.path, x, y) < PATH_HALF) s = 'path';
     if (s === 'grass' && g.plaza && Math.hypot(x - g.plaza[0], y - g.plaza[1]) < g.plaza[2]) s = 'path';
+    if (s === 'grass' && g.sand && Math.hypot(x - g.sand[0], y - g.sand[1]) < g.sand[2]) s = 'sand';
   }
   return s;
 }
@@ -91,28 +92,37 @@ export function buildTown(tiles) {
   for (const t of tiles) {
     const d = t.def, x0 = t.col * TILE, y0 = t.row * TILE, R = rng(t.col * 7919 + t.row * 104729 + 17);
     t.seed = t.col * 7919 + t.row * 104729;
+    // what stands on this tile and does not move: built and dropped with it as she comes and goes (scene.js)
+    const own = t.things = { trees: [], lamps: [], houses: [], plats: [], kennels: [] };
     // a point of the tile, in town coordinates; a heading, turned with it
     const at = (x, y) => { const [u, v] = turn(t.rot, x, y); return [x0 + u, y0 + v]; };
     const head = (h) => h + t.rot * Math.PI / 2;
-    for (const [x, y] of d.lamps || []) { const [X, Y] = at(x, y); lamps.push({ x: X, y: Y }); obstacles.push({ kind: 'lamp', x: X, y: Y, r: 9, wob: 0 }); }
+    for (const [x, y] of d.lamps || []) { const [X, Y] = at(x, y), o = { kind: 'lamp', x: X, y: Y, r: 9, wob: 0 }; lamps.push({ x: X, y: Y }); own.lamps.push(o); obstacles.push(o); }
     for (const [kind, x, y, z] of d.props || []) { const [X, Y] = at(x, y); prop(kind, X, Y, z || 0); }
     for (const [x, y] of d.trees || []) {
       const [X, Y] = at(x, y), tr = { x: X, y: Y, s: 0.9 + R() * 0.35, hue: (R() * 4) | 0, seed: R() * 6, wob: 0 };
-      trees.push(tr); obstacles.push({ kind: 'tree', x: X, y: Y, r: 22 * tr.s, tree: tr });
+      trees.push(tr); own.trees.push(tr); obstacles.push({ kind: 'tree', x: X, y: Y, r: 22 * tr.s, tree: tr });
     }
     for (const [x, y] of d.benches || []) {
       const [ax, ay] = at(x - 52, y), [bx, by] = at(x + 52, y);
-      platforms.push({ kind: 'bench', ax, ay, bx, by, r: 24, h: 42, wob: 0 });
+      const o = { kind: 'bench', ax, ay, bx, by, r: 24, h: 42, wob: 0 }; platforms.push(o); own.plats.push(o);
     }
     if (d.table) {
       const [X, Y] = at(...d.table);
-      table = { kind: 'table', ax: X, ay: Y, bx: X, by: Y, r: 76, h: 60, wob: 0 }; platforms.push(table);
+      table = { kind: 'table', ax: X, ay: Y, bx: X, by: Y, r: 76, h: 60, wob: 0 }; platforms.push(table); own.plats.push(table);
       for (let i = 0; i < 4; i++) { const a = 0.6 + i * 1.57; prop('plate', X + Math.cos(a) * 42, Y + Math.sin(a) * 42, table.h); }
     }
-    if (d.house) {
-      const [X, Y] = at(...d.house), w = 250 + R() * 110;
-      houses.push({ x: X, y: Y - R() * 30, w, d: 170, h: 190 + R() * 80, color: HOUSE[(t.col + t.row) % HOUSE.length], roof: ROOF[(R() * ROOF.length) | 0] });
-    }
+    // buildings face south on their tile (front door that side) and turn with it; solid, as a row of circles along them
+    const building = (b, x, y) => {
+      const [X, Y] = at(x, y);
+      Object.assign(b, { x: X, y: Y, dir: t.rot }); houses.push(b); own.houses.push(b);
+      const [ux, uy] = [[1, 0], [0, 1], [-1, 0], [0, -1]][t.rot], n = Math.ceil(b.w / b.d) + 1;
+      for (let i = 0; i < n; i++) { const s = (i / (n - 1) - 0.5) * (b.w - b.d); obstacles.push({ kind: 'house', x: X + ux * s, y: Y + uy * s, r: b.d / 2 }); }
+    };
+    if (d.house) building({ kind: 'house', w: 250 + R() * 100, d: 170, h: 190 + R() * 80, color: HOUSE[(t.col * 3 + t.row) % HOUSE.length], roof: ROOF[(R() * ROOF.length) | 0] }, d.house[0], d.house[1] - R() * 30);
+    if (d.home) building({ kind: 'home', w: 300, d: 180, h: 240, color: '#FFF4E2', roof: '#C8553D' }, ...d.home);
+    if (d.school) building({ kind: 'school', w: 380, d: 220, h: 250, color: '#F6D365', roof: '#B5483A' }, ...d.school);
+    for (const [x, y] of d.kennels || []) { const [X, Y] = at(x, y), o = { kind: 'kennel', x: X, y: Y, dir: t.rot, r: 34 }; own.kennels.push(o); obstacles.push(o); }
     if (d.car) { const [X, Y] = at(d.car[0], d.car[1]); car = { x: X, y: Y, heading: head(d.car[2]) }; }
     for (const [x, y] of d.birds || []) {
       const [X, Y] = at(x, y), i = flocks.length;

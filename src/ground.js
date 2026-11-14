@@ -68,6 +68,19 @@ export function paintTile(t, res = 1) {
     for (const [x, y, rad] of plazas) { Art.circ(c, x, y, rad - 46); c.stroke(); }
   }
 
+  // sandpits: a wooden rim round soft sand
+  for (const sp of ground.filter((s) => s.sand).map((s) => s.sand)) {
+    const [x, y, rad] = sp;
+    c.fillStyle = '#9A6A3A'; Art.circ(c, x, y, rad + 10); c.fill();
+    c.fillStyle = '#B98248'; Art.circ(c, x, y, rad + 6); c.fill();
+    c.fillStyle = '#F0DDA8'; Art.circ(c, x, y, rad); c.fill();
+    for (let i = 0; i < 160; i++) {
+      const a = r() * Math.PI * 2, d = Math.sqrt(r()) * (rad - 4);
+      c.fillStyle = r() < 0.5 ? 'rgba(170,140,80,.25)' : 'rgba(255,248,220,.5)';
+      Art.circ(c, x + Math.cos(a) * d, y + Math.sin(a) * d, 1.5 + r() * 2.5); c.fill();
+    }
+  }
+
   // roads: pavement and its stones, kerb, asphalt and its speckles, the dashed middle line
   if (roads.length) {
     const full = (ROAD_HALF + WALK) * 2;

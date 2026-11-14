@@ -48,36 +48,8 @@ export function initScene(canvas, w) {
     for (const o of world.people) { const m = M.makePerson(o.look); scene.add(m.root); people.push({ o, m }); }
     resize(); return;
   }
-  // ---- the ground: one painted square per tile ----
-  const tileGeo = new THREE.PlaneGeometry(TILE, TILE);
-  for (const t of world.tiles) {
-    const tex = new THREE.CanvasTexture(paintTile(t));
-    tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
-    tex.wrapS = tex.wrapT = THREE.ClampToEdgeWrapping;
-    const ground = new THREE.Mesh(tileGeo, M.surf({ map: tex }));
-    ground.rotation.x = -Math.PI / 2; ground.position.set((t.col + 0.5) * TILE, 0, (t.row + 0.5) * TILE); ground.receiveShadow = true; scene.add(ground);
-  }
-
-  const vc = M.surf({ color: '#ffffff', vertexColors: true });
-  // ---- trees: the leaves fade when they would hide whoever the camera follows ----
-  for (const t of world.trees) {
-    const g = new THREE.Group(); g.position.set(t.x, 0, t.y); g.scale.setScalar(t.s); g.rotation.y = t.seed;
-    const trunk = new THREE.Mesh(M.trunkGeometry, M.mat('#B98248')); trunk.castShadow = true;
-    const leafMat = M.surf({ color: '#ffffff', vertexColors: true, transparent: true });
-    const leaves = new THREE.Mesh(M.canopyGeometry(t.hue), leafMat); leaves.castShadow = true;
-    g.add(trunk, leaves); scene.add(g);
-    trees.push({ t, g, leaves, leafMat, faded: false });
-  }
-  for (const l of world.lamps) {
-    const m = new THREE.Mesh(M.lampGeometry, vc); m.castShadow = true; m.position.set(l.x, 0, l.y); scene.add(m);
-    lamps.push({ o: world.obstacles.find((o) => o.kind === 'lamp' && o.x === l.x && o.y === l.y), m });
-  }
-  for (const o of world.platforms) {
-    const geo = M.platformGeometry(o); if (!geo) continue;
-    const m = new THREE.Mesh(geo, vc); m.castShadow = true; m.receiveShadow = true;
-    m.position.set((o.ax + o.bx) / 2, 0, (o.ay + o.by) / 2); scene.add(m); plats.push({ o, m });
-  }
-  for (const h of world.houses) scene.add(M.makeHouse(h));
+  vc = M.surf({ color: '#ffffff', vertexColors: true });
+  streamTiles(world.start.x, world.start.y, true);
 
   // ---- the hedge round the edge of town, and the flowers in the park ----
   const R = rng(7), spots = [];
@@ -104,6 +76,56 @@ export function initScene(canvas, w) {
   car = M.makeCar(); scene.add(car.root);
   dog = M.makeDog(); scene.add(dog.root);
   resize();
+}
+
+// ---- the town is built a few tiles at a time around the camera, and dropped behind it ----
+// Each tile's ground, trees, lamps, benches and table, houses and kennels are built when it comes near and dropped when
+// it is far (the tile's `things`, see buildTown). People, birds, props and the car move about, so they are always there.
+let vc;
+const built = new Map(), tileGeo = new THREE.PlaneGeometry(TILE, TILE), houses = [];
+function buildTile(t) {
+  const objs = [], mats = [], add = (m) => { scene.add(m); objs.push(m); return m; };
+  const tex = new THREE.CanvasTexture(paintTile(t));
+  tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+  const gm = M.surf({ map: tex }); mats.push(gm);
+  const ground = add(new THREE.Mesh(tileGeo, gm));
+  ground.rotation.x = -Math.PI / 2; ground.position.set((t.col + 0.5) * TILE, 0, (t.row + 0.5) * TILE); ground.receiveShadow = true;
+  // trees: the leaves fade when they would hide whoever the camera follows
+  for (const tr of t.things.trees) {
+    const g = add(new THREE.Group()); g.position.set(tr.x, 0, tr.y); g.scale.setScalar(tr.s); g.rotation.y = tr.seed;
+    const trunk = new THREE.Mesh(M.trunkGeometry, M.mat('#B98248')); trunk.castShadow = true;
+    const leafMat = M.surf({ color: '#ffffff', vertexColors: true, transparent: true }); mats.push(leafMat);
+    const leaves = new THREE.Mesh(M.canopyGeometry(tr.hue), leafMat); leaves.castShadow = true;
+    g.add(trunk, leaves); trees.push({ t: tr, g, leaves, leafMat, faded: false, tile: t });
+  }
+  for (const o of t.things.lamps) { const m = add(new THREE.Mesh(M.lampGeometry, vc)); m.castShadow = true; m.position.set(o.x, 0, o.y); lamps.push({ o, m, tile: t }); }
+  for (const o of t.things.plats) {
+    const m = add(new THREE.Mesh(M.platformGeometry(o), vc)); m.castShadow = true; m.receiveShadow = true;
+    m.position.set((o.ax + o.bx) / 2, 0, (o.ay + o.by) / 2); plats.push({ o, m, tile: t });
+  }
+  // houses: each its own see-through-able material, so it can fade when it stands in front of her
+  for (const h of t.things.houses) {
+    const m = add(M.makeHouse(h)), mat = M.surf({ color: '#ffffff', vertexColors: true, transparent: true }); mats.push(mat);
+    m.material = mat; m.castShadow = true; houses.push({ h, m, mat, tile: t });
+  }
+  for (const o of t.things.kennels) { const m = add(new THREE.Mesh(M.kennelGeometry, vc)); m.castShadow = true; m.position.set(o.x, 0, o.y); m.rotation.y = -o.dir * Math.PI / 2; }
+  built.set(t, { objs, mats, tex });
+}
+function dropTile(t) {
+  const b = built.get(t);
+  for (const m of b.objs) scene.remove(m);
+  for (const m of b.mats) m.dispose();
+  b.tex.dispose(); built.delete(t);
+  for (const list of [trees, lamps, plats, houses]) for (let i = list.length - 1; i >= 0; i--) if (list[i].tile === t) list.splice(i, 1);
+}
+// Build the tiles near (x, y), nearest first, a couple a frame (all at once when `now`); drop those well out of sight.
+// The camera looks north, so more is seen ahead of it than behind; further back (driving, ?zoom), more of both.
+function streamTiles(x, y, now) {
+  const c = Math.floor(x / TILE), r = Math.floor(y / TILE), side = Math.ceil(3 * zoom * fit), ahead = Math.ceil(4 * zoom * fit), behind = Math.ceil(2 * zoom * fit);
+  const near = (t, m) => Math.abs(t.col - c) <= side + m && t.row >= r - ahead - m && t.row <= r + behind + m;
+  for (const t of [...built.keys()]) if (!near(t, 2)) dropTile(t);
+  const want = world.tiles.filter((t) => !built.has(t) && near(t, 0)).sort((a, b) => Math.hypot(a.col - c, a.row - r) - Math.hypot(b.col - c, b.row - r));
+  for (const t of now ? want : want.slice(0, 2)) buildTile(t);
 }
 
 export function resize() {
@@ -183,6 +205,7 @@ export function render(G, dt) {
 
   dog.update(G.dog, t);
   car.update(G.car, t, dt);
+  streamTiles(camAim.x, camAim.z);
 
   // ---- leaves between the camera and him go see-through ----
   _a.copy(camera.position); _b.set(f.x, 40, f.y).sub(_a);
@@ -200,6 +223,12 @@ export function render(G, dt) {
     e.leafMat.depthWrite = e.leafMat.opacity > 0.9;
     const w = e.t.wob;
     e.leaves.rotation.z = Math.sin(t * 19) * w * 0.07; e.leaves.rotation.x = Math.cos(t * 16) * w * 0.05;
+  }
+  // ---- and so do houses standing between the camera and her ----
+  for (const e of houses) {
+    const h = e.h, dy = h.y - f.y, front = dy > -60 && dy < 700 * fit * zoom && Math.abs(h.x - f.x) < Math.max(h.w, h.d) / 2 + 170;
+    e.mat.opacity = lerp(e.mat.opacity, front ? 0.25 : 1, 1 - Math.exp(-dt * 9));
+    e.mat.depthWrite = e.mat.opacity > 0.9;
   }
   for (const e of lamps) e.m.rotation.z = Math.sin(t * 30) * (e.o.wob || 0) * 0.06;
   for (const e of plats) { e.m.rotation.z = Math.sin(t * 34) * e.o.wob * 0.03; e.m.position.y = Math.abs(Math.sin(t * 34)) * e.o.wob * 2; }

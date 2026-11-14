@@ -1,6 +1,6 @@
 # Open world and missions: design
 
-Status: approved; step 1 (tiles) built 2026-11-15, see *The town: tiles on a map* in `docs/tech.md`.
+Status: approved; steps 1 (tiles) and 2 (bigger town, only nearby tiles built) done 2026-11-15, see *The town: tiles on a map* in `docs/tech.md`.
 
 ## What the game becomes
 

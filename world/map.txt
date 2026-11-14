@@ -1,11 +1,17 @@
 # The town: one tile per letter, 400 x 400 game units each, north at the top (docs/open-world-design.md).
 # A tile can be turned: > a quarter turn clockwise, >> half a turn, < a quarter turn anticlockwise.
 # Lili can go as far as `bounds` (x0 y0 x1 y1); a hedge runs round it.
+#
+# A ring road with a middle road and two cross streets, and six blocks inside it: houses round lawns, the park (middle,
+# top), the playground (east, top). Houses line the ring outside; Lili's home and the school are among them on the north
+# side, facing the road (the camera looks north, so buildings north of a road show their fronts).
 
 h = house
 . = grass
 R = road
 C = corner
+Y = tee
+J = cross
 Z = crossing
 Q = parking
 X = parcels
@@ -17,13 +23,22 @@ p = path
 B = benches
 F = pots
 K = picnic
+L = home
+S = school
+G = playground
 
-bounds 300 410 3300 2500
+bounds 400 400 6400 4800
 
-h  h   h   h   h   h   h   h   h
-.  C   R   Q   Z   R   X   C>  .
-.  R<  P   T   p>  T   P   R>  .
-.  Z<  p   B   +   F   p   Z>  .
-.  R<  K   P   p>  T   P   R>  .
-.  C<  W>> R>> Z>> R>> R>> C>> .
-.  .   .   .   .   .   .   .   .
+.  .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
+.  h   h   L   h   h   h   h   h   h   h   h   S   h   h   h   .
+.  h<  C   R   Q   R   Y   R   Z   R   Y   R   R   X   C>  h>  .
+.  h<  R<  h>> h>> h>> R<  T   p>  T   R>  P   P   P   R>  h>  .
+.  h<  R<  P   T   P   Z<  F   +   B   Z>  T   G   P   R>  h>  .
+.  h<  R<  h   h   h   R<  K   p>  P   R>  h   h   h   R>  h>  .
+.  h<  Y<  R   R   R   J   R   Z>> R   J   R   W   R   Y>  h>  .
+.  h<  R<  h>> h>> h>> R<  h>> h>> h>> R>  h>> h>> h>> R>  h>  .
+.  h<  R<  P   T   P   R<  T   P   T   R>  P   T   P   R>  h>  .
+.  h<  R<  h   h   h   R<  h   h   h   R>  h   h   h   R>  h>  .
+.  h<  C<  R>> R>> R>> Y>> R>> R>> R>> Y>> R>> R>> R>> C>> h>  .
+.  h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> .
+.  .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
