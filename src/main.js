@@ -134,9 +134,11 @@ function updateDog(dt) {
   const p = dog;
   p.barkT = Math.max(0, p.barkT - dt); p.landT = Math.max(0, p.landT - dt); p.thought = Math.max(0, p.thought - dt);
   p.happy = Math.max(0, p.happy - dt); p.excited = Math.max(0, p.excited - dt);
-  // out of breath: built up over about 3 s of zoomies, panted off over about 8 s once she slows down
+  // out of breath: built up over about 3 s of zoomies, panted off over about 8 s once she slows down. Flat out she
+  // breathes hard all the way, heavier the longer it lasts; slower than that, only while she is still out of breath.
   p.puff = p.zoom && !p.air ? Math.min(1, p.puff + dt / 3) : Math.max(0, p.puff - dt / 8);
-  A.panting(onFoot() && !p.zoom && Math.hypot(p.vx, p.vy) < TROT * 0.8 ? p.puff : 0); p.bow = Math.max(0, p.bow - dt); p.shake = Math.max(0, p.shake - dt);
+  const flatOut = p.zoom && !p.air;
+  A.panting(!onFoot() ? 0 : flatOut ? 0.5 + 0.5 * p.puff : Math.hypot(p.vx, p.vy) < TROT * 0.8 ? p.puff : 0, flatOut); p.bow = Math.max(0, p.bow - dt); p.shake = Math.max(0, p.shake - dt);
   if (p.state === 'hop') { updateHop(dt); return; }
   if (p.state === 'drive') return;                    // the car carries him (updateCar)
   if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 1.4; p.state = 'idle'; } }

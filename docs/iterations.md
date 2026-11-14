@@ -282,3 +282,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the car sound is not continuous.
 
 **Decision**: the generated clip went silent for half a second near its end; the loop now uses only its first two continuous seconds (`--span` in `tools/sound_prep.py`). **Checked by script**: the loop's loudness never drops more than 11 dB below its peak, and the seam is smooth. **Not checked**: by ear.
+
+**Feedback**: the engine is good now. She should breathe heavily while running.
+
+**Decision**: flat out (zoomies) she pants all the way, louder as she gets out of breath and a little quicker than standing; after she slows, as before. **Checked by script**: page loads, a gallop, no errors. **Not checked**: by ear.
