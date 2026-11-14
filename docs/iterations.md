@@ -258,3 +258,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: picked generated sounds: bark, a man's yell, a paw step, the car crash and horn, light panting. The woman's and children's screams are too frightened; the engine is too real, it should be cartoon; paws on grass and heavy panting not wanted. No credits file; the bark can be replaced so none is needed.
 
 **Decision**: the picks are in the game (prepared by `tools/sound_prep.py`); she pants after zoomies, tongue out; the soundfont bark and `sounds/CREDITS.md` are gone. New rounds generated for a less frightened woman and child and a cartoon engine, for the owner to pick. Found on the way: the generator gives noise at lengths that are not whole seconds; every short sound of the first round was broken and was made again. **Checked by script**: the sounds load and play without errors (bark, steps, a fright, panting after zoomies). **Not checked**: by ear in the game: levels against each other, the panting loop's seam.
+
+**Feedback**: the generated paw step is horrible; keep the synthetic one. Asked for a plain "woman screaming, frightened".
+
+**Decision**: the synthetic step is back and the file is gone. Eight "woman screaming, frightened" generated for the owner to pick. **Checked by script**: audio.js parses. **Not checked**: by ear.

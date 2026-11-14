@@ -69,9 +69,9 @@ function noise(when, dur, o = {}) {
 
 // ---- the dog ----
 // Sounds from files: Lili herself, growling the way she does when she is pulling on something in play (recorded), and
-// generated ones (docs/tech.md, "Generated sounds"): her bark, paw steps and panting, the car's horn and crash, a man's yell.
+// generated ones (docs/tech.md, "Generated sounds"): her bark and panting, the car's horn and crash, a man's yell.
 const voice = {};
-const FILES = ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3', 'paw-step', 'panting', 'car-horn', 'car-crash', 'man-yell'];
+const FILES = ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3', 'panting', 'car-horn', 'car-crash', 'man-yell'];
 function loadVoice() {
   for (const k of FILES) {
     fetch(new URL(`../sounds/${k}.wav`, import.meta.url)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((b) => { voice[k] = b; }).catch(() => {});
@@ -99,7 +99,7 @@ export function playClip(url) {
 export function yip() { tone(700, 0, 0.12, { type: 'triangle', to: 1300, sweep: 0.08, vol: 0.2 }); tone(900, 0.13, 0.12, { type: 'triangle', to: 1500, sweep: 0.08, vol: 0.16 }); }
 export function jump() { tone(280, 0, 0.2, { to: 720, sweep: 0.16, vol: 0.18 }); }
 export function land() { tone(170, 0, 0.1, { to: 90, vol: 0.22 }); noise(0, 0.06, { freq: 500, q: 1.2, vol: 0.1 }); }
-export function step() { say('paw-step', 0.18, 0.9 + Math.random() * 0.25); }   // a little different each time
+export function step() { noise(0, 0.035, { freq: 420, q: 1.5, vol: 0.05 }); }
 export function whoosh() { noise(0, 0.35, { freq: 500, to: 2200, q: 1.2, vol: 0.14, attack: 0.1 }); }
 export function skid() { noise(0, 0.22, { freq: 1700, to: 900, q: 2.5, vol: 0.09, attack: 0.03 }); }
 // running flat out into something solid

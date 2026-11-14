@@ -1,6 +1,6 @@
 # Tech
 
-Three.js r170 (vendored), plain ES modules, no build step, and no asset files but sounds (`sounds/`): `lili-growl-*.wav` are Lili's own play growl, the sound she makes pulling on something, recorded by the owner and kept for pulling a toy from someone; the rest (bark, paw step, panting, car horn and crash, a man's yell) are generated (*Generated sounds* below) and everything else is synthesised in `src/audio.js`. Same architecture as wheek.
+Three.js r170 (vendored), plain ES modules, no build step, and no asset files but sounds (`sounds/`): `lili-growl-*.wav` are Lili's own play growl, the sound she makes pulling on something, recorded by the owner and kept for pulling a toy from someone; the rest (bark, panting, car horn and crash, a man's yell) are generated (*Generated sounds* below) and everything else is synthesised in `src/audio.js`. Same architecture as wheek.
 
 ## Files
 
@@ -94,7 +94,7 @@ Sound effects can be generated on this machine with Stability AI's Stable Audio 
 
 - **Prompts** like a sound library catalogue: the thing, then character words ("footsteps on grass, small dog, light, close-mic"). Lengths in **whole seconds only** (1, 2, 3...): at 0.5, 0.8, 1.2 or 1.5 s the model gives full-volume noise (found 2026-11-14 by generating one prompt and seed at each length); make it 1 or 2 s and trim it in the game. Several variations each, pick by ear.
 - **Into the game**: `~/stable-audio/.venv/bin/python tools/sound_prep.py <seed> <name> [--loop]` writes `sounds/<name>.wav` from the file with that seed: mono, silence trimmed, faded, peak −1 dB; a loop is crossfaded end into start instead. Then load it in `loadVoice` and play it from `src/audio.js`.
-- **In the game now** (seed: file): 85998275 bark, 336555405 man-yell (a frightened man), 748043820 paw-step (every footfall, quiet, pitch varied 0.9 to 1.15), 1649600267 car-crash, 1167704597 car-horn, 375600156 panting (a loop: `dog.puff` builds over about 3 s of zoomies and is panted off over about 8 s once she slows below a brisk trot, tongue out while standing). Still synthesised: the engine (a generated real engine did not suit; a cartoon one is being chosen) and the woman's and children's frights (the generated ones were too frightened).
+- **In the game now** (seed: file): 85998275 bark, 336555405 man-yell (a frightened man), 1649600267 car-crash, 1167704597 car-horn, 375600156 panting (a loop: `dog.puff` builds over about 3 s of zoomies and is panted off over about 8 s once she slows below a brisk trot, tongue out while standing). Still synthesised: the paw steps (a generated step sounded horrible), the engine (a generated real engine did not suit; a cartoon one is being chosen) and the woman's and children's frights (the generated ones were too frightened).
 - Each sound has a row in `~/stable-audio/out/generation_log.csv` (date, prompt, seed, duration, steps, model revision). The outputs are ours; the owner decided no credits file is kept in the game.
 
 ## The simulated skeleton (`tools/sim/`)
