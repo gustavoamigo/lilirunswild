@@ -83,7 +83,7 @@ function say(k, vol, rate = 1) {
   src.connect(g); g.connect(sfx); src.start();
 }
 export function bark() { say('bark', 0.9, 1.2); }   // a spaniel: a bit higher than the recording
-// her play growl, three takes in turn. There is nothing to pull on yet, so it goes with the play bow.
+// her play growl, three takes in turn: only for pulling a toy from someone (not the play bow). Nothing plays it until then.
 let growls = 0;
 export function playGrowl() { say('lili-growl-' + (growls++ % 3 + 1), 0.7); }
 // an excited little yip: "a bird!"

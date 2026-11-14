@@ -238,3 +238,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: in the game, standing still, she should wag her tail and do the bow or shake once in a while, as in the studio.
 
 **Decision**: the cause was the birds: in town a flock is nearly always in sight, and she pointed at it, stiff, for as long as she stood. Now she points for 3.5 s and relaxes; she points again 16 s later or at a new flock. **Checked by script**: 20 s standing in town: point, wag, bow, shake, bow, point again; no errors. **Not checked**: by eye.
+
+**Feedback**: no growl with the bow; the growl is for pulling a toy from someone.
+
+**Decision**: the bow is silent; the growl stays in the game, unused until there is a toy to pull. **Checked by script**: page loads, no errors. **Not checked**: by ear.
