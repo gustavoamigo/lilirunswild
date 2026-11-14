@@ -4,7 +4,7 @@ Status: proposed (2026-11-14), not built. For the owner to approve or change bef
 
 ## What the game becomes
 
-A GTA for children of 6 and 7, played as Lili. You roam an open town, borrow the car, cause harmless mischief and make friends. Missions give ideas of what to do, never a path you must follow. Playing without any mission is always fun on its own, as it is today.
+An open-world game for children of 6 and 7, played as Lili: one big town with no levels or loading screens, where you go anywhere you like, at any time. You roam it, borrow the car, cause harmless mischief and make friends. Missions give ideas of what to do, never a path you must follow. Playing without any mission is always fun on its own, as it is today.
 
 Two things make it scale:
 
@@ -20,7 +20,7 @@ Children of 6 and 7, most of whom read little or not at all.
 - **Rewards you can see and play with.** A picture to-do list that gets stamped like a sticker book; new things for Lili (a collar, a hat, a ball); new parts of town opening.
 - **One finger is enough** (already a rule in `CLAUDE.md`).
 
-The model is *Untitled Goose Game*: an open, sandbox area with a to-do list of mischief that can be done in almost any order, and finishing enough of it opens the next area.
+The model: an open area to play in freely, with a to-do list of bits of mischief that can be done in almost any order; finishing enough of them opens the next area.
 
 ## The town: tiles on a map
 
@@ -138,6 +138,6 @@ Each step is playable and shown to the owner before the next.
 
 - Rewards and motivation: [MDPI review](https://www.mdpi.com/2227-7102/13/7/668), [MIT gamification chapter](https://lcl.media.mit.edu/resources/readings/chapter3-gamification.pdf), [Harvard GSE, why children play](https://www.gse.harvard.edu/ideas/usable-knowledge/23/09/why-do-children-play)
 - No scores or levels: [Toca Boca](https://tocaboca.com/?p=16287), [Kidscreen interview](https://kidscreen.com/?p=49360)
-- A to-do list in a sandbox: [Untitled Goose Game guide](https://nintendolife.com/news/2020/05/guide_untitled_goose_game_walkthrough_-_puzzle_solutions_and_to-do_list_objectives)
+- A to-do list of mischief in an open area: [a guide to one such game](https://nintendolife.com/news/2020/05/guide_untitled_goose_game_walkthrough_-_puzzle_solutions_and_to-do_list_objectives)
 - Tile towns by Wave Function Collapse: [Marian42](https://marian42.github.io/article/wfc/)
 - Interfaces for pre-readers: [Aten Design](https://atendesigngroup.com/articles/designing-young-audiences), [UXmatters](https://www.uxmatters.com/mt/archives/2010/05/designing-user-experiences-for-children.php)

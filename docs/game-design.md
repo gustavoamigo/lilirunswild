@@ -1,6 +1,6 @@
 # Game design
 
-Where the game is going: an open town in the shape of GTA, played as a dog. Roam freely, take a car, cause chaos, later do missions. The chaos is a spaniel's: affection and enthusiasm, never harm.
+Where the game is going: an open-world game (one big town to roam freely, with cars to take and missions to pick up), played as a dog. Roam freely, take a car, cause chaos, later do missions. The chaos is a spaniel's: affection and enthusiasm, never harm.
 
 What exists now is the dog and a small town to try him in.
 
@@ -39,10 +39,10 @@ See *Design rules* in `CLAUDE.md`: not violent, he is a dog, the camera never tu
 
 ## Where it is going
 
-A GTA for children of 6 and 7: an open town built from reusable tiles, and missions as files with dependencies, no points or timers. Proposed in `docs/open-world-design.md`, not built yet.
+An open-world game for children of 6 and 7: one big town built from reusable tiles, and missions as files with dependencies, no points or timers. Proposed in `docs/open-world-design.md`, not built yet.
 
 ## Not decided yet
 
 - Missions, and what the counters are for.
-- Camera: fixed and looking north, as in wheek. A GTA-style camera behind the car would break "up means away"; to decide when driving matters more.
+- Camera: fixed and looking north, as in wheek. A camera that follows behind the car, turning with it, would break "up means away"; to decide when driving matters more.
 - How big the town gets, more cars, traffic, people who react for longer (chasing him, calling him).
