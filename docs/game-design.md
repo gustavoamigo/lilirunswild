@@ -14,7 +14,7 @@ Lili, liver and white: a white body, brown sides to her head with a white blaze 
 | Zoomies | Keep running flat out for about a second (or run at birds) and he tips into a gallop: half as fast again, ears flying, dust. He has no brakes and skids wide round corners. |
 | Jump | From a stand she sinks on her haunches and drives off them; when already running she takes a stride and springs: a long low leap, or a high one when there is a bench, the table or the car in front of her. In the air she can still lean. |
 | Bonk | Gallop straight into a tree, lamp, bench or the hedge: stars, a dazed moment, leaves fall. A glancing hit only slides him past. |
-| Say hello | Trot into a person: paws up on their chest, hearts. Fly into them (jumping or galloping): they sit down with a bump. |
+| Say hello | People react by their nature and how she behaves. Stand calmly by someone and dog lovers and children come and pet her; trot into them and it is paws up on their chest, which dog lovers love and the uninterested shrug off; fly into them (jumping or galloping) and they sit down with a bump, then run away screaming. Nervous people run from anything but calm, a bark sends most of them off, and a near miss with the car too. |
 | Break stuff | Run into pots, bins, cones, boxes and a ball. Pots smash, bins spill. Jump on the picnic table and the plates go flying. Each thing counts once on the paw counter. |
 | Birds | He notices any flock nearby: his head turns, he yips, a bird appears in a thought bubble. Standing still he freezes and points. Run at them and he goes straight into zoomies; they fly off to another spot and the bird counter goes up. Barking scares them too. |
 | Bark | Startles people and birds near him. |
@@ -31,7 +31,7 @@ A park (trees, benches, a picnic table, flower pots, a sandy cross of paths with
 
 ## People
 
-Cartoon adults and children, natural in how they walk and stand. They will have three reactions to Lili: love (when she is gentle), indifference, and fright (they scream and run away). Planned later: Lili steals a child's toy, the child holds on, then gets scared, screams and runs; the same with adults; jumping at people frightens them, gentleness wins them over.
+Cartoon adults and children, natural in how they walk and stand. Three reactions to Lili: love (they crouch and pet her), indifference (a glance and a shrug), and fright (they scream, run, catch their breath and come back). Who reacts how depends on both their nature (dog lover, not interested, nervous; children like dogs more) and how gentle she is. Planned later: Lili steals a child's toy, the child holds on, then gets scared, screams and runs; the same with adults; jumping at people frightens them, gentleness wins them over.
 
 ## Rules that will hold
 

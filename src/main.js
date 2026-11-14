@@ -7,7 +7,7 @@ import { input, keyVector, steerMag, initInput } from './input.js';
 import { pollPad } from './gamepad.js';
 import { spawn, updateFx, drawFx, burst } from './fx.js';
 import { buildTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js';
-import { CAR, PERSON_LOOKS } from './models.js';
+import { CAR, PERSON_LOOKS, isChild } from './models.js';
 import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
 
 const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560;
@@ -126,7 +126,8 @@ function bark() {
   const hx = Math.cos(dog.heading), hy = Math.sin(dog.heading);
   for (let i = 0; i < 3; i++) spawn({ type: 'ring', x: dog.x + hx * 70, z: dog.y + hy * 70, y: dog.z + 70, vx: hx * 260, vz: hy * 260, drag: 2, life: 0.45, delay: i * 0.07, size: 10, grow: 90, color: '#ffffff', alpha: 0.9 });
   for (const f of world.flocks) if (f.state === 'ground' && dist(f.x, f.y, dog.x, dog.y) < (driving ? 650 : 520)) flyAway(f);
-  for (const o of world.people) if (dist(o.x, o.y, dog.x, dog.y) < 400 && (o.state === 'walk' || o.state === 'stand')) startle(o, o.x, o.y);
+  // a bark close by frightens; never wins love
+  for (const o of world.people) if (dist(o.x, o.y, dog.x, dog.y) < 400 && o.cool <= 0 && (o.state === 'walk' || o.state === 'stand')) respond(o, reaction(o, 'bark', false));
 }
 
 function updateDog(dt) {
@@ -437,7 +438,25 @@ function updateProps(dt) {
 }
 
 // ----------------------------------------------------------------- people --
+// Each person has a warmth (their nature, and children like dogs more); what Lili does adds to it, and the sum decides:
+// love, indifference, or fright. A bark or a near miss with the car never wins love, only less fright.
+const WARMTH = { lover: 0.7, meh: 0, nervous: -0.7 }, CHILD_WARMTH = 0.3, LOVE_AT = 0.3, SCARED_AT = -0.35;
+const MANNER = { calm: 0.4, paws: 0.25, bark: -0.7, car: -0.9, crash: -1.2 };
+const RUN = { adult: 230, child: 200 }, RUN_T = 1.8, BREATH_T = 1.4, LOVE_T = 2.6, LOVE_REST = 8;   // after petting her, a while before they would again
 const baseState = (o) => (o.walk ? 'walk' : 'stand');
+const warmth = (o) => WARMTH[o.nature || 'meh'] + (isChild(o.look) ? CHILD_WARMTH : 0);
+function reaction(o, manner, mayLove = true) {
+  const w = warmth(o) + MANNER[manner];
+  return w >= LOVE_AT && mayLove ? 'love' : w <= SCARED_AT ? 'scared' : 'meh';
+}
+// what they do once it is decided (after any wobble, sit or jump that came first)
+function respond(o, r) {
+  const toDog = Math.atan2(dog.y - o.y, dog.x - o.x);
+  o.t = 0; o.cool = 4;
+  if (r === 'love') { o.state = dist(o.x, o.y, dog.x, dog.y) > 75 ? 'approach' : 'love'; o.heading = o.state === 'love' ? toDog : o.heading; if (o.state === 'love') { A.aww(); hearts(o.x, o.y, 120); } }
+  else if (r === 'scared') { o.state = 'scared'; o.runDir = toDog + Math.PI; A.scream(isChild(o.look)); }
+  else { o.state = baseState(o); o.glance = 1.4; }
+}
 function startle(o, x, y) {
   o.state = 'hop'; o.t = 0; o.from = { x: o.x, y: o.y };
   o.to = { x: clamp(x, BOUNDS.x0 + 30, BOUNDS.x1 - 30), y: clamp(y, BOUNDS.y0 + 30, BOUNDS.y1 - 30) };
@@ -446,22 +465,38 @@ function startle(o, x, y) {
 function updatePeople(dt) {
   const hx = Math.cos(car.heading), hy = Math.sin(car.heading);
   for (const o of world.people) {
-    o.t += dt; o.cool = Math.max(0, o.cool - dt); o.wave = Math.max(0, (o.wave || 0) - dt);
+    o.t += dt; o.cool = Math.max(0, o.cool - dt); o.wave = Math.max(0, (o.wave || 0) - dt); o.glance = Math.max(0, (o.glance || 0) - dt);
+    o.home ||= { x: o.x, y: o.y };
     const dd = dist(o.x, o.y, dog.x, dog.y), toDog = Math.atan2(dog.y - o.y, dog.x - o.x);
     const face = (a, r) => { o.heading += angDiff(a, o.heading) * (1 - Math.exp(-dt * r)); };
+    o.glanceYaw = clamp(angDiff(toDog, o.heading), -1.2, 1.2);
+    const walkTo = (x, y, v) => { const d = dist(o.x, o.y, x, y) || 1, s = Math.min(d, v * dt); o.x += (x - o.x) / d * s; o.y += (y - o.y) / d * s; face(Math.atan2(y - o.y, x - o.x), 8); return d; };
     if (o.state === 'walk') {
       const w = o.walk;
       if (o.x > w.x1) w.dir = -1; if (o.x < w.x0) w.dir = 1;
       const vy = clamp(w.y - o.y, -40, 40);
       o.x += w.dir * 70 * dt; o.y += vy * dt; face(Math.atan2(vy, w.dir * 70), 6);
     } else if (o.state === 'stand') { if (dd < 420) face(toDog, 5); }
-    else if (o.state === 'wobble') { face(toDog, 8); if (o.t > 1.15) { o.state = baseState(o); o.wave = 1.4; } }
-    else if (o.state === 'sit') { if (o.t > 2.6) { o.state = baseState(o); o.wave = 1.6; } }
+    else if (o.state === 'wobble') { face(toDog, 8); if (o.t > 1.15) respond(o, o.next || 'meh'); }
+    else if (o.state === 'sit') { if (o.t > 1.6) respond(o, o.next || 'meh'); }
     else if (o.state === 'hop') {
       const k = clamp(o.t / 0.45, 0, 1);
       o.x = lerp(o.from.x, o.to.x, k); o.y = lerp(o.from.y, o.to.y, k);
-      if (k >= 1) o.state = baseState(o);
+      if (k >= 1) { if (o.next) respond(o, o.next); else o.state = baseState(o); o.next = null; }
     }
+    else if (o.state === 'approach') { if (walkTo(dog.x, dog.y, 80) < 75 || o.t > 3) { o.state = 'love'; o.t = 0; A.aww(); hearts(o.x, o.y, 120); } }
+    else if (o.state === 'love') { face(toDog, 6); if (o.t > LOVE_T) { o.state = baseState(o); o.wave = 1.4; o.t = 0; o.cool = LOVE_REST; } }
+    else if (o.state === 'scared') {
+      // away from her, bending round anything in the way, still away if she follows
+      o.runDir += angDiff(toDog + Math.PI, o.runDir) * (1 - Math.exp(-dt * 2));
+      const v = isChild(o.look) ? RUN.child : RUN.adult;
+      o.x += Math.cos(o.runDir) * v * dt; o.y += Math.sin(o.runDir) * v * dt; face(o.runDir, 10);
+      pushOut(world, o, 22);
+      o.x = clamp(o.x, BOUNDS.x0 + 40, BOUNDS.x1 - 40); o.y = clamp(o.y, BOUNDS.y0 + 40, BOUNDS.y1 - 40);
+      if (o.t > RUN_T) { o.state = 'breath'; o.t = 0; }
+    }
+    else if (o.state === 'breath') { if (o.t > BREATH_T) { o.state = o.walk ? 'walk' : 'return'; o.t = 0; } }
+    else if (o.state === 'return') { if (walkTo(o.home.x, o.home.y, 70) < 4) { o.state = 'stand'; o.t = 0; } pushOut(world, o, 22); }
 
     // ---- a car is coming: jump clear. Nobody ever gets run over. ----
     if (Math.abs(car.v) > 60) {
@@ -470,6 +505,7 @@ function updatePeople(dt) {
       if (o.state !== 'hop' && ahead > -60 && ahead < 190 + Math.abs(car.v) * 0.45 && Math.abs(side) < 120) {
         const s = side >= 0 ? 1 : -1;
         startle(o, o.x - hy * s * (210 - Math.abs(side)), o.y + hx * s * (210 - Math.abs(side)));
+        o.next = reaction(o, 'car', false);
       }
       for (const s of [1, -1]) {
         const cx = car.x + hx * CAR.half * s, cy = car.y + hy * CAR.half * s, d = dist(o.x, o.y, cx, cy) || 1;
@@ -477,21 +513,30 @@ function updatePeople(dt) {
       }
     }
 
-    // ---- he arrives ----
-    if (!onFoot() || dog.state === 'daze' || dd > DOG_R + 28 || dog.z > 120) continue;
+    // ---- she is near ----
+    if (!onFoot() || dog.state === 'daze' || dog.z > 120) continue;
+    const busy = o.cool > 0 || !(o.state === 'walk' || o.state === 'stand');
+    // calm: she has stood still near them for a second
+    if (!busy && dd < 130 && !dog.air && Math.hypot(dog.vx, dog.vy) < 20) { o.calmT = (o.calmT || 0) + dt; if (o.calmT > 1) { o.calmT = 0; respond(o, reaction(o, 'calm')); } }
+    else o.calmT = 0;
+    if (dd > DOG_R + 28) continue;
     const sp = Math.hypot(dog.vx, dog.vy), nx = (dog.x - o.x) / (dd || 1), ny = (dog.y - o.y) / (dd || 1);
-    if (o.cool <= 0 && o.state !== 'hop' && o.state !== 'sit') {
+    if (o.cool <= 0 && !['hop', 'sit', 'scared', 'breath'].includes(o.state)) {
       if (dog.air || sp > ZOOM * 0.8) {
-        // a flying hello: they sit down with a bump, he bounces off
-        o.state = 'sit'; o.t = 0; o.cool = 4.5; o.heading = toDog;
+        // a flying hello: they sit down with a bump, he bounces off, and then they decide
+        o.state = 'sit'; o.t = 0; o.cool = 4.5; o.heading = toDog; o.next = reaction(o, 'crash');
         A.oof(); stars(o.x, o.y, 150, 7); G.mess++; G.pop = 1;
         dog.vx = nx * 150; dog.vy = ny * 150;
-      } else if (dog.state === 'idle' && sp > 40) {
-        // paws up for a proper hello
-        o.state = 'wobble'; o.t = 0; o.cool = 4;
-        dog.state = 'paws'; dog.stT = 1.15; dog.vx = dog.vy = 0; dog.heading = toDog + Math.PI; dog.runT = 0;
-        dog.x = o.x + nx * 50; dog.y = o.y + ny * 50;
-        A.aww(); hearts(o.x, o.y, 170);
+      } else if (dog.state === 'idle' && sp > 40 && o.state !== 'love' && o.state !== 'approach') {
+        // paws up for a proper hello, unless they are frightened of her
+        const r = reaction(o, 'paws');
+        if (r === 'scared') respond(o, r);
+        else {
+          o.state = 'wobble'; o.t = 0; o.cool = 4; o.next = r;
+          dog.state = 'paws'; dog.stT = 1.15; dog.vx = dog.vy = 0; dog.heading = toDog + Math.PI; dog.runT = 0;
+          dog.x = o.x + nx * 50; dog.y = o.y + ny * 50;
+          if (r === 'love') { A.aww(); hearts(o.x, o.y, 150); }
+        }
       }
     }
     if (!dog.air && dog.state !== 'paws' && dd < 50) { dog.x = o.x + nx * 50; dog.y = o.y + ny * 50; }

@@ -715,22 +715,25 @@ export function makePerson(look) {
     for (const n of ['thigh', 'knee', 'ankle', 'sh', 'out', 'elbow']) T[n + 0] = T[n + 1] = 0;
     T.out0 = T.out1 = 0.07; T.elbow0 = T.elbow1 = 0.18; T.knee0 = T.knee1 = -0.04;
     let fast = 14;
-    if (o.state === 'walk' || o.pace) {
-      // the walk: driven by the ground covered, a step every 0.55 leg lengths
-      const step = (B.thigh + B.shin) * 0.55;
+    const run = o.state === 'scared';
+    if (o.state === 'walk' || o.state === 'approach' || o.state === 'return' || run || o.pace) {
+      // the walk: driven by the ground covered, a step every 0.55 leg lengths. Running away scared: longer steps, knees
+      // high, leaning into it, arms up in the air
+      const step = (B.thigh + B.shin) * (run ? 0.85 : 0.55);
       ph += (o.pace ? o.pace * dt : moved < 50 ? moved : 0) / (2 * step);
       const s = ph * Math.PI * 2;
       for (const [i, q] of [[0, 0], [1, Math.PI]]) {
         const a = s + q, fw = Math.sin(a);
-        T['thigh' + i] = 0.32 * fw;
-        T['knee' + i] = -(0.08 + 0.8 * Math.max(0, Math.cos(a + 0.35)) ** 2);                        // folds as the leg swings through
+        T['thigh' + i] = (run ? 0.6 : 0.32) * fw;
+        T['knee' + i] = -(0.08 + (run ? 1.4 : 0.8) * Math.max(0, Math.cos(a + 0.35)) ** 2);           // folds as the leg swings through
         T['ankle' + i] = 0.12 * Math.max(0, -Math.cos(a - 0.4)) - 0.1 * Math.max(0, fw);              // toes off behind, heel first in front
-        T['sh' + i] = -0.32 * fw;                                                                      // the arm goes with the other leg
-        T['elbow' + i] = 0.2 + 0.32 * Math.max(0, -fw);
+        T['sh' + i] = run ? 2.5 + 0.35 * Math.sin(2 * a) : -0.32 * fw;                                 // the arm goes with the other leg
+        T['elbow' + i] = run ? 0.35 + 0.3 * Math.sin(2 * a + 1) : 0.2 + 0.32 * Math.max(0, -fw);
+        if (run) T['out' + i] = 0.55;
       }
-      T.y = 1.6 * k * Math.cos(2 * s);                       // up as the legs pass, down as a heel lands
+      T.y = (run ? 3.5 : 1.6) * k * Math.cos(2 * s);         // up as the legs pass, down as a heel lands
       T.yaw = 0.09 * Math.sin(s); T.twist = -0.15 * Math.sin(s); T.roll = 0.025 * Math.cos(s);
-      T.lean = 0.07; T.hp = 0.04;
+      T.lean = run ? 0.22 : 0.07; T.hp = run ? 0.2 : 0.04;
       fast = 30;
     } else {
       // standing: weight on one leg then the other, breathing, a look about now and then
@@ -741,7 +744,17 @@ export function makePerson(look) {
       T.hy = 0.45 * Math.sin(t * 0.31 + seed * 2) * Math.max(0, Math.sin(t * 0.17 + seed));
       T.hp = 0.06 * Math.sin(t * 0.23 + seed);
     }
-    if (o.state === 'wobble') {                              // a dog's paws on their chest: rocked back, arms up and out
+    if (o.state === 'love') {                               // down on their haunches by her, one hand stroking her, the other on a knee
+      T.thigh0 = T.thigh1 = 1.25; T.knee0 = T.knee1 = -2.1; T.ankle0 = T.ankle1 = 0;
+      T.y = -(B.thigh * 0.685 + B.shin * 0.34); T.lean = 0.45; T.hp = -0.35; T.roll = 0;
+      T.sh0 = 0.75 + 0.18 * Math.sin(t * 5); T.out0 = 0.15; T.elbow0 = 0.25;
+      T.sh1 = 0.5; T.out1 = 0.2; T.elbow1 = 0.6;
+      fast = 8;
+    } else if (o.state === 'breath') {                      // stopped, hands on knees, puffing
+      T.thigh0 = T.thigh1 = 0.35; T.knee0 = T.knee1 = -0.35; T.y = -3 * k + 1.2 * k * Math.sin(t * 7);
+      T.lean = 0.75; T.hp = 0.45; T.sh0 = T.sh1 = 0.1; T.out0 = T.out1 = 0.12; T.elbow0 = T.elbow1 = 0.1;
+      fast = 8;
+    } else if (o.state === 'wobble') {                              // a dog's paws on their chest: rocked back, arms up and out
       const f = Math.sin(t * 19);
       T.lean = -0.22 + f * 0.04; T.knee0 = T.knee1 = -0.25; T.thigh0 = T.thigh1 = 0.12; T.y = -3;
       T.sh0 = 1.0 + f * 0.5; T.sh1 = 1.0 - f * 0.5; T.out0 = T.out1 = 0.6; T.elbow0 = T.elbow1 = 0.7; T.hp = 0.25;
@@ -752,6 +765,10 @@ export function makePerson(look) {
       const q = clamp(o.t / 0.45, 0, 1); T.y = Math.sin(q * Math.PI) * 46 * k;
       T.thigh0 = 0.7; T.thigh1 = 0.3; T.knee0 = T.knee1 = -1.1; T.sh0 = T.sh1 = 2.3; T.out0 = T.out1 = 0.45; T.elbow0 = T.elbow1 = 0.3;
       fast = 30;
+    } else if (o.glance > 0 && !run) {                      // not bothered: a look at her and a little shrug
+      T.hy += o.glanceYaw * 0.8;
+      const sh = Math.max(0, Math.sin((1.4 - o.glance) / 0.6 * Math.PI)) * (o.glance > 0.8 ? 1 : 0);
+      T.out0 += 0.3 * sh; T.out1 += 0.3 * sh; T.elbow0 += 0.6 * sh; T.elbow1 += 0.6 * sh;
     } else if (o.wave > 0) { T.sh0 = 2.2; T.out0 = 0.75; T.elbow0 = 0.5 + Math.sin(t * 12) * 0.35; }       // up and out to the side, not across the face
     if (fh === null) fh = o.heading;
     if (o.state !== 'stand' || o.pace) { fh = o.heading; stepT = 0; const d = Math.exp(-dt * 3); offX *= d; offY *= d; }
@@ -779,7 +796,7 @@ export function makePerson(look) {
     head.rotation.set(0, S.hy - S.twist - S.yaw + tw * 0.4, S.hp + S.lean * 0.6);
     blink = (t + seed) % 4.1 < 0.12 ? 0.15 : 1;
     eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); });
-    smile.visible = !(open.visible = o.state === 'wobble' || o.state === 'hop' || o.state === 'sit');
+    smile.visible = !(open.visible = o.state === 'wobble' || o.state === 'hop' || o.state === 'sit' || run || o.state === 'breath');
     root.position.set(o.x + offX, 0, o.y + offY); root.rotation.y = -fh;
     o.feet = legs;                                           // for tests
   }
