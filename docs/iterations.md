@@ -266,3 +266,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the woman's scream: two picks from a plain "woman screaming" prompt. For the panting, a cocker spaniel panting while running, to make a loop.
 
 **Decision**: both screams in the game, one or the other at random. Panting-while-running generated for the owner to pick. **Checked by script**: page loads and the files load. **Not checked**: by ear.
+
+**Feedback**: panting: seed 2013129909, at a lower volume.
+
+**Decision**: it replaces the earlier panting loop, at about half the volume. **Not checked**: by ear.

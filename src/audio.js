@@ -158,6 +158,6 @@ export function panting(level) {
     pant.src.buffer = voice.panting; pant.src.loop = true; pant.g.gain.value = 0;
     pant.src.connect(pant.g); pant.g.connect(sfx); pant.src.start();
   }
-  pant.g.gain.setTargetAtTime(level * 0.35, ac.currentTime, 0.25);
+  pant.g.gain.setTargetAtTime(level * 0.18, ac.currentTime, 0.25);
   pant.src.playbackRate.setTargetAtTime(0.9 + level * 0.2, ac.currentTime, 0.25);
 }
