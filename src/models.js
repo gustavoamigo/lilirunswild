@@ -148,7 +148,8 @@ const EAR_SEG = 9.5, EAR_G = 1500, EAR_DRAG = 14, EAR_SPRING = [16, 7, 4, 3];
 // The wind of her own speed pushes the ears back: this much push (units/s²) for each unit/s the head moves, up to
 // WIND_TOP. Flat out (460) it is about as strong as gravity, so they stream back at some 45°; in the car, flatter.
 const EAR_WIND = 3, WIND_TOP = 1000;
-const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _x = new THREE.Vector3(), _y = new THREE.Vector3(), _z = new THREE.Vector3(), _inv = new THREE.Matrix4(), _rot = new THREE.Matrix4(), _p = new THREE.Vector3(), _t = new THREE.Vector3(), _o = new THREE.Vector3(), Z_AXIS = new THREE.Vector3(0, 0, 1), X_AXIS = new THREE.Vector3(1, 0, 0);
+const EAR_FLAT = [0.25, 0.6, 0.85, 1];      // for each piece of an ear, how far its flat faces her body's side rather than her head's
+const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _x = new THREE.Vector3(), _y = new THREE.Vector3(), _z = new THREE.Vector3(), _inv = new THREE.Matrix4(), _rot = new THREE.Matrix4(), _p = new THREE.Vector3(), _side = new THREE.Vector3(), _t = new THREE.Vector3(), _o = new THREE.Vector3(), Z_AXIS = new THREE.Vector3(0, 0, 1), X_AXIS = new THREE.Vector3(1, 0, 0);
 
 export function makeDog() {
   const root = new THREE.Group();                       // position + heading (+ landing squash)
@@ -288,6 +289,7 @@ export function makeDog() {
     const len = EAR_SEG * _a.setFromMatrixScale(head.matrixWorld).y, n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n, keep = Math.exp(-h * EAR_DRAG * (1 + 3 * still));
     earT += dt;
     const me = head.matrixWorld.elements, side = Math.hypot(me[8], me[9], me[10]) || 1;
+    const re = root.matrixWorld.elements, bodySide = _side.set(re[8], re[9], re[10]).transformDirection(_inv);   // her body's sideways, as the head sees it
     for (const e of ears) {
       const top = _a.copy(e.top).applyMatrix4(head.matrixWorld);
       if (!e.pts) { e.pts = e.segs.map((_, i) => top.clone().setY(top.y - (i + 1) * len)); e.was = e.pts.map((q) => q.clone()); e.at = top.clone(); e.wx = e.wz = 0; }
@@ -344,7 +346,10 @@ export function makeDog() {
       e.segs.forEach((m, i) => {
         const to = _b.copy(e.pts[i]).applyMatrix4(_inv);
         _y.copy(from).sub(to).normalize();
-        _x.crossVectors(_y, Z_AXIS); if (_x.lengthSq() < 0.01) _x.copy(X_AXIS); _x.normalize(); _z.crossVectors(_x, _y);
+        // which way the flat of the ear faces: out from her head where it joins, out from her body further down. Faced
+        // with her head all the way, the whole ear swung round like a stiff flap whenever she turned her head.
+        _z.copy(Z_AXIS).lerp(bodySide, EAR_FLAT[i]).normalize();
+        _x.crossVectors(_y, _z); if (_x.lengthSq() < 0.01) _x.copy(X_AXIS); _x.normalize(); _z.crossVectors(_x, _y);
         m.position.copy(from); m.quaternion.setFromRotationMatrix(_rot.makeBasis(_x, _y, _z));
         from = m.userData.end = (m.userData.end || new THREE.Vector3()).copy(to);
       });
