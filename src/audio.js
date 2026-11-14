@@ -69,9 +69,9 @@ function noise(when, dur, o = {}) {
 
 // ---- the dog ----
 // Sounds from files: Lili herself, growling the way she does when she is pulling on something in play (recorded), and
-// generated ones (docs/tech.md, "Generated sounds"): her bark and panting, the car's horn and crash, a man's yell.
+// generated ones (docs/tech.md, "Generated sounds"): her bark and panting, the car's horn and crash, a man's yell, a woman's scream (two takes).
 const voice = {};
-const FILES = ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3', 'panting', 'car-horn', 'car-crash', 'man-yell'];
+const FILES = ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3', 'panting', 'car-horn', 'car-crash', 'man-yell', 'woman-scream-1', 'woman-scream-2'];
 function loadVoice() {
   for (const k of FILES) {
     fetch(new URL(`../sounds/${k}.wav`, import.meta.url)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((b) => { voice[k] = b; }).catch(() => {});
@@ -123,9 +123,10 @@ export function flutter() { for (let i = 0; i < 9; i++) noise(i * 0.055, 0.05, {
 export function coo() { tone(520, 0, 0.22, { to: 610, sweep: 0.1, vol: 0.05, attack: 0.05 }); tone(560, 0.26, 0.3, { to: 470, vol: 0.05, attack: 0.05 }); }
 export function aww() { tone(440, 0, 0.5, { type: 'triangle', to: 660, sweep: 0.25, vol: 0.13, attack: 0.06 }); tone(660, 0.3, 0.4, { type: 'triangle', to: 520, vol: 0.1, attack: 0.06 }); }
 export function oof() { tone(300, 0, 0.25, { type: 'triangle', to: 130, vol: 0.2 }); noise(0.05, 0.12, { freq: 400, q: 0.8, vol: 0.18 }); }
-// a fright: a man yells (generated); women and children still have a synthesised wail, higher from a child, until theirs are chosen
+// a fright: a man yells, a woman screams (generated; one of two takes); children still have a synthesised wail until theirs is chosen
 export function scream(who) {
   if (who === 'man') { say('man-yell', 0.5, 0.95 + Math.random() * 0.1); return; }
+  if (who === 'woman') { say('woman-scream-' + (1 + (Math.random() < 0.5)), 0.45); return; }
   const f = who === 'child' ? 900 : 620; for (const [d, v] of [[0, 0.06], [7, 0.04]]) tone(f + d, 0, 0.6, { type: 'sawtooth', to: f * 1.35 + d, sweep: 0.25, vol: v, attack: 0.03 }); tone(f * 1.3, 0.3, 0.35, { type: 'triangle', to: f * 1.1, vol: 0.05 }); }
 export function yelp() { tone(600, 0, 0.18, { type: 'triangle', to: 1100, sweep: 0.1, vol: 0.14 }); }
 

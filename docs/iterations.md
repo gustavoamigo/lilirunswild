@@ -262,3 +262,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the generated paw step is horrible; keep the synthetic one. Asked for a plain "woman screaming, frightened".
 
 **Decision**: the synthetic step is back and the file is gone. Eight "woman screaming, frightened" generated for the owner to pick. **Checked by script**: audio.js parses. **Not checked**: by ear.
+
+**Feedback**: the woman's scream: two picks from a plain "woman screaming" prompt. For the panting, a cocker spaniel panting while running, to make a loop.
+
+**Decision**: both screams in the game, one or the other at random. Panting-while-running generated for the owner to pick. **Checked by script**: page loads and the files load. **Not checked**: by ear.
