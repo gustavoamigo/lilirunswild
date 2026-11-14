@@ -408,7 +408,7 @@ export function makeDog() {
       T.hp = -0.32; T.tailUp = 0.3; T.wag = 0; T.y = -6;
     } else if (sp < 30 && p.excited > 0) {               // a child petting her: the tail going fast, her bottom wiggling with it, the chest steady
       T.wag = 0.75; T.wagHz = 18; T.tailUp = 0.75; T.tongue = 1; T.wig = 1;
-    } else if (sp < 30) { T.wag = 0.55 + (p.happy ? 0.25 : 0); T.wagHz = p.happy ? 17 : 12; }
+    } else if (sp < 30) { T.wag = 0.55 + (p.happy ? 0.25 : 0); T.wagHz = p.happy ? 17 : 12; if (p.puff > 0.15) T.tongue = 1; }
     if (p.barkT > 0) { T.jaw = 0.75; T.hp += 0.3; }
     if (p.spring > 0 && !p.still) T.gal = 1;              // a run-up is bounds, not a trot
     // ---- a captured move (tools/sim): the long leap, or the high jump when there is something to get up onto ----
@@ -638,17 +638,18 @@ const ADULT = { thigh: 35, shin: 34, foot: 14, hipW: 10, shY: 49, shW: 20, upArm
   torso: [[0, 11.7, 17], [11.7, 11, 16.3], [24.7, 13, 18.2], [36.4, 13.7, 20], [44, 13, 20.8], [49.4, 9, 17], [53.3, 4.5, 8.5], [54.6, 2, 2.6]] };
 const CHILD = { thigh: 27, shin: 26, foot: 11, hipW: 7.5, shY: 38, shW: 15.5, upArm: 21, foreArm: 19, hand: 5.5, neck: 46, headR: 19, limb: 0.72,
   torso: [[0, 9, 13], [9, 8.5, 12.5], [19, 10, 14], [28, 10.5, 15.5], [34, 10, 16], [38, 7, 13], [41, 3.5, 6.5], [42, 1.5, 2]] };
-// skin, hair (colour and style: short, long, bun, curls, tails), top (colour, sleeves short or long), bottom (trousers, shorts,
+// voice (man or woman, for adults), skin, hair (colour and style: short, long, bun, curls, tails), top (colour, sleeves short or long), bottom (trousers, shorts,
 // skirt), shoes; child or not
 const LOOKS = [
-  { kid: false, skin: '#F2C29B', hair: ['#6B4226', 'short'], top: ['#5BA8E6', 'short'], bottom: ['#3C4A66', 'trousers'], shoes: '#3A2E2A' },
-  { kid: false, skin: '#A86E4C', hair: ['#2B2326', 'bun'], top: ['#F28C5C', 'long'], bottom: ['#4E5E86', 'skirt'], shoes: '#5A3A2A' },
-  { kid: false, skin: '#F6D2B0', hair: ['#C9CBD0', 'short'], top: ['#7FB77E', 'long'], bottom: ['#6A5A48', 'trousers'], shoes: '#2E2A28' },
+  { kid: false, voice: 'man', skin: '#F2C29B', hair: ['#6B4226', 'short'], top: ['#5BA8E6', 'short'], bottom: ['#3C4A66', 'trousers'], shoes: '#3A2E2A' },
+  { kid: false, voice: 'woman', skin: '#A86E4C', hair: ['#2B2326', 'bun'], top: ['#F28C5C', 'long'], bottom: ['#4E5E86', 'skirt'], shoes: '#5A3A2A' },
+  { kid: false, voice: 'man', skin: '#F6D2B0', hair: ['#C9CBD0', 'short'], top: ['#7FB77E', 'long'], bottom: ['#6A5A48', 'trousers'], shoes: '#2E2A28' },
   { kid: true, skin: '#E8B58E', hair: ['#E3B04F', 'tails'], top: ['#F27FA8', 'short'], bottom: ['#5B7FC4', 'skirt'], shoes: '#E9545B' },
   { kid: true, skin: '#7A4E36', hair: ['#1E1A1C', 'curls'], top: ['#F2C14E', 'short'], bottom: ['#3F6E8C', 'shorts'], shoes: '#F2F2F2' },
 ];
 export const PERSON_LOOKS = LOOKS.length;
 export const isChild = (look) => LOOKS[look % LOOKS.length].kid;
+export const personVoice = (look) => (LOOKS[look % LOOKS.length].kid ? 'child' : LOOKS[look % LOOKS.length].voice);
 const EYE = '#2A1C14', MOUTH = '#8A3B36';
 export function makePerson(look) {
   const L = LOOKS[look % LOOKS.length], B = L.kid ? CHILD : ADULT, k = B.limb;

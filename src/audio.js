@@ -1,5 +1,5 @@
-// Sounds are synthesised with WebAudio, all but the bark and Lili's own play growl.
-let ac = null, master, sfx, noiseBuf, eng = null;
+// Sounds are synthesised with WebAudio, but for the recorded and generated ones in sounds/ (loaded in loadVoice).
+let ac = null, master, sfx, noiseBuf, eng = null, pant = null;
 let muted = false;
 
 export function initAudio() {
@@ -68,11 +68,12 @@ function noise(when, dur, o = {}) {
 }
 
 // ---- the dog ----
-// Recorded sounds (sounds/CREDITS.md): a soundfont bark, because a synthesised one never sounded like a dog,
-// and Lili herself, growling the way she does when she is pulling on something in play.
+// Sounds from files: Lili herself, growling the way she does when she is pulling on something in play (recorded), and
+// generated ones (docs/tech.md, "Generated sounds"): her bark, paw steps and panting, the car's horn and crash, a man's yell.
 const voice = {};
+const FILES = ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3', 'paw-step', 'panting', 'car-horn', 'car-crash', 'man-yell'];
 function loadVoice() {
-  for (const k of ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3']) {
+  for (const k of FILES) {
     fetch(new URL(`../sounds/${k}.wav`, import.meta.url)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((b) => { voice[k] = b; }).catch(() => {});
   }
 }
@@ -82,7 +83,7 @@ function say(k, vol, rate = 1) {
   src.buffer = voice[k]; src.playbackRate.value = rate; g.gain.value = vol;
   src.connect(g); g.connect(sfx); src.start();
 }
-export function bark() { say('bark', 0.9, 1.2); }   // a spaniel: a bit higher than the recording
+export function bark() { say('bark', 0.8); }
 // her play growl, three takes in turn: only for pulling a toy from someone (not the play bow). Nothing plays it until then.
 let growls = 0;
 export function playGrowl() { say('lili-growl-' + (growls++ % 3 + 1), 0.7); }
@@ -98,7 +99,7 @@ export function playClip(url) {
 export function yip() { tone(700, 0, 0.12, { type: 'triangle', to: 1300, sweep: 0.08, vol: 0.2 }); tone(900, 0.13, 0.12, { type: 'triangle', to: 1500, sweep: 0.08, vol: 0.16 }); }
 export function jump() { tone(280, 0, 0.2, { to: 720, sweep: 0.16, vol: 0.18 }); }
 export function land() { tone(170, 0, 0.1, { to: 90, vol: 0.22 }); noise(0, 0.06, { freq: 500, q: 1.2, vol: 0.1 }); }
-export function step() { noise(0, 0.035, { freq: 420, q: 1.5, vol: 0.05 }); }
+export function step() { say('paw-step', 0.18, 0.9 + Math.random() * 0.25); }   // a little different each time
 export function whoosh() { noise(0, 0.35, { freq: 500, to: 2200, q: 1.2, vol: 0.14, attack: 0.1 }); }
 export function skid() { noise(0, 0.22, { freq: 1700, to: 900, q: 2.5, vol: 0.09, attack: 0.03 }); }
 // running flat out into something solid
@@ -122,14 +123,16 @@ export function flutter() { for (let i = 0; i < 9; i++) noise(i * 0.055, 0.05, {
 export function coo() { tone(520, 0, 0.22, { to: 610, sweep: 0.1, vol: 0.05, attack: 0.05 }); tone(560, 0.26, 0.3, { to: 470, vol: 0.05, attack: 0.05 }); }
 export function aww() { tone(440, 0, 0.5, { type: 'triangle', to: 660, sweep: 0.25, vol: 0.13, attack: 0.06 }); tone(660, 0.3, 0.4, { type: 'triangle', to: 520, vol: 0.1, attack: 0.06 }); }
 export function oof() { tone(300, 0, 0.25, { type: 'triangle', to: 130, vol: 0.2 }); noise(0.05, 0.12, { freq: 400, q: 0.8, vol: 0.18 }); }
-// a cartoon scream: a rising wail with a wobble in it, higher from a child
-export function scream(child) { const f = child ? 900 : 620; for (const [d, v] of [[0, 0.06], [7, 0.04]]) tone(f + d, 0, 0.6, { type: 'sawtooth', to: f * 1.35 + d, sweep: 0.25, vol: v, attack: 0.03 }); tone(f * 1.3, 0.3, 0.35, { type: 'triangle', to: f * 1.1, vol: 0.05 }); }
+// a fright: a man yells (generated); women and children still have a synthesised wail, higher from a child, until theirs are chosen
+export function scream(who) {
+  if (who === 'man') { say('man-yell', 0.5, 0.95 + Math.random() * 0.1); return; }
+  const f = who === 'child' ? 900 : 620; for (const [d, v] of [[0, 0.06], [7, 0.04]]) tone(f + d, 0, 0.6, { type: 'sawtooth', to: f * 1.35 + d, sweep: 0.25, vol: v, attack: 0.03 }); tone(f * 1.3, 0.3, 0.35, { type: 'triangle', to: f * 1.1, vol: 0.05 }); }
 export function yelp() { tone(600, 0, 0.18, { type: 'triangle', to: 1100, sweep: 0.1, vol: 0.14 }); }
 
 // ---- the car ----
 export function door() { tone(150, 0, 0.08, { to: 90, vol: 0.3 }); noise(0, 0.05, { freq: 900, vol: 0.2 }); }
-export function horn() { for (const f of [392, 494]) { tone(f, 0, 0.14, { type: 'square', vol: 0.09 }); tone(f, 0.18, 0.3, { type: 'square', vol: 0.09 }); } }
-export function crash() { tone(160, 0, 0.25, { to: 60, vol: 0.4 }); noise(0, 0.2, { freq: 700, q: 0.6, vol: 0.35 }); noise(0.03, 0.15, { freq: 3000, q: 2, vol: 0.12 }); }
+export function horn() { say('car-horn', 0.5); }
+export function crash() { say('car-crash', 0.7); }
 // The engine hums while he is driving: level 0..1 is how fast the car is going.
 export function engine(level, on) {
   if (!ac) return;
@@ -145,4 +148,15 @@ export function engine(level, on) {
   eng.osc.frequency.setTargetAtTime(52 + level * 95, t, 0.08);
   eng.f.frequency.setTargetAtTime(380 + level * 900, t, 0.08);
   eng.g.gain.setTargetAtTime(on ? 0.07 + level * 0.06 : 0, t, 0.12);
+}
+// Her panting, a loop: level 0..1 is how out of breath she is.
+export function panting(level) {
+  if (!ac || !voice.panting) return;
+  if (!pant) {
+    pant = { src: ac.createBufferSource(), g: ac.createGain() };
+    pant.src.buffer = voice.panting; pant.src.loop = true; pant.g.gain.value = 0;
+    pant.src.connect(pant.g); pant.g.connect(sfx); pant.src.start();
+  }
+  pant.g.gain.setTargetAtTime(level * 0.35, ac.currentTime, 0.25);
+  pant.src.playbackRate.setTargetAtTime(0.9 + level * 0.2, ac.currentTime, 0.25);
 }

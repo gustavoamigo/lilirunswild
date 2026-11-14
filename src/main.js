@@ -7,7 +7,7 @@ import { input, keyVector, steerMag, initInput } from './input.js';
 import { pollPad } from './gamepad.js';
 import { spawn, updateFx, drawFx, burst } from './fx.js';
 import { buildTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js';
-import { CAR, PERSON_LOOKS, isChild } from './models.js';
+import { CAR, PERSON_LOOKS, isChild, personVoice } from './models.js';
 import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
 
 const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560;
@@ -41,7 +41,7 @@ const dog = {
   state: 'idle', stT: 0,            // idle (on his feet) | paws (up on someone) | daze | hop (in or out of the car) | drive
   air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0, skid: false, sweepT: 9, ptrX: 0, ptrY: 0, push: false, shake: 0, fidget: 0,
   lookYaw: 0, lookPitch: 0, seen: null, thought: 0, point: 0,
-  barkT: 0, landT: 0, spring: 0, bow: 0, idleT: 0, happy: 0, excited: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
+  barkT: 0, landT: 0, spring: 0, bow: 0, idleT: 0, happy: 0, excited: 0, puff: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
 };
 const car = { ...world.car, v: 0, steer: 0, bump: 0, on: false, rev: false, skidT: 0 };
 const G = { t: 0, mess: 0, birds: 0, pop: 0, dog, car, world, props: world.props, people: world.people, flocks: world.flocks, debris: [], focus: { x: dog.x, y: dog.y, vx: 0, vy: 0, zoom: 1 }, input };
@@ -133,7 +133,10 @@ function bark() {
 function updateDog(dt) {
   const p = dog;
   p.barkT = Math.max(0, p.barkT - dt); p.landT = Math.max(0, p.landT - dt); p.thought = Math.max(0, p.thought - dt);
-  p.happy = Math.max(0, p.happy - dt); p.excited = Math.max(0, p.excited - dt); p.bow = Math.max(0, p.bow - dt); p.shake = Math.max(0, p.shake - dt);
+  p.happy = Math.max(0, p.happy - dt); p.excited = Math.max(0, p.excited - dt);
+  // out of breath: built up over about 3 s of zoomies, panted off over about 8 s once she slows down
+  p.puff = p.zoom && !p.air ? Math.min(1, p.puff + dt / 3) : Math.max(0, p.puff - dt / 8);
+  A.panting(onFoot() && !p.zoom && Math.hypot(p.vx, p.vy) < TROT * 0.8 ? p.puff : 0); p.bow = Math.max(0, p.bow - dt); p.shake = Math.max(0, p.shake - dt);
   if (p.state === 'hop') { updateHop(dt); return; }
   if (p.state === 'drive') return;                    // the car carries him (updateCar)
   if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 1.4; p.state = 'idle'; } }
@@ -459,7 +462,7 @@ function respond(o, r) {
   const toDog = Math.atan2(dog.y - o.y, dog.x - o.x);
   o.t = 0; o.cool = 4;
   if (r === 'love') { o.state = dist(o.x, o.y, dog.x, dog.y) > 75 ? 'approach' : 'love'; o.heading = o.state === 'love' ? toDog : o.heading; if (o.state === 'love') { A.aww(); hearts(o.x, o.y, 120); } }
-  else if (r === 'scared') { o.state = 'scared'; o.runDir = toDog + Math.PI; A.scream(isChild(o.look)); }
+  else if (r === 'scared') { o.state = 'scared'; o.runDir = toDog + Math.PI; A.scream(personVoice(o.look)); }
   else { o.state = baseState(o); o.glance = 1.4; }
 }
 function startle(o, x, y) {
