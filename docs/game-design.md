@@ -16,7 +16,7 @@ Lili, liver and white: a white body, brown sides to her head with a white blaze 
 | Bonk | Gallop straight into a tree, lamp, bench or the hedge: stars, a dazed moment, leaves fall. A glancing hit only slides him past. |
 | Say hello | People react by their nature and how she behaves. Stand calmly by someone and dog lovers and children come and pet her; trot into them and it is paws up on their chest, which dog lovers love and the uninterested shrug off; fly into them (jumping or galloping) and they sit down with a bump, then run away screaming. Nervous people run from anything but calm, a bark sends most of them off, and a near miss with the car too. |
 | Break stuff | Run into pots, bins, cones, boxes and a ball. Pots smash, bins spill. Jump on the picnic table and the plates go flying. Each thing counts once on the paw counter. |
-| Birds | He notices any flock nearby: his head turns, he yips, a bird appears in a thought bubble. Standing still he freezes and points. Run at them and he goes straight into zoomies; they fly off to another spot and the bird counter goes up. Barking scares them too. |
+| Birds | He notices any flock nearby: his head turns, he yips, a bird appears in a thought bubble. Standing still he freezes and points for a few seconds, then relaxes (wags, bows, shakes) and points again a while later, or at once at another flock. Run at them and he goes straight into zoomies; they fly off to another spot and the bird counter goes up. Barking scares them too. |
 | Bark | Startles people and birds near him. |
 | Play bow | Left alone for a few seconds, he asks for a game. |
 | Drive | Near the car a wheel bubble and a yellow button appear. E (or jump onto the car) and he hops into the seat, paws on the wheel. |

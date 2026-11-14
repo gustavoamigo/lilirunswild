@@ -246,6 +246,7 @@ function updateDog(dt) {
 }
 
 // Birds. He cannot not look at them.
+const POINT_FOR = 3.5, POINT_EVERY = 16;
 function watchBirds(st, dt) {
   const p = dog;
   let best = null, bd = 760;
@@ -256,10 +257,14 @@ function watchBirds(st, dt) {
     // (at a run he only glances: he still has to see where he is going)
     const most = Math.hypot(p.vx, p.vy) > TROT * 0.5 ? 0.6 : 1.3;
     yaw = clamp(angDiff(p.birdDir, p.heading), -most, most); pitch = clamp(best.h / 300, 0, 1) * 0.5;
-    if (p.seen !== best) { p.seen = best; if (best.state === 'ground' && G.t - (p.yipAt || -9) > 5) { p.yipAt = G.t; p.thought = 1.8; A.yip(); } }
-    if (p.state === 'idle' && !st.mag && !p.air && best.state === 'ground' && !p.bow) {
-      // frozen, one paw up, all of him aimed at the bird
-      p.point = 1; p.heading += angDiff(p.birdDir, p.heading) * (1 - Math.exp(-dt * 4));
+    if (p.seen !== best) { p.seen = best; p.pointT = 0; if (best.state === 'ground' && G.t - (p.yipAt || -9) > 5) { p.yipAt = G.t; p.thought = 1.8; A.yip(); } }
+    if (p.state === 'idle' && !st.mag && !p.air && best.state === 'ground' && !p.bow && !p.shake) {
+      // frozen, one paw up, all of him aimed at the bird: for a few seconds, then she relaxes (wags, bows, shakes) and
+      // points again a while later, or at once at another flock. Pointing for as long as birds were in sight, she stood
+      // stiff in town and never wagged or asked for a game.
+      p.pointT = (p.pointT || 0) + dt;
+      if (p.pointT > POINT_EVERY) p.pointT = 0;
+      if (p.pointT < POINT_FOR) { p.point = 1; p.heading += angDiff(p.birdDir, p.heading) * (1 - Math.exp(-dt * 4)); }
     }
   } else if (!best) p.seen = null;
   if (studio.point && p.state === 'idle' && !st.mag && !p.air && !p.bow) p.point = 1;
