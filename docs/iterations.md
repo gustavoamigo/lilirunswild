@@ -302,3 +302,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: a longer child's scream, from "5 year old child screaming" (plain "child screaming" did not sound like a child); seed 1997700765.
 
 **Decision**: in the game for all three children (pitch varied a little); the synthesised wail is gone. **Checked by script**: the nervous boy screams and runs at a bark, no errors. **Not checked**: by ear.
+
+**Feedback**: the cups need a breaking sound when they fall on the floor; picks 1216753226 and 1741754685.
+
+**Decision**: the things on the picnic table break with one or the other; the flower pots keep their synthesised smash. **Checked by script**: jumping on the table, no errors. **Not checked**: by ear.

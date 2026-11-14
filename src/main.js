@@ -373,7 +373,7 @@ function messUp(o) {
   o.messed = true; G.mess++; G.pop = 1;
 }
 function smashProp(o) {
-  o.gone = true; messUp(o); A.smash();
+  o.gone = true; messUp(o); if (o.kind === 'plate') A.breakCup(); else A.smash();
   G.debris.push({ kind: o.kind, x: o.x, y: o.y, dir: Math.random() * TAU });
   const cols = o.kind === 'pot' ? ['#C9683F', '#D97B50', '#4FA653', '#FF7FA0'] : ['#ffffff', '#F6A6C1', '#E9EDF2'];
   for (let i = 0; i < 12; i++) {
