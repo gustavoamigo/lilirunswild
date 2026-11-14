@@ -326,3 +326,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the plates (knocked, not broken) should sound similar to the box too.
 
 **Decision**: a lighter, higher version of the box's thud for plates; the old cone sound is removed. **Checked by script**: jumping on the table, no errors. **Not checked**: by ear.
+
+**Feedback**: the plates should use the generated crash sound.
+
+**Decision**: knocked or broken, a plate plays the generated cup and plate breaking; the thud for plates is removed. **Checked by script**: jumping on the table, no errors. **Not checked**: by ear.
