@@ -261,10 +261,9 @@ export function makeDog() {
       blob(LIVER, 28, 0, s * 8.2, 1.3, 1.3, 1), blob(LIVER, 24.5, -2.5, s * 9, 1.1, 1.1, 1), blob(LIVER, 29, -4, s * 7.2, 1, 1, 1)]),   // freckles
   ]));
   const eyes = [1, -1].map((s) => {
-    // big, round and set forward, warm dark brown, with a large shine and a small one: friendly, not beady
-    const e = group(15.3, 8.4, s * 9.4, ball(mat('#33200F', { roughness: 0.2 }), 4.4, 4.7, 3.6, 0, 0, 0, false),
-      ball('#ffffff', 1.55, 1.55, 1.2, 2.9, 1.9, s * 0.4, false), ball('#ffffff', 0.7, 0.7, 0.6, 3.2, -1.3, -s * 1.1, false),
-      ball('#9A6A48', 2.2, 5.9, 5.6, 0.4, 0, 0, false));    // a soft lighter ring of fur round it, so it does not sink into the dark patch
+    // a spaniel's eye: a soft almond, dark warm brown, set just forward of the fur, one quiet shine
+    const e = group(15, 8.2, s * 9.4, ball(mat('#2E1C10', { roughness: 0.3 }), 3.5, 3.4, 3.0, 0, 0, 0, false),
+      ball('#ffffff', 0.95, 0.95, 0.8, 2.6, 1.3, s * 0.3, false));
     head.add(e); return e;
   });
   // soft brows, thin and high over the eyes (heavy ones sitting on them looked stern)

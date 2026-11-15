@@ -428,3 +428,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the eyes are a little creepy.
 
 **Decision**: small dark beads sunk in the dark patch under heavy, slanted brows looked stern. Now: bigger, rounder eyes set forward, warm dark brown, a large and a small shine, a lighter ring of fur round each so they stand out from the patch, thinner level brows set higher. **Checked by script**: her face from the front and both sides. **Not checked**: blinking and the bark/point brow lift by eye.
+
+**Feedback**: no: the new eyes are too big and cartoonish.
+
+**Decision**: back to a spaniel's size, a soft almond shape, dark warm brown, one quiet shine, no ring; kept the softer, higher brows and the eye set a little forward (not sunk in the patch). **Checked by script**: her face from the front and both sides.
