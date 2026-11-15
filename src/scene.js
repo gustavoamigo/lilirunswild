@@ -42,10 +42,10 @@ function updateSwim(p, t) {
   const sp = Math.min(1, Math.hypot(p.vx, p.vy) / 110);
   for (const r of swim.rings) {
     const u = (t * 0.5 + r.userData.ph) % 1;
-    r.scale.set(60 + u * 70, 40 + u * 50, 1); r.position.x = -15 - u * 40 * sp; r.material.opacity = (1 - u) * 0.3;
+    r.scale.set(60 + u * 70, 40 + u * 50, 1); r.position.x = -15 - u * 110 * sp;    // left behind as she swims on r.material.opacity = (1 - u) * 0.3;
   }
   for (const w of swim.wake) {                         // two white streaks spreading back from her chest
-    const a = 0.35, sd = w.userData.s; w.scale.set(90, 5, 1); w.rotation.z = -sd * a; w.position.set(25 - 45 * Math.cos(a), 0, sd * 45 * Math.sin(a)); w.material.opacity = 0.4 * sp;
+    const a = 0.35, sd = w.userData.s; w.scale.set(90, 5, 1); w.rotation.z = sd * a; w.position.set(25 - 45 * Math.cos(a), 0, sd * 45 * Math.sin(a)); w.material.opacity = 0.4 * sp;
   }
 }
 const trees = [], lamps = [], plats = [], props = [], people = [], birds = [], debris = [];

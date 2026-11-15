@@ -358,3 +358,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: it does not look like swimming.
 
 **Decision**: she sat on the water like a toy on a table (a shadow under her, no waterline, nothing moving round her, front paws showing). Now: tilted chest-up with her rump low, head up, legs out of sight, a see-through waterline over her lower body, soft rings spreading from her, a V wake when she moves, no shadow while swimming. **Checked by script**: close-ups swimming sideways and towards the camera. **Not checked**: by eye in motion.
+
+**Feedback**: swimming is good, but the trail should go against the direction she swims; the jump should do something else in the water or not be available.
+
+**Decision**: the wake's V opened forward (its angle was the wrong way round); it now opens behind her, and the rings are left behind as she swims. Jump in the water is a splash: spray, a splash sound, a little surge forward. **Checked by script**: close-ups swimming, jump in the water does not leave the water, no errors. **Not checked**: by eye in motion.
