@@ -400,3 +400,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: almost; the crown looks like bowling pins. The drops in the shake are bad: too literal, not what was meant.
 
 **Decision**: the crown is one flaring sheet of water with a pointed rim; the shake flings soft spray off her coat in bursts, side to side with its swing. **Checked by script**: the crown and the shake spray in still frames. **Not checked**: by eye in motion.
+
+**Feedback**: the splash could be enough. The shake out of the water: can she do it walking slowly?
+
+**Decision**: she keeps shaking as she walks on, held to a slow walk (a third of a trot) until the shake ends. **Checked by script**: swimming out with the key held: she shakes for the whole 1.4 s while walking about 150 on. **Not checked**: by eye.

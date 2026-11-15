@@ -14,7 +14,7 @@ const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560;
 // a spaniel's trot and flat-out run for her size (84 game units to the metre: 2.5 and 5.5 m/s); flat out is the simulated gallop's own speed
 const TROT = 210, ZOOM = 460, ZOOM_AFTER = 0.9;      // run flat out for this long and he gets the zoomies
 // the about-turn's slide takes a third of a second from flat out, down to SKID_END, whatever her top speed
-const SWIM = 0.5;                                    // swimming, she goes at half her trot
+const SWIM = 0.5, SHAKE_WALK = 0.35;                 // swimming, she goes at half her trot; shaking herself dry, a slow walk
 const BRAKE = ZOOM * 2.3, SKID_END = ZOOM * 0.23;
 const BONK = ZOOM * 0.73;                                    // faster than this into something solid and he sees stars
 const CAR_TOP = 900;
@@ -166,8 +166,7 @@ function updateDog(dt) {
   if (p.state === 'drive') return;                    // the car carries him (updateCar)
   if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 1.4; p.state = 'idle'; } }
 
-  // shaking the lake off: she stands still for it, whatever she is asked
-  let st = p.state === 'idle' && !(p.shakeWet > 0) ? steering(p.x, p.y, 34) : ZERO;
+  let st = p.state === 'idle' ? steering(p.x, p.y, 34) : ZERO;
   const sp0 = Math.hypot(p.vx, p.vy);
   // A pointer that sits near her means "come here, slowly". One that is being swept past her on its way to the
   // other side is near her too, for a moment, and means nothing of the kind: while it is moving and she is
@@ -184,7 +183,7 @@ function updateDog(dt) {
     }
   }
   watchBirds(st, dt);
-  if (st.mag || p.air) p.shake = 0;
+  if ((st.mag && !(p.shakeWet > 0)) || p.air) p.shake = 0;          // shaking the lake off goes on as she walks
 
   // ---- zoomies: keep running flat out and he tips over into a mad gallop ----
   if (st.mag > 0.85 && sp0 > TROT * 0.6) p.runT += dt; else p.runT = 0;
@@ -198,7 +197,9 @@ function updateDog(dt) {
   if (wet) { p.runT = 0; p.dripT = (p.dripT || 0) - dt; if (p.dripT <= 0 && sp0 > 30) { p.dripT = 0.18; dust(p.x + Math.cos(p.heading) * 30, p.y + Math.sin(p.heading) * 30, 2, { speed: 50, color: '#E6F6FC', size: 6 }); } }
   // out of the lake she shakes at once, and water flies off her sideways, more as the shake gets going
   if (p.shakeWet > 0) {
-    p.shakeWet -= dt; p.shake = Math.max(p.shake, 0.05); p.vx *= Math.exp(-dt * 10); p.vy *= Math.exp(-dt * 10);
+    p.shakeWet -= dt; p.shake = Math.max(p.shake, 0.05); p.runT = 0;
+    const v = Math.hypot(p.vx, p.vy), most = TROT * SHAKE_WALK;      // and she only walks while she does it
+    if (v > most) { p.vx *= most / v; p.vy *= most / v; }
     // spray flung off her coat in bursts, to one side and then the other with the shake's swing
     const k = 1.4 - p.shakeWet, swing = Math.sin(k * 30), side = swing > 0 ? 1 : -1;
     if (k > 0.2 && Math.abs(swing) > 0.7) for (let i = 0; i < 3; i++) {
