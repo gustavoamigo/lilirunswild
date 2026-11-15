@@ -436,3 +436,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: shared two reference pictures of friendly cartoon dogs from children's TV (big eyes with white, coloured iris, pupil and shines; happy open mouths; soft fur marks rather than brows).
 
 **Decision**: her eyes are built that way: white, a big warm brown iris, a dark pupil, two shines, a thin dark line along the top; brows softened to a mark close to her fur colour. Lili's own face otherwise (no characters copied). **Checked by script**: her face from the front and both sides. Next to discuss: a happy open-mouth smile, a smoother head.
+
+**Feedback**: balls stick out of her eyeball; an eye is one ball, not several. Do a much better job.
+
+**Decision**: each eye is now one ball with the iris, pupil, shines and top line painted on it as a texture. **Checked by script**: her face from the front and both sides.

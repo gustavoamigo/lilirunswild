@@ -201,6 +201,29 @@ function earSkin() {
   };
 }
 
+// The eye's surface, painted once: white, a warm brown iris (darker at its rim), a big dark pupil, two shines, and a dark
+// line along the top. On a sphere's texture the front (+x) is the middle (u 0.5, v 0.5), and near it a pixel is the same
+// angle across and down (512 x 256), so circles drawn there stay round on the ball.
+const EYE_GEO = new THREE.SphereGeometry(1, 40, 28);
+let eyeMat = null;
+function eyeMaterial() {
+  if (eyeMat) return eyeMat;
+  const cv = document.createElement('canvas'); cv.width = 512; cv.height = 256;
+  const c = cv.getContext('2d'), cx = 256, cy = 128, k = 512 / (Math.PI * 2);   // pixels per radian
+  c.fillStyle = '#FFFFFF'; c.fillRect(0, 0, 512, 256);
+  const ir = 0.72 * k, iris = c.createRadialGradient(cx, cy - ir * 0.25, ir * 0.1, cx, cy, ir);
+  iris.addColorStop(0, '#C8925A'); iris.addColorStop(0.65, '#8A5A2E'); iris.addColorStop(1, '#4A2C14');
+  c.fillStyle = iris; c.beginPath(); c.arc(cx, cy, ir, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#1A0F08'; c.beginPath(); c.arc(cx, cy, ir * 0.52, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#FFFFFF';
+  c.beginPath(); c.arc(cx - ir * 0.32, cy - ir * 0.38, ir * 0.24, 0, Math.PI * 2); c.fill();
+  c.beginPath(); c.arc(cx + ir * 0.34, cy + ir * 0.36, ir * 0.11, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#3A2416'; c.fillRect(0, 0, 512, 256 * 0.17);                          // the line along the top
+  const tex = new THREE.CanvasTexture(cv); tex.colorSpace = THREE.SRGBColorSpace; tex.anisotropy = 4;
+  eyeMat = surf({ map: tex, roughness: 0.25 });
+  return eyeMat;
+}
+
 export function makeDog() {
   const root = new THREE.Group();                       // position + heading (+ landing squash)
   const lean = new THREE.Group();                       // rolls into a turn
@@ -261,13 +284,9 @@ export function makeDog() {
       blob(LIVER, 28, 0, s * 8.2, 1.3, 1.3, 1), blob(LIVER, 24.5, -2.5, s * 9, 1.1, 1.1, 1), blob(LIVER, 29, -4, s * 7.2, 1, 1, 1)]),   // freckles
   ]));
   const eyes = [1, -1].map((s) => {
-    // a cartoon eye, as in children's TV: white, a big warm brown iris, a dark pupil, two shines, a dark line along the top
-    const e = group(14.6, 8.6, s * 9.4,
-      ball('#FFFFFF', 4.2, 5.0, 3.6, 0, 0, 0, false),
-      ball('#8A5A2E', 2.0, 3.9, 3.3, 2.3, 0.5, 0, false),
-      ball('#1E120A', 1.6, 2.6, 2.2, 3.4, 0.5, 0, false),
-      ball('#ffffff', 0.9, 0.9, 0.75, 4.4, 1.9, -s * 0.8, false), ball('#ffffff', 0.45, 0.45, 0.4, 4.2, -1.0, s * 0.9, false),
-      ball('#3A2416', 3.0, 0.55, 3.6, 1.6, 4.7, 0, false));
+    // one eyeball, its iris, pupil, shine and the dark line along its top painted on it (eyeTexture), looking forward
+    const ball1 = new THREE.Mesh(EYE_GEO, eyeMaterial()); ball1.scale.set(4.2, 5.0, 3.8);
+    const e = group(14.6, 8.6, s * 9.4, ball1);
     head.add(e); return e;
   });
   // soft brows, thin and high over the eyes (heavy ones sitting on them looked stern)
