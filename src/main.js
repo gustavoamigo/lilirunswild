@@ -192,7 +192,8 @@ function updateDog(dt) {
   if (studio.gait === 'trot') p.runT = 0; else if (studio.gait === 'gallop' && st.mag > 0.5 && !p.push) p.runT = ZOOM_AFTER;
   // ---- in the lake she swims: slowly, low in the water, splashing; out of it she shakes herself dry when she stops ----
   const wet = !STUDIO && onFoot() && !p.air && world.surfaceAt(p.x, p.y) === 'water';
-  if (wet !== p.swim) { dust(p.x, p.y, 10, { speed: 120, color: '#E6F6FC', size: 7 }); if (wet) A.splash(); else { p.shake = 1.4; p.shakeWet = 1.4; p.drip = false; } }
+  // (!!: at the start swim is unset, which once counted as climbing out of the lake, and she shook)
+  if (wet !== !!p.swim) { dust(p.x, p.y, 10, { speed: 120, color: '#E6F6FC', size: 7 }); if (wet) A.splash(); else { p.shake = 1.4; p.shakeWet = 1.4; p.drip = false; } }
   p.swim = wet;
   if (wet) { p.runT = 0; p.dripT = (p.dripT || 0) - dt; if (p.dripT <= 0 && sp0 > 30) { p.dripT = 0.18; dust(p.x + Math.cos(p.heading) * 30, p.y + Math.sin(p.heading) * 30, 2, { speed: 50, color: '#E6F6FC', size: 6 }); } }
   // out of the lake she shakes at once, and water flies off her sideways, more as the shake gets going

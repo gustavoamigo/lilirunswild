@@ -464,3 +464,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: it looks like she has a tumour on her chest.
 
 **Decision**: a separate oval of chest feathering stood out between her front legs; removed, the chest is now the body's own smooth surface. **Checked by script**: the turnaround.
+
+**Feedback**: some movement in the eyes might make them more natural. Do not start the dog with a shake.
+
+**Decision**: her eyes glance about on their own every second or two and lead her head towards what she watches. The shake at the start was a bug: before the first frame `swim` was unset, which counted as climbing out of the lake. **Checked by script**: no shake in the first two seconds; still frames with the eyes looking different ways.

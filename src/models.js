@@ -523,7 +523,7 @@ export function makeDog() {
 
   // smoothed pose: everything eases towards its target so states blend into each other
   const P = { pitch: 0, fl: 0, fr: 0, hl: 0, hr: 0, rf: 30, rh: 30, wf: 0, wr: 0, wh: 0, amp: 0, gal: 0, yaw: 0, hp: 0, jaw: 0, tailUp: 0.5, wag: 0.45, wagHz: 12, y: 0, tongue: 0, bend: 0, roll: 0, flex: 0, fly: 0, wig: 0 };
-  let earT = 0, shakeT = 9, gw = 0;
+  let earT = 0, shakeT = 9, gw = 0, gazeT = 0, gazeY = 0, gazeZ = 0;
   let last = -1, blink = 0, ph = 0, wagPh = 0, px = 0, py = 0, pz = 0, earCalm = 1, ph0 = 0, turn = 0, fresh = true, flying = false, flew = 0, flight = 1, pitch0 = 0;
 
   function update(p, t) {
@@ -726,7 +726,10 @@ export function makeDog() {
     tail.rotation.y = wagNow * (1 - 0.8 * gw) + P.bend * 0.8 + shakeAt(shakeT, 1) * 0.7; tail.rotation.x = shakeAt(shakeT, 0.9) * 0.6;
 
     blink = (t % 3.7) < 0.12 || p.state === 'daze' || shakeT < 1.25 ? 0.15 : 1;
-    eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); });
+    // the eyes move on their own: a quick glance somewhere every second or two, and ahead of the head towards what she watches
+    if ((gazeT -= dt) <= 0) { gazeT = 0.7 + Math.random() * 1.8; gazeY = (Math.random() - 0.5) * 0.5; gazeZ = (Math.random() - 0.5) * 0.25; }
+    const gy = clamp(gazeY + (p.lookYaw || 0) * 0.4, -0.4, 0.4), gz = gazeZ + (p.lookPitch || 0) * 0.3, kg = 1 - Math.exp(-dt * 28);
+    eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); e.rotation.y = lerp(e.rotation.y, gy, kg); e.rotation.z = lerp(e.rotation.z, gz, kg); });
 
     const sq = clamp((p.landT || 0) / 0.22, 0, 1);
     root.scale.set(1 + sq * 0.03, 1 - sq * 0.07, 1 + sq * 0.03);
