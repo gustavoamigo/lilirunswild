@@ -27,11 +27,15 @@ An open red car, one in town. Steer where it should go; steering against the way
 
 ## The town
 
-Built from tiles on a map (`world/map.txt`): streets in a grid (a ring road, a middle road, two cross streets) with crossroads, zebra crossings, road works and a parking bay; houses round lawns, a park with a plaza, benches, flower pots and a picnic table, a playground with a sandpit; Lili's home (her kennel and bowl by the door), where she starts, and the school; houses all round, a hedge round the edge. Seven people: four adults and three children; two of them (a woman walking the west lawn and a boy on the east lawn) are nervous of dogs; three flocks of birds.
+Built from tiles on a map (`world/map.txt`): streets in a grid (a ring road, a middle road, two cross streets) with crossroads, zebra crossings, road works and a parking bay; houses round lawns, a park with a plaza, benches, flower pots and a picnic table, a playground with a sandpit; Lili's home (her kennel and bowl by the door), where she starts, and the school; the town centre: the butcher's, the baker's and a café round a square with a fountain and market stalls piled with apples; houses all round, a hedge round the edge. Seven people: four adults and three children; two of them (a woman walking the west lawn and a boy on the east lawn) are nervous of dogs; three flocks of birds.
 
 ## People
 
 Cartoon adults and children, natural in how they walk and stand. Three reactions to Lili: love (they crouch and pet her; a child petting her sets her tail going fast and her bottom wiggling), indifference (a glance and a shrug), and fright (they scream, run, catch their breath and come back). Who reacts how depends on both their nature (dog lover, not interested, nervous; children like dogs more) and how gentle she is. Planned later: Lili steals a child's toy, the child holds on, then gets scared, screams and runs; the same with adults; jumping at people frightens them, gentleness wins them over.
+
+## Places still to come
+
+Agreed with the owner (2026-11-15), built one district at a time, each with a few missions later: a lake with a little beach, a dog park, a farm at the edge of town, then (later) an amusement park. Also suggested: a vet or groomer (the bath she runs from), a post office or postman, a fire station, a building site, a football pitch, a train station, an ice-cream van, woods with a stream. Layout: the town centre in the middle, homes and the school round it, big open places at the edges.
 
 ## Rules that will hold
 

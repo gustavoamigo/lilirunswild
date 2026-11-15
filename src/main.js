@@ -369,7 +369,7 @@ function updateCar(dt) {
 }
 
 // ------------------------------------------------------------------ props --
-const SOUND = { cone: A.box, bin: A.bin, box: A.box, ball: A.boing, plate: A.breakCup, pot: A.smash };
+const SOUND = { cone: A.box, bin: A.bin, box: A.box, ball: A.boing, apple: A.box, plate: A.breakCup, pot: A.smash };
 function messUp(o) {
   if (!KINDS[o.kind].mess || o.messed) return;
   o.messed = true; G.mess++; G.pop = 1;

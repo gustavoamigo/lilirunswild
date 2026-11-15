@@ -873,6 +873,7 @@ export function makeProp(kind) {
   else if (kind === 'pot') parts = [{ geo: CONE, color: '#C9683F', at: [0, 15, 0], scale: [20, 30, 20], rot: [Math.PI, 0, 0], flat: true }, cyl('#D97B50', 0, 30, 0, 22, 6), cyl('#5A4636', 0, 32.5, 0, 18, 2),
     blob('#4FA653', 0, 42, 0, 12, 10, 12), blob('#FF7FA0', 7, 52, 3, 6.5), blob('#FFD23F', -6, 54, -4, 6), blob('#FF7FA0', -2, 50, 8, 5.5), blob('#ffffff', 2, 57, -3, 5)];
   else if (kind === 'plate') parts = [cyl('#ffffff', 0, 1.5, 0, 17, 3), cyl('#E9EDF2', 0, 3, 0, 12, 1), blob('#F6A6C1', 0, 9, 0, 9, 6.5, 9), blob('#E0453A', 0, 16, 0, 3)];
+  else if (kind === 'apple') { mid = 7; parts = [blob('#D9342B', 0, 0, 0, 8, 7.5, 8), cyl('#6E4630', 0, 8, 0, 1, 4), blob('#4FA653', 3, 9, 0, 3, 1.2, 2)]; }
   else { mid = 13; parts = [blob('#D7E84A', 0, 0, 0, 13), { geo: new THREE.TorusGeometry(12.6, 1.2, 6, 20), color: '#ffffff', at: [0, 0, 0], scale: [1, 1, 1], rot: [0.5, 0.4, 0], flat: true }]; }
   // A bin or cone falls over its base's edge (FOOT: how far that is from the middle), so it ends up lying on its side on
   // the ground; tipped about the middle, half of it went into the ground
@@ -915,6 +916,12 @@ export function platformGeometry(o) {
     cyl('#E0453A', 0, 56, 0, o.r, 7), cyl('#ffffff', 0, 52, 0, o.r + 3, 3), cyl(WOOD2, 0, 27, 0, 11, 54), cyl(WOOD2, 0, 3, 0, 40, 6),
     ...[0, 1, 2, 3, 4, 5].map((i) => blob('#ffffff', Math.cos(i * 1.047) * (o.r - 16), 60, Math.sin(i * 1.047) * (o.r - 16), 9, 0.6, 9)),
   ]);
+  if (o.kind === 'stall') return merged([                // a market stall: a counter with crates, under a striped awning
+    box(WOOD, 0, 46, 0, 128, 8, 60), box(WOOD2, 0, 22, 0, 120, 40, 52),
+    box('#C9A06A', -38, 54, 0, 40, 10, 44), box('#C9A06A', 0, 54, 0, 40, 10, 44), box('#C9A06A', 38, 54, 0, 40, 10, 44),
+    ...[-60, 60].flatMap((x) => [cyl(WOOD2, x, 70, -28, 3, 140)]),
+    ...[0, 1, 2, 3, 4, 5, 6, 7].map((i) => box(i % 2 ? '#ffffff' : '#E8B04A', -56 + i * 16, 142, -6, 16, 4, 76, [0.22, 0, 0])),
+  ]);
   return null;
 }
 export const lampGeometry = merged([cyl('#4A5560', 0, 100, 0, 4.5, 200), cyl('#4A5560', 0, 5, 0, 10, 10), box('#4A5560', 0, 200, 14, 5, 5, 34), blob('#FFF2B8', 0, 193, 28, 12, 9, 12)]);
@@ -923,6 +930,7 @@ export const flowerGeometry = (color) => merged([cyl('#4FA653', 0, 6, 0, 1.2, 12
 // A house faces south (its front door at +z) and is turned with its tile (h.dir quarter turns clockwise). Lili's home and
 // the school are houses with something of their own: a round window and a red door; a clock, a double door and a flag.
 export function makeHouse(h) {
+  if (SHOP_SIGN[h.kind]) return makeShop(h);
   const wall = h.color, w = h.w, d = h.d, hh = h.h;
   const roofGeo = new THREE.CylinderGeometry(0.02, 1, 1, 4, 1).rotateY(Math.PI / 4);
   const parts = [
@@ -946,8 +954,43 @@ export function makeHouse(h) {
   const m = mesh(parts); m.position.set(h.x, 0, h.y); m.rotation.y = -(h.dir || 0) * Math.PI / 2; m.receiveShadow = true;
   return m;
 }
+// A shop: lower than a house, a big window showing what it sells (pictures, not words: the players cannot read), a door,
+// a striped awning over the front and the same picture on a sign above. Faces south like a house.
+const SHOP_SIGN = {
+  butcher: (y, z) => [0, 1, 2, 3, 4].map((i) => blob('#D9786A', -30 + i * 15, y - Math.abs(i - 2) * 4, z, 8, 5, 4)),       // a string of sausages
+  bakery: (y, z) => [blob('#C98A45', -16, y, z, 16, 8, 6), blob('#E0A55C', 14, y + 2, z, 14, 9, 6), blob('#B5763A', 0, y - 8, z + 2, 12, 6, 5)],   // loaves
+  cafe: (y, z) => [cyl('#ffffff', 0, y, z, 13, 20), cyl('#6E4630', 0, y + 9, z, 10, 2), { geo: new THREE.TorusGeometry(7, 2.2, 6, 12), color: '#ffffff', at: [16, y, z], scale: [1, 1, 1], flat: true }],   // a cup
+};
+function makeShop(h) {
+  const w = h.w, d = h.d, hh = h.h, f = d / 2, roofGeo = new THREE.CylinderGeometry(0.02, 1, 1, 4, 1).rotateY(Math.PI / 4);
+  const parts = [
+    box(h.color, 0, hh / 2, 0, w, hh, d),
+    { geo: roofGeo, color: h.roof, at: [0, hh + 30, 0], scale: [w * 0.78, 60, d * 0.82], flat: true },
+    box('#ffffff', -w * 0.12, 62, f + 1, w * 0.52, 84, 4), box('#BFE3F5', -w * 0.12, 62, f + 2.5, w * 0.48, 74, 3),   // the window
+    box('#8A5A3C', w * 0.32, 48, f + 1, 46, 96, 4), blob('#FFD23F', w * 0.32 - 15, 48, f + 4, 3),                     // the door
+    box('#ffffff', 0, hh - 32, f + 1, 120, 44, 4),                                                                      // the sign board
+    ...SHOP_SIGN[h.kind](70, f + 6), ...SHOP_SIGN[h.kind](hh - 32, f + 5),
+    ...Array.from({ length: 12 }, (_, i) => box(h.awning[i % 2], -w / 2 + 14 + i * (w - 28) / 11, 122, f + 22, (w - 28) / 11 + 0.5, 4, 48, [0.35, 0, 0])),
+  ];
+  const m = mesh(parts); m.position.set(h.x, 0, h.y); m.rotation.y = -(h.dir || 0) * Math.PI / 2; m.receiveShadow = true;
+  return m;
+}
+// Fixtures: solid things that stay put, facing south (turned with their tile). Lili's kennel with her bowl; the town
+// square's fountain; a café table with two chairs.
+export function fixtureGeometry(kind) {
+  if (kind === 'kennel') return kennelGeometry;
+  if (kind === 'fountain') return merged([
+    cyl('#C9C2B4', 0, 14, 0, 78, 28), cyl('#7EC8E8', 0, 27, 0, 68, 3), cyl('#B9B4A8', 0, 46, 0, 12, 64),
+    cyl('#C9C2B4', 0, 78, 0, 30, 8), cyl('#7EC8E8', 0, 83, 0, 25, 2), blob('#BFE6F5', 0, 100, 0, 6, 16, 6), blob('#E6F6FC', 0, 90, 0, 22, 4, 22),
+  ]);
+  if (kind === 'cafe-table') return merged([
+    cyl('#ffffff', 0, 44, 0, 22, 3), cyl('#4A5560', 0, 22, 0, 3, 44), cyl('#4A5560', 0, 1.5, 0, 12, 3),
+    ...[-1, 1].flatMap((s) => [box('#3E9A6E', s * 34, 26, 0, 20, 3, 20), box('#3E9A6E', s * 43, 40, 0, 3, 30, 20), box('#4A5560', s * 34, 12, 0, 3, 24, 3)]),
+  ]);
+  return null;
+}
 // Lili's kennel, facing south like a house, and her bowl in front of it
-export const kennelGeometry = merged([
+const kennelGeometry = merged([
   box('#C8553D', 0, 26, 0, 60, 52, 56), box('#4A2E22', 0, 20, 28.5, 26, 34, 2), blob('#4A2E22', 0, 37, 28.5, 13, 13, 1),
   { geo: new THREE.CylinderGeometry(0.02, 1, 1, 4, 1).rotateY(Math.PI / 4), color: '#7A4A2A', at: [0, 70, 0], scale: [48, 36, 46], flat: true },
   cyl('#4FA3E0', 26, 4, 46, 10, 8, undefined, 8), cyl('#B98248', 26, 7, 46, 7, 2),

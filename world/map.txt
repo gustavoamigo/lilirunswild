@@ -3,7 +3,8 @@
 # Lili can go as far as `bounds` (x0 y0 x1 y1); a hedge runs round it.
 #
 # A ring road with a middle road and two cross streets, and six blocks inside it: houses round lawns, the park (middle,
-# top), the playground (east, top). Houses line the ring outside; Lili's home and the school are among them on the north
+# top), the playground (east, top), the town centre (middle, below the park: shops round a square with a fountain and
+# market stalls). Houses line the ring outside; Lili's home and the school are among them on the north
 # side, facing the road (the camera looks north, so buildings north of a road show their fronts).
 
 h = house
@@ -26,6 +27,12 @@ K = picnic
 L = home
 S = school
 G = playground
+U = butcher
+N = bakery
+E = cafe
+O = fountain
+q = square
+M = market
 
 bounds 400 400 6400 4800
 
@@ -36,9 +43,9 @@ bounds 400 400 6400 4800
 .  h<  R<  P   T   P   Z<  F   +   B   Z>  T   G   P   R>  h>  .
 .  h<  R<  h   h   h   R<  K   p>  P   R>  h   h   h   R>  h>  .
 .  h<  Y<  R   R   R   J   R   Z>> R   J   R   W   R   Y>  h>  .
-.  h<  R<  h>> h>> h>> R<  h>> h>> h>> R>  h>> h>> h>> R>  h>  .
-.  h<  R<  P   T   P   R<  T   P   T   R>  P   T   P   R>  h>  .
-.  h<  R<  h   h   h   R<  h   h   h   R>  h   h   h   R>  h>  .
+.  h<  R<  h>> h>> h>> R<  U   N   E   R>  h>> h>> h>> R>  h>  .
+.  h<  R<  P   T   P   R<  q   O   q   R>  P   T   P   R>  h>  .
+.  h<  R<  h   h   h   R<  M   q   M   R>  h   h   h   R>  h>  .
 .  h<  C<  R>> R>> R>> Y>> R>> R>> R>> Y>> R>> R>> R>> C>> h>  .
 .  h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> .
 .  .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .

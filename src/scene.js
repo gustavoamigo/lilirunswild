@@ -79,7 +79,7 @@ export function initScene(canvas, w) {
 }
 
 // ---- the town is built a few tiles at a time around the camera, and dropped behind it ----
-// Each tile's ground, trees, lamps, benches and table, houses and kennels are built when it comes near and dropped when
+// Each tile's ground, trees, lamps, benches, tables and stalls, buildings and fixtures are built when it comes near and dropped when
 // it is far (the tile's `things`, see buildTown). People, birds, props and the car move about, so they are always there.
 let vc;
 const built = new Map(), tileGeo = new THREE.PlaneGeometry(TILE, TILE), houses = [];
@@ -101,14 +101,14 @@ function buildTile(t) {
   for (const o of t.things.lamps) { const m = add(new THREE.Mesh(M.lampGeometry, vc)); m.castShadow = true; m.position.set(o.x, 0, o.y); lamps.push({ o, m, tile: t }); }
   for (const o of t.things.plats) {
     const m = add(new THREE.Mesh(M.platformGeometry(o), vc)); m.castShadow = true; m.receiveShadow = true;
-    m.position.set((o.ax + o.bx) / 2, 0, (o.ay + o.by) / 2); plats.push({ o, m, tile: t });
+    m.position.set((o.ax + o.bx) / 2, 0, (o.ay + o.by) / 2); m.rotation.y = -(o.dir || 0) * Math.PI / 2; plats.push({ o, m, tile: t });
   }
   // houses: each its own see-through-able material, so it can fade when it stands in front of her
   for (const h of t.things.houses) {
     const m = add(M.makeHouse(h)), mat = M.surf({ color: '#ffffff', vertexColors: true, transparent: true }); mats.push(mat);
     m.material = mat; m.castShadow = true; houses.push({ h, m, mat, tile: t });
   }
-  for (const o of t.things.kennels) { const m = add(new THREE.Mesh(M.kennelGeometry, vc)); m.castShadow = true; m.position.set(o.x, 0, o.y); m.rotation.y = -o.dir * Math.PI / 2; }
+  for (const o of t.things.fixtures) { const m = add(new THREE.Mesh(M.fixtureGeometry(o.kind), vc)); m.castShadow = true; m.receiveShadow = true; m.position.set(o.x, 0, o.y); m.rotation.y = -o.dir * Math.PI / 2; }
   built.set(t, { objs, mats, tex });
 }
 function dropTile(t) {

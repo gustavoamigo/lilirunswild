@@ -30,6 +30,7 @@ export function tileSurface(def, x, y) {
     if (s === 'grass' && g.path && shapeDist(g.path, x, y) < PATH_HALF) s = 'path';
     if (s === 'grass' && g.plaza && Math.hypot(x - g.plaza[0], y - g.plaza[1]) < g.plaza[2]) s = 'path';
     if (s === 'grass' && g.sand && Math.hypot(x - g.sand[0], y - g.sand[1]) < g.sand[2]) s = 'sand';
+    if (s === 'grass' && g.pave && x >= g.pave[0] && x <= g.pave[2] && y >= g.pave[1] && y <= g.pave[3]) s = 'walk';
   }
   return s;
 }
@@ -82,8 +83,16 @@ export const KINDS = {
   pot:   { r: 23, h: 40, tough: 240, breaks: true, mess: true },
   plate: { r: 18, h: 10, tough: 0, fly: 1.2, pop: 240, drag: 1.2, fragile: true, mess: true },
   ball:  { r: 13, h: 26, tough: 0, fly: 1.5, pop: 300, drag: 0.7, rolls: true },
+  apple: { r: 8, h: 14, tough: 0, fly: 1.4, pop: 240, drag: 1.0, rolls: true },
 };
 
+// how big each kind of fixture is (its radius as an obstacle), and the shops' colours: walls, roof, awning stripes
+const FIXTURE_R = { kennel: 34, fountain: 78, 'cafe-table': 30 };
+const SHOP = {
+  butcher: { color: '#F4F1EA', roof: '#8A5A44', awning: ['#D9483B', '#ffffff'] },
+  bakery: { color: '#F7E1B5', roof: '#B5483A', awning: ['#9A6A3A', '#F6EBC8'] },
+  cafe: { color: '#CFE8E0', roof: '#5E7C99', awning: ['#3E9A6E', '#ffffff'] },
+};
 export function buildTown(tiles, pop) {
   const obstacles = [], platforms = [], props = [], trees = [], lamps = [], houses = [], flowers = [], flocks = [], people = [], spots = [];
   const prop = (kind, x, y, z = 0) => { const o = { kind, x, y, z, home: { x, y, z }, vx: 0, vy: 0, vz: 0, tip: 0, roll: 0, dir: 0, rest: true, gone: false, wob: 0, messed: false }; props.push(o); return o; };
@@ -94,7 +103,7 @@ export function buildTown(tiles, pop) {
     const d = t.def, x0 = t.col * TILE, y0 = t.row * TILE, R = rng(t.col * 7919 + t.row * 104729 + 17);
     t.seed = t.col * 7919 + t.row * 104729;
     // what stands on this tile and does not move: built and dropped with it as she comes and goes (scene.js)
-    const own = t.things = { trees: [], lamps: [], houses: [], plats: [], kennels: [] };
+    const own = t.things = { trees: [], lamps: [], houses: [], plats: [], fixtures: [] };
     // a point of the tile, in town coordinates
     const at = (x, y) => { const [u, v] = turn(t.rot, x, y); return [x0 + u, y0 + v]; };
     for (const [x, y] of d.lamps || []) { const [X, Y] = at(x, y), o = { kind: 'lamp', x: X, y: Y, r: 9, wob: 0 }; lamps.push({ x: X, y: Y }); own.lamps.push(o); obstacles.push(o); }
@@ -105,7 +114,7 @@ export function buildTown(tiles, pop) {
     }
     for (const [x, y] of d.benches || []) {
       const [ax, ay] = at(x - 52, y), [bx, by] = at(x + 52, y);
-      const o = { kind: 'bench', ax, ay, bx, by, r: 24, h: 42, wob: 0 }; platforms.push(o); own.plats.push(o);
+      const o = { kind: 'bench', ax, ay, bx, by, r: 24, h: 42, wob: 0, dir: t.rot }; platforms.push(o); own.plats.push(o);
     }
     if (d.table) {
       const [X, Y] = at(...d.table);
@@ -122,7 +131,14 @@ export function buildTown(tiles, pop) {
     if (d.house) building({ kind: 'house', w: 250 + R() * 100, d: 170, h: 190 + R() * 80, color: HOUSE[(t.col * 3 + t.row) % HOUSE.length], roof: ROOF[(R() * ROOF.length) | 0] }, d.house[0], d.house[1] - R() * 30);
     if (d.home) building({ kind: 'home', w: 300, d: 180, h: 240, color: '#FFF4E2', roof: '#C8553D' }, ...d.home);
     if (d.school) building({ kind: 'school', w: 380, d: 220, h: 250, color: '#F6D365', roof: '#B5483A' }, ...d.school);
-    for (const [x, y] of d.kennels || []) { const [X, Y] = at(x, y), o = { kind: 'kennel', x: X, y: Y, dir: t.rot, r: 34 }; own.kennels.push(o); obstacles.push(o); }
+    if (d.shop) building({ kind: d.shop[0], w: 340, d: 150, h: 175, ...SHOP[d.shop[0]] }, d.shop[1], d.shop[2]);
+    // fixtures: solid things that stay put, each a model of its kind (scene.js), facing south and turned with the tile
+    for (const [kind, x, y] of d.fixtures || []) { const [X, Y] = at(x, y), o = { kind, x: X, y: Y, dir: t.rot, r: FIXTURE_R[kind] }; own.fixtures.push(o); obstacles.push(o); }
+    // market stalls: counters she can jump onto, west to east
+    for (const [x, y] of d.stalls || []) {
+      const [ax, ay] = at(x - 60, y), [bx, by] = at(x + 60, y), o = { kind: 'stall', ax, ay, bx, by, r: 30, h: 58, wob: 0, dir: t.rot };
+      platforms.push(o); own.plats.push(o);
+    }
     for (const [x, y] of d.birds || []) {
       const [X, Y] = at(x, y), i = flocks.length;
       flocks.push({ x: X, y: Y, h: 0, state: 'ground', t: 0, seed: i * 2.3,

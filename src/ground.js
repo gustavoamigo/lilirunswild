@@ -49,6 +49,13 @@ export function paintTile(t, res = 1) {
   const ground = d.ground || [], roads = ground.filter((g) => g.road).map((g) => g.road);
   const paths = ground.filter((g) => g.path).map((g) => g.path), plazas = ground.filter((g) => g.plaza).map((g) => g.plaza);
 
+  // paving (a town square): the pavement's stones over a whole area
+  for (const [px0, py0, px1, py1] of ground.filter((s) => s.pave).map((s) => s.pave)) {
+    c.fillStyle = '#DDD8CC'; c.fillRect(px0, py0, px1 - px0, py1 - py0);
+    c.fillStyle = 'rgba(120,110,95,.16)';
+    for (let x = px0; x < px1; x += 50) for (let y = py0; y < py1; y += 50) { c.fillRect(x, y, 48, 2.5); c.fillRect(x, y, 2.5, 48); }
+  }
+
   // sandy paths and plaza
   c.lineCap = 'butt';
   for (const [w, color] of [[PATH_HALF * 2 + 16, '#D9C28C'], [PATH_HALF * 2, '#EBD9A8']]) {
