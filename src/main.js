@@ -400,11 +400,11 @@ function updateCar(dt) {
       if (!hit) continue;
       c.x += q.x - x0; c.y += q.y - y0;
       const into = -(hx * hit.nx + hy * hit.ny) * c.v;
-      // a light pole hit by the car goes over, away from it, and the car ploughs on
+      // a light pole hit by the car goes over, away from it, and the crash nearly stops the car
       if (hit.o && hit.o.kind === 'lamp' && into > 150) {
         const o = hit.o; o.fallen = true; o.fallT = 0; o.fallDir = c.heading + (c.v < 0 ? Math.PI : 0);
         world.obstacles.splice(world.obstacles.indexOf(o), 1);
-        A.crash(); c.bump = 0.6; stars(o.x, o.y, 120, 8); G.mess++; G.pop = 1; c.v *= 0.75;
+        A.crash(); c.bump = 1; stars(o.x, o.y, 120, 8); G.mess++; G.pop = 1; c.v *= 0.2;   // a real crash: the car is nearly stopped
         continue;
       }
       if (into > 260) { A.crash(); c.bump = 1; stars(x0 - hit.nx * 60, y0 - hit.ny * 60, 60, 8); shake(hit.o); c.v *= -0.3; }

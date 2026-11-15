@@ -484,3 +484,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: make the car destroy things like the light poles.
 
 **Decision**: a pole hit by the car topples away from it with a crash and stars, bounces once and lies there, no longer solid; the car ploughs on, slowed a little; it counts on the mess counter. Only the car does it. **Checked by script**: driving into a pole (falls, not solid after, car keeps going, counter up), the fallen pole lying on the pavement. **Not checked**: by eye in motion. Open: should poles stand up again; should the car knock down other things (benches, café tables, trees?).
+
+**Feedback**: hitting a pole should be a crash: the car stops or at least slows right down, with a crash sound.
+
+**Decision**: the crash keeps the sound, the car shudders and is nearly stopped (a fifth of its speed); the pole still falls.
