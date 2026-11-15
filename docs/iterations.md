@@ -362,3 +362,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: swimming is good, but the trail should go against the direction she swims; the jump should do something else in the water or not be available.
 
 **Decision**: the wake's V opened forward (its angle was the wrong way round); it now opens behind her, and the rings are left behind as she swims. Jump in the water is a splash: spray, a splash sound, a little surge forward. **Checked by script**: close-ups swimming, jump in the water does not leave the water, no errors. **Not checked**: by eye in motion.
+
+**Feedback**: the trail lies across the direction she swims (a screenshot swimming north); the graphic got much worse than the first version, which was much better, just needing the fix.
+
+**Decision**: the cause was a code comment that had switched off the turning of the swim effects, so they never faced her way (unseen in tests that swam only sideways). Fixed; the ripples are back as in the version the owner preferred (round her), with the V opening behind her. **Checked by script**: swimming north and west, the waterline and wake along her. **Not checked**: by eye in motion.
