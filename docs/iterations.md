@@ -412,3 +412,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: lower the breathing's volume a little.
 
 **Decision**: panting gain 0.2 to 0.13 at most. **Not checked**: by ear.
+
+**Feedback**: disable looking at the birds when she gets out of the water.
+
+**Decision**: while she shakes the lake off she ignores birds: no head turn, no yip, no thought bubble. **Checked by script**: page loads. **Not checked**: by eye.

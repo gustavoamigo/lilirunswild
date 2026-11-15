@@ -297,7 +297,8 @@ function watchBirds(st, dt) {
   let best = null, bd = 760;
   for (const f of world.flocks) { const d = dist(f.x, f.y, p.x, p.y); if (d < bd && f.h < 420) { bd = d; best = f; } }
   let yaw = 0, pitch = 0; p.point = 0;
-  if (best && p.state !== 'daze' && p.state !== 'paws') {
+  // shaking the lake off she has no eyes for birds: no look, no yip, no bubble
+  if (best && p.state !== 'daze' && p.state !== 'paws' && !(p.shakeWet > 0)) {
     p.birdDir = Math.atan2(best.y - p.y, best.x - p.x);
     // (at a run he only glances: he still has to see where he is going)
     const most = Math.hypot(p.vx, p.vy) > TROT * 0.5 ? 0.6 : 1.3;
