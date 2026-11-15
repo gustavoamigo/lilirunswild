@@ -350,3 +350,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the road looks worse than before the tiles; the owner wants it plain, without texture, as it was.
 
 **Decision**: the asphalt speckles are gone (plain asphalt); the sand's pebbles thinned to the old density. **Checked by script**: the same view before tiles and now, side by side. **Not checked**: on the owner's screen.
+
+**Feedback**: go on with the lake.
+
+**Decision**: a lake (3 × 3 tiles, west, below Lili's home) with a sandy beach all round, ducks and a ball on its north shore; four tiles (`lake`, `shore`, `shore-corner`, `beach`) give the whole lake by turning. She swims in it: slowly, low in the water, head up, paddling, splashing; out of it she shakes herself dry when she stops. The car stops at the water's edge. Found on the way: the deeper-water bands showed every tile's edge until the water shapes reached past the tiles. **Checked by script**: the lake from above, swimming in and out (half speed, shakes after), the car driven at the lake stops at the beach, no errors. **Not checked**: by eye in play; the splash sound (synthesised; a generated one can be picked). Next: the dog park.

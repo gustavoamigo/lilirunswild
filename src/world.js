@@ -22,14 +22,20 @@ function shapeDist(g, x, y) {
   let a = Math.atan2(y - cy, x - cx); while (a < a0) a += Math.PI * 2;
   return a <= a1 ? Math.abs(Math.hypot(x - cx, y - cy) - r) : Infinity;
 }
-// What is underfoot at a point of a tile, in its own coordinates: 'road' | 'walk' | 'path' | 'sand' | 'grass'
+// A rounded rectangle [x0, y0, x1, y1, r] (it may reach beyond the tile): is the point inside it?
+export function inRound([x0, y0, x1, y1, r], x, y) {
+  return Math.hypot(Math.max(x0 + r - x, x - (x1 - r), 0), Math.max(y0 + r - y, y - (y1 - r), 0)) <= r;
+}
+// What is underfoot at a point of a tile, in its own coordinates: 'road' | 'walk' | 'water' | 'path' | 'sand' | 'grass'
 export function tileSurface(def, x, y) {
   let s = 'grass';
+  for (const g of def.ground || []) if (g.water && inRound(g.water, x, y)) return 'water';
   for (const g of def.ground || []) {
     if (g.road) { const d = shapeDist(g.road, x, y); if (d < ROAD_HALF) return 'road'; if (d < ROAD_HALF + WALK) s = 'walk'; }
     if (s === 'grass' && g.path && shapeDist(g.path, x, y) < PATH_HALF) s = 'path';
     if (s === 'grass' && g.plaza && Math.hypot(x - g.plaza[0], y - g.plaza[1]) < g.plaza[2]) s = 'path';
     if (s === 'grass' && g.sand && Math.hypot(x - g.sand[0], y - g.sand[1]) < g.sand[2]) s = 'sand';
+    if (s === 'grass' && g.beach && inRound(g.beach, x, y)) s = 'sand';
     if (s === 'grass' && g.pave && x >= g.pave[0] && x <= g.pave[2] && y >= g.pave[1] && y <= g.pave[3]) s = 'walk';
   }
   return s;

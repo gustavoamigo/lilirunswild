@@ -14,6 +14,7 @@ const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560;
 // a spaniel's trot and flat-out run for her size (84 game units to the metre: 2.5 and 5.5 m/s); flat out is the simulated gallop's own speed
 const TROT = 210, ZOOM = 460, ZOOM_AFTER = 0.9;      // run flat out for this long and he gets the zoomies
 // the about-turn's slide takes a third of a second from flat out, down to SKID_END, whatever her top speed
+const SWIM = 0.5;                                    // swimming, she goes at half her trot
 const BRAKE = ZOOM * 2.3, SKID_END = ZOOM * 0.23;
 const BONK = ZOOM * 0.73;                                    // faster than this into something solid and he sees stars
 const CAR_TOP = 900;
@@ -168,6 +169,12 @@ function updateDog(dt) {
   const chase = p.seen && st.mag > 0.5 && st.x * Math.cos(p.birdDir) + st.y * Math.sin(p.birdDir) > 0.75;
   if (chase) p.runT = Math.max(p.runT, ZOOM_AFTER);
   if (studio.gait === 'trot') p.runT = 0; else if (studio.gait === 'gallop' && st.mag > 0.5 && !p.push) p.runT = ZOOM_AFTER;
+  // ---- in the lake she swims: slowly, low in the water, splashing; out of it she shakes herself dry when she stops ----
+  const wet = !STUDIO && onFoot() && !p.air && world.surfaceAt(p.x, p.y) === 'water';
+  if (wet !== p.swim) { dust(p.x, p.y, 10, { speed: 120, color: '#E6F6FC', size: 7 }); if (wet) A.splash(); else p.drip = true; }
+  p.swim = wet;
+  if (wet) { p.runT = 0; p.dripT = (p.dripT || 0) - dt; if (p.dripT <= 0 && sp0 > 30) { p.dripT = 0.18; dust(p.x + Math.cos(p.heading) * 30, p.y + Math.sin(p.heading) * 30, 2, { speed: 50, color: '#E6F6FC', size: 6 }); } }
+  else if (p.drip && !st.mag && !p.air && p.state === 'idle') { p.drip = false; p.shake = 1.4; }
   const was = p.zoom; p.zoom = p.runT >= ZOOM_AFTER && p.state === 'idle';
   if (p.zoom && !was) { A.whoosh(); dust(p.x, p.y, 8, { speed: 110 }); }
 
@@ -204,7 +211,7 @@ function updateDog(dt) {
   else if (!p.air) {
     // She runs the way she is pointing, so a change of direction is a curve: at a trot a tight one
     // (she slows right down to turn about), at full gallop a wide skid, because she has no brakes.
-    const top = (p.zoom ? ZOOM : TROT) * st.mag * (p.zoom ? 1 : clamp(Math.cos(off), 0.1, 1)), k = 1 - Math.exp(-dt * (p.state !== 'idle' ? 12 : p.zoom ? 4.5 : 9));
+    const top = (p.zoom ? ZOOM : TROT) * st.mag * (p.zoom ? 1 : clamp(Math.cos(off), 0.1, 1)) * (p.swim ? SWIM : 1), k = 1 - Math.exp(-dt * (p.state !== 'idle' ? 12 : p.zoom ? 4.5 : 9));
     p.vx = lerp(p.vx, Math.cos(p.heading) * top, k); p.vy = lerp(p.vy, Math.sin(p.heading) * top, k);
     if (p.zoom && sp0 > ZOOM * 0.6) {
       p.dustT -= dt;
@@ -353,7 +360,9 @@ function updateCar(dt) {
     const off = world.carPlat.off; world.carPlat.off = true;
     for (const s of [1, -1]) {
       const q = { x: c.x + hx * CAR.half * s, y: c.y + hy * CAR.half * s, z: 0 }, x0 = q.x, y0 = q.y;
-      const hit = pushOut(world, q, CAR.r);
+      let hit = pushOut(world, q, CAR.r);
+      // the lake: the car stops at the water's edge, as at a wall
+      if (!hit && world.surfaceAt(q.x + hx * CAR.r * s, q.y + hy * CAR.r * s) === 'water') { q.x -= hx * s * Math.abs(c.v) * dt * 1.2; q.y -= hy * s * Math.abs(c.v) * dt * 1.2; hit = { nx: -hx * s, ny: -hy * s, o: null }; }
       if (!hit) continue;
       c.x += q.x - x0; c.y += q.y - y0;
       const into = -(hx * hit.nx + hy * hit.ny) * c.v;

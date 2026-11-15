@@ -129,6 +129,7 @@ export function scream(who) {
   else if (who === 'woman') say('woman-scream-' + (1 + (Math.random() < 0.5)), 0.45);
   else say('child-scream', 0.45, 0.97 + Math.random() * 0.06);
 }
+export function splash() { noise(0, 0.3, { freq: 900, to: 400, q: 0.8, vol: 0.18, attack: 0.02 }); noise(0.05, 0.25, { freq: 2600, q: 1.5, vol: 0.08 }); }
 export function yelp() { tone(600, 0, 0.18, { type: 'triangle', to: 1100, sweep: 0.1, vol: 0.14 }); }
 
 // ---- the car ----
