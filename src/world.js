@@ -37,7 +37,7 @@ export function tileSurface(def, x, y) {
 export function turn(rot, x, y) { for (let k = 0; k < (rot & 3); k++) [x, y] = [TILE - y, x]; return [x, y]; }
 export function unturn(rot, x, y) { for (let k = 0; k < (rot & 3); k++) [x, y] = [y, TILE - x]; return [x, y]; }
 
-// Read the map and every tile it names.
+// Read the map, every tile it names, and who is in town (world/people.js).
 export async function loadTown() {
   const text = await (await fetch(new URL('../world/map.txt', import.meta.url))).text();
   const legend = {}, rows = [];
@@ -60,7 +60,8 @@ export async function loadTown() {
   }));
   W = Math.max(...rows.map((r) => r.length)) * TILE; H = rows.length * TILE;
   [BOUNDS.x0, BOUNDS.y0, BOUNDS.x1, BOUNDS.y1] = bounds || [0, 0, W, H];
-  return buildTown(tiles);
+  const pop = (await import(new URL('../world/people.js', import.meta.url))).default;
+  return buildTown(tiles, pop);
 }
 
 // Things with a flat top that he can jump onto: a line with a radius (a point, if both ends are the same).
@@ -83,7 +84,7 @@ export const KINDS = {
   ball:  { r: 13, h: 26, tough: 0, fly: 1.5, pop: 300, drag: 0.7, rolls: true },
 };
 
-export function buildTown(tiles) {
+export function buildTown(tiles, pop) {
   const obstacles = [], platforms = [], props = [], trees = [], lamps = [], houses = [], flowers = [], flocks = [], people = [], spots = [];
   const prop = (kind, x, y, z = 0) => { const o = { kind, x, y, z, home: { x, y, z }, vx: 0, vy: 0, vz: 0, tip: 0, roll: 0, dir: 0, rest: true, gone: false, wob: 0, messed: false }; props.push(o); return o; };
   const HOUSE = ['#F7D9A8', '#F4B6A6', '#BFE0F2', '#F6E7A1', '#D8C4EE', '#C9E8B8'], ROOF = ['#C8553D', '#8A5A44', '#5E7C99', '#B5483A'];
@@ -94,9 +95,8 @@ export function buildTown(tiles) {
     t.seed = t.col * 7919 + t.row * 104729;
     // what stands on this tile and does not move: built and dropped with it as she comes and goes (scene.js)
     const own = t.things = { trees: [], lamps: [], houses: [], plats: [], kennels: [] };
-    // a point of the tile, in town coordinates; a heading, turned with it
+    // a point of the tile, in town coordinates
     const at = (x, y) => { const [u, v] = turn(t.rot, x, y); return [x0 + u, y0 + v]; };
-    const head = (h) => h + t.rot * Math.PI / 2;
     for (const [x, y] of d.lamps || []) { const [X, Y] = at(x, y), o = { kind: 'lamp', x: X, y: Y, r: 9, wob: 0 }; lamps.push({ x: X, y: Y }); own.lamps.push(o); obstacles.push(o); }
     for (const [kind, x, y, z] of d.props || []) { const [X, Y] = at(x, y); prop(kind, X, Y, z || 0); }
     for (const [x, y] of d.trees || []) {
@@ -123,17 +123,10 @@ export function buildTown(tiles) {
     if (d.home) building({ kind: 'home', w: 300, d: 180, h: 240, color: '#FFF4E2', roof: '#C8553D' }, ...d.home);
     if (d.school) building({ kind: 'school', w: 380, d: 220, h: 250, color: '#F6D365', roof: '#B5483A' }, ...d.school);
     for (const [x, y] of d.kennels || []) { const [X, Y] = at(x, y), o = { kind: 'kennel', x: X, y: Y, dir: t.rot, r: 34 }; own.kennels.push(o); obstacles.push(o); }
-    if (d.car) { const [X, Y] = at(d.car[0], d.car[1]); car = { x: X, y: Y, heading: head(d.car[2]) }; }
     for (const [x, y] of d.birds || []) {
       const [X, Y] = at(x, y), i = flocks.length;
       flocks.push({ x: X, y: Y, h: 0, state: 'ground', t: 0, seed: i * 2.3,
         birds: Array.from({ length: 5 }, (_, k) => ({ ox: Math.cos(k * 1.3 + i) * (28 + k * 9), oy: Math.sin(k * 1.3 + i) * (22 + k * 7), ph: R() * 6, face: R() * 6, color: k % 3 })) });
-    }
-    for (const p of d.people || []) {
-      const o = { look: p.look, nature: p.nature, heading: head(p.heading || 0), state: 'stand', t: 0, cool: 0, walk: null, seed: people.length * 2 };
-      if (p.walk) { const [a, b] = p.walk.map(([x, y]) => at(x, y)); o.walk = { ax: a[0], ay: a[1], bx: b[0], by: b[1], dir: 1 }; [o.x, o.y] = a; o.state = 'walk'; }
-      else [o.x, o.y] = at(...p.at);
-      people.push(o);
     }
     for (const [tag, x, y] of d.spots || []) { const [X, Y] = at(x, y); spots.push({ tag, x: X, y: Y }); }
     // flowers: on the tile's grass, clear of trees and furniture
@@ -143,7 +136,16 @@ export function buildTown(tiles) {
       const [X, Y] = at(x, y); flowers.push({ x: X, y: Y, c: (R() * 4) | 0, s: 0.8 + R() * 0.6 }); n++;
     }
   }
-  if (!car) throw new Error('world/map.txt: no tile has the car');
+  // People and the car are placed on the map, not on tiles (world/people.js): [col, row, x, y] is a map square and a place in it
+  const place = ([col, row, x, y]) => [col * TILE + x, row * TILE + y];
+  const FACING = { east: 0, south: Math.PI / 2, west: Math.PI, north: -Math.PI / 2 };
+  { const [x, y] = place(pop.car.at); car = { x, y, heading: FACING[pop.car.facing] || 0 }; }
+  for (const p of pop.people) {
+    const o = { look: p.look, nature: p.nature, heading: FACING[p.facing] || 0, state: 'stand', t: 0, cool: 0, walk: null, seed: people.length * 2 };
+    if (p.walk) { const [a, b] = p.walk.map(place); o.walk = { ax: a[0], ay: a[1], bx: b[0], by: b[1], dir: 1 }; [o.x, o.y] = a; o.state = 'walk'; }
+    else [o.x, o.y] = place(p.at);
+    people.push(o);
+  }
   // The parked car is a thing he can jump onto (and so into). Its line is moved with the car.
   const carPlat = { kind: 'car', ax: 0, ay: 0, bx: 0, by: 0, r: 66, h: 64, wob: 0 };
   platforms.push(carPlat);

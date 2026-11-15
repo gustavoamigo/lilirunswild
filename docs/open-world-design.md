@@ -30,8 +30,10 @@ A tile is a square of town, `TILE` 400 units a side (about 4.7 m; Lili is about 
 
 - **ground**: the surface by area (road, pavement, path, grass, sand, water), from which the ground picture is painted;
 - **solid things** (trees, lamps, walls, houses) and **things to stand on** (benches, tables, the car's spot);
-- **props** (pots, bins, balls, toys) and **people** (look, nature, standing or a path to walk), **birds**;
+- **props** (pots, bins, balls, toys) and **birds**;
 - **spots**: named places that missions point at, with tags: `table`, `school-door`, `sandpit`, `home`, `toy`, `bin`.
+
+People and cars are not part of tiles: they are placed on the map in their own file (`world/people.js`: a map square and a place in it, or two places to walk between), so a tile can be used any number of times and people go wherever they are wanted.
 
 Each tile also says what its four edges are (road, pavement, grass, hedge), so the map editor and a later check can see that neighbours fit, and how it may be turned (0, 90, 180, 270°).
 
