@@ -27,6 +27,40 @@ let dog, car;
 // Swimming: her waterline is the lake's surface, and she pushes the water as she goes (src/water.js), which makes her
 // ripples and wake. She casts no shadow while swimming (on the water it made her look as if she lay on top of it).
 let swimming = false;
+// A splash's crown: a ring of chunky water spikes that shoots up round where she landed, then falls back into the water.
+const CROWN_T = 0.8;
+// several shapes as one (positions and normals; nothing else is needed here)
+function mergeGeos(list) {
+  const pos = [], nor = [];
+  for (const g of list) { const n = g.toNonIndexed(); pos.push(...n.attributes.position.array); nor.push(...n.attributes.normal.array); }
+  const out = new THREE.BufferGeometry();
+  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
+  return out;
+}
+let crownGeo = null;
+const crowns = [];
+function crown(x, y) {
+  if (!crownGeo) {
+    const parts = [];
+    for (let i = 0; i < 11; i++) {
+      const a = (i / 11) * Math.PI * 2 + (i % 2) * 0.15, h = i % 2 ? 0.75 : 1;
+      parts.push(new THREE.SphereGeometry(1, 8, 8).scale(0.24, h / 2, 0.24).translate(0, h / 2, 0).rotateZ(-0.2).rotateY(-a).translate(Math.cos(a), 0, Math.sin(a)));   // rounded tongues of water, not shards
+    }
+    crownGeo = mergeGeos(parts);
+  }
+  const mat = M.surf({ color: '#F2FBFF', transparent: true, opacity: 0.95 });
+  const m = new THREE.Mesh(crownGeo, mat); m.position.set(x, 10, y); m.renderOrder = 2; scene.add(m);
+  crowns.push({ m, mat, t: 0 });
+}
+function updateCrowns(dt) {
+  for (let i = crowns.length - 1; i >= 0; i--) {
+    const c = crowns[i]; c.t += dt;
+    const u = c.t / CROWN_T;
+    if (u >= 1) { scene.remove(c.m); c.mat.dispose(); crowns.splice(i, 1); continue; }
+    c.m.scale.set(26 + u * 24, 75 * Math.sin(Math.min(1, u * 1.15) * Math.PI) + 2, 26 + u * 24);   // up fast, falling back as it spreads
+    c.mat.opacity = 0.95 * (1 - u * u);
+  }
+}
 function updateSwim(p, t) {
   if (!!p.swim !== swimming) { swimming = !!p.swim; dog.root.traverse((o) => { if (o.isMesh) o.castShadow = !swimming; }); }
   if (!swimming || !water) return;
@@ -34,6 +68,7 @@ function updateSwim(p, t) {
   // her chest, paddling: pushing the water up and down in rhythm (a steady push would pile it into a mound), harder as she goes
   water.push(p.x + hx * 34, p.y + hy * 34, 10, (0.1 + 0.2 * sp) * Math.sin(t * 6));
   if (p.splashed) { water.push(p.x + hx * 30, p.y + hy * 30, 18, p.splashed); p.splashed = 0; }   // how hard: set by what splashed
+  if (p.crown) { crown(p.x, p.y); p.crown = 0; }
 }
 const trees = [], lamps = [], plats = [], props = [], people = [], birds = [], debris = [];
 
@@ -217,7 +252,7 @@ export function render(G, dt) {
   zoom = lerp(zoom, f.zoom || 1, 1 - Math.exp(-dt * 2));
   placeCamera();
 
-  dog.update(G.dog, t); updateSwim(G.dog, t); if (water) water.update(t, dt);
+  dog.update(G.dog, t); updateSwim(G.dog, t); updateCrowns(dt); if (water) water.update(t, dt);
   car.update(G.car, t, dt);
   streamTiles(camAim.x, camAim.z);
 

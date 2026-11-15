@@ -91,15 +91,19 @@ function shake(o) { if (!o) return; o.wob = 1; if (o.tree) { o.tree.wob = 1; lea
 // -------------------------------------------------------------------- dog --
 // spray thrown up from the water: a jump in the water, a leap into it
 function spray(x, y, n, up) {
-  for (let i = 0; i < n; i++) {
-    const a = Math.random() * TAU, s = 60 + Math.random() * 140;
-    spawn({ type: 'drop', x, z: y, y: 20, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: up * (0.5 + Math.random() * 0.7), g: 600, drag: 1.6, life: 0.9 + Math.random() * 0.4, size: 7 + Math.random() * 9, grow: 18, color: '#ffffff', alpha: 0.9 });
+  for (let i = 0; i < n; i++) {                        // chunky drops, shrinking as they fall
+    const a = Math.random() * TAU, s = 50 + Math.random() * 110;
+    spawn({ type: 'drop', x, z: y, y: 20, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: up * (0.5 + Math.random() * 0.6), g: 900, drag: 0.6, life: 0.7 + Math.random() * 0.3, size: 5 + Math.random() * 4, grow: -5, color: '#ffffff', alpha: 1 });
+  }
+  for (let i = 0; i < 5; i++) {                        // and a little mist at its foot
+    const a = Math.random() * TAU;
+    spawn({ type: 'mist', x: x + Math.cos(a) * 20, z: y + Math.sin(a) * 20, y: 12, vx: Math.cos(a) * 40, vz: Math.sin(a) * 40, vy: 20, drag: 2, life: 0.6, size: 14, grow: 16, color: '#ffffff', alpha: 0.6 });
   }
 }
 function land(fromHop) {
   dog.air = false; dog.vz = 0; dog.landT = 0.22;
   // a leap into the lake: a big splash, and a ring across the water
-  if (!fromHop && dog.state !== 'drive' && world.surfaceAt(dog.x, dog.y) === 'water') { spray(dog.x, dog.y, 60, 440); A.splash(); dog.splashed = 2.5; dog.swim = true; return; }
+  if (!fromHop && dog.state !== 'drive' && world.surfaceAt(dog.x, dog.y) === 'water') { spray(dog.x, dog.y, 16, 440); dog.crown = 1; A.splash(); dog.splashed = 2.5; dog.swim = true; return; }
   dust(dog.x, dog.y, 6); A.land();
   const [, on] = floorAt(world, dog.x, dog.y, dog.z);
   if (on) on.wob = Math.max(on.wob, 0.6);
@@ -114,7 +118,7 @@ function jump() {
   if (dog.swim) {
     if (G.t - (dog.splashAt || -9) < 0.5) return;
     dog.splashAt = G.t; dog.splashed = 1.6; A.splash(); dog.barkT = 0.2;
-    spray(dog.x + Math.cos(dog.heading) * 30, dog.y + Math.sin(dog.heading) * 30, 14, 270);
+    spray(dog.x + Math.cos(dog.heading) * 30, dog.y + Math.sin(dog.heading) * 30, 8, 270);
     dog.vx += Math.cos(dog.heading) * 120; dog.vy += Math.sin(dog.heading) * 120;
     return;
   }
@@ -195,10 +199,10 @@ function updateDog(dt) {
   // out of the lake she shakes at once, and water flies off her sideways, more as the shake gets going
   if (p.shakeWet > 0) {
     p.shakeWet -= dt; p.shake = Math.max(p.shake, 0.05); p.vx *= Math.exp(-dt * 10); p.vy *= Math.exp(-dt * 10);
-    const k = 1.4 - p.shakeWet, n = k < 0.2 ? 0 : 3;
+    const k = 1.4 - p.shakeWet, n = k < 0.2 ? 0 : Math.random() < 0.6 ? 1 : 0;
     for (let i = 0; i < n; i++) {
       const side = Math.random() < 0.5 ? 1 : -1, a = p.heading + side * Math.PI / 2 + (Math.random() - 0.5) * 1.2, along = (Math.random() - 0.5) * 60, s = 120 + Math.random() * 120;
-      spawn({ type: 'drop', x: p.x + Math.cos(p.heading) * along, z: p.y + Math.sin(p.heading) * along, y: 30 + Math.random() * 25, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 60 + Math.random() * 100, g: 300, drag: 2.2, life: 0.6 + Math.random() * 0.4, size: 5 + Math.random() * 7, grow: 22, color: '#ffffff', alpha: 0.75 });
+      spawn({ type: 'drop', x: p.x + Math.cos(p.heading) * along, z: p.y + Math.sin(p.heading) * along, y: 30 + Math.random() * 25, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 60 + Math.random() * 100, g: 800, drag: 0.8, life: 0.5 + Math.random() * 0.3, size: 3 + Math.random() * 3, grow: -4, color: '#ffffff', alpha: 1 });
     }
   }
   const was = p.zoom; p.zoom = p.runT >= ZOOM_AFTER && p.state === 'idle';

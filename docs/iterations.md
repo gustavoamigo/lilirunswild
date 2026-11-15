@@ -392,3 +392,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: does not like the water drops; it should be more splashy, not so well defined, like fog.
 
 **Decision**: the drops are now soft white puffs, misty at the edge, that spread as they fly; more of them, for the leap, the splash and the shake. **Checked by script**: a leap into the lake and the shake on the beach. **Not checked**: by eye in motion.
+
+**Feedback**: too foggy now; is there something in between? How do people do water splashes?
+
+**Decision**: as cartoon games do: a crown of water (rounded tongues rising round her and falling back), a handful of chunky two-tone drops that shrink as they fall, and only a little mist at the foot. The shake throws a few small drops. **Checked by script**: the crown and drops in still frames. **Not checked**: by eye in motion.

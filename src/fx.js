@@ -47,9 +47,15 @@ export function drawFx(c, project) {
         break;
       case 'star': c.rotate(p.rot); starPath(c, 0, 0, s); c.fill(); break;
       case 'heart': heartPath(c, 0, 0, s); c.fill(); break;
-      case 'drop': {                                      // spray: a soft white puff, misty at its edge, spreading as it flies
+      case 'drop': {                                      // a chunky cartoon drop: pale blue, a white highlight, edge just softened
+        const g = c.createRadialGradient(-s * 0.3, -s * 0.3, 0, 0, 0, s);
+        g.addColorStop(0, '#ffffff'); g.addColorStop(0.35, '#E8F7FF'); g.addColorStop(0.8, 'rgba(190,230,250,0.95)'); g.addColorStop(1, 'rgba(190,230,250,0)');
+        c.fillStyle = g; c.beginPath(); c.arc(0, 0, s, 0, TAU); c.fill();
+        break;
+      }
+      case 'mist': {                                      // soft spray at the foot of a splash
         const g = c.createRadialGradient(0, 0, 0, 0, 0, s);
-        g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.45, 'rgba(245,252,255,0.6)'); g.addColorStop(1, 'rgba(235,248,255,0)');
+        g.addColorStop(0, 'rgba(255,255,255,0.7)'); g.addColorStop(1, 'rgba(255,255,255,0)');
         c.fillStyle = g; c.beginPath(); c.arc(0, 0, s, 0, TAU); c.fill();
         break;
       }
