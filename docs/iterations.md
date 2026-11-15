@@ -488,3 +488,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: hitting a pole should be a crash: the car stops or at least slows right down, with a crash sound.
 
 **Decision**: the crash keeps the sound, the car shudders and is nearly stopped (a fifth of its speed); the pole still falls.
+
+**Feedback**: you can see the pole through the car.
+
+**Decision**: the car kept rolling onto the pole it had knocked down; now it stops dead and rocks back a little, so the pole lies in front of it. **Checked by script**: the car's position after the crash stays short of the pole's base.

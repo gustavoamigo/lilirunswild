@@ -39,7 +39,7 @@ Built from the design in `docs/open-world-design.md` (steps 1 and 2 of 4 done: t
 
 ## The car knocks down light poles
 
-A light pole hit by the car at more than 150 (`updateCar`) goes over: it stops being solid (taken out of `world.obstacles`), tips over its base away from the car, faster and faster, in 0.55 s, bounces once on the ground and stays lying there (`o.fallen`, drawn in `render`); a crash (sound, the car shudders), stars, one on the mess counter, and the car is nearly stopped (0.2 of its speed kept; it ploughed on at 0.75 at first, which the owner found too light). Lili running into a pole only shakes it. Fallen poles do not stand up again (yet).
+A light pole hit by the car at more than 150 (`updateCar`) goes over: it stops being solid (taken out of `world.obstacles`), tips over its base away from the car, faster and faster, in 0.55 s, bounces once on the ground and stays lying there (`o.fallen`, drawn in `render`); a crash (sound, the car shudders), stars, one on the mess counter, and the car stops dead and rocks back at 45, so the pole falls in front of it (it ploughed on at 0.75 at first, too light; then kept 0.2 and rolled onto the fallen pole, which showed through the car). Lili running into a pole only shakes it. Fallen poles do not stand up again (yet).
 
 ## Swimming
 
