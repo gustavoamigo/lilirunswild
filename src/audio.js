@@ -139,13 +139,16 @@ export function crash() { say('car-crash', 0.7); }
 // A sound file played round and round (loops are made with tools/sound_prep.py --loop), its volume and speed eased
 // towards what is asked; started the first time it is asked for.
 const loops = {};
-function loopAt(k, vol, rate) {
+// `soften`: a low-pass filter's cut-off (Hz), to take the hiss off a rough recording.
+function loopAt(k, vol, rate, soften) {
   if (!ac || !voice[k]) return;
   let l = loops[k];
   if (!l) {
     l = loops[k] = { src: ac.createBufferSource(), g: ac.createGain() };
     l.src.buffer = voice[k]; l.src.loop = true; l.g.gain.value = 0;
-    l.src.connect(l.g); l.g.connect(sfx); l.src.start();
+    let out = l.src;
+    if (soften) { const f = ac.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = soften; f.Q.value = 0.5; out.connect(f); out = f; }
+    out.connect(l.g); l.g.connect(sfx); l.src.start();
   }
   l.g.gain.setTargetAtTime(vol, ac.currentTime, 0.2);
   l.src.playbackRate.setTargetAtTime(rate, ac.currentTime, 0.2);
@@ -153,4 +156,4 @@ function loopAt(k, vol, rate) {
 // The engine while she is driving: level 0..1 is how fast the car is going. It runs faster and a little louder with speed.
 export function engine(level, on) { loopAt('car-engine', on ? 0.25 + level * 0.15 : 0, 0.8 + level * 0.7); }
 // Her panting while she runs flat out: level 0..1 is how out of breath she is.
-export function panting(level) { loopAt('panting', level * 0.18, 1.05 + level * 0.2); }
+export function panting(level) { loopAt('panting', level * 0.2, 1.05 + level * 0.2, 1800); }   // softened: raw, it rasped like sandpaper

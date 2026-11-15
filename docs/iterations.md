@@ -404,3 +404,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the splash could be enough. The shake out of the water: can she do it walking slowly?
 
 **Decision**: she keeps shaking as she walks on, held to a slow walk (a third of a trot) until the shake ends. **Checked by script**: swimming out with the key held: she shakes for the whole 1.4 s while walking about 150 on. **Not checked**: by eye.
+
+**Feedback**: filter the breathing a little; it is too rough, like sandpaper.
+
+**Decision**: the panting plays through a gentle low-pass filter (1800 Hz), a touch louder to make up. **Not checked**: by ear.
