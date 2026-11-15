@@ -185,8 +185,11 @@ function earSkin() {
         const u = k / EAR_K;
         curve.getPointAt(u, C); curve.getTangentAt(u, T);
         // width and thickness along the ear, and how far out from the line
-        const w = (u < 0.65 ? 6 + 4.8 * Math.sin((u / 0.65) * Math.PI / 2) : 10.8 * Math.sqrt(Math.max(0, 1 - ((u - 0.65) / 0.36) ** 2))) + 0.3;
-        const th = Math.max(0.8, w * 0.62), out = 4 + 2 * u;    // thick and soft, hanging clear of the collar
+        // the root is closed off and sunk into the skull (it was an open end beside the head, which could be seen into, and a
+        // gap showed between ear and head); the flap then comes out of the head and hangs clear of the collar
+        const cap = Math.sqrt(Math.min(1, u / 0.07));
+        const w = ((u < 0.65 ? 6 + 4.8 * Math.sin((u / 0.65) * Math.PI / 2) : 10.8 * Math.sqrt(Math.max(0, 1 - ((u - 0.65) / 0.36) ** 2))) + 0.3) * cap;
+        const th = Math.max(0.8 * cap, w * 0.62), out = -3 + 9 * Math.min(1, u / 0.35) - 3 * Math.max(0, u - 0.35);
         const f = u * 3, fi = Math.min(2, Math.floor(f)), flat = EAR_FLAT[fi] + (EAR_FLAT[fi + 1] - EAR_FLAT[fi]) * (f - fi);
         Y.copy(T).negate();
         Zv.copy(Z_AXIS).lerp(bodySide, flat).normalize();

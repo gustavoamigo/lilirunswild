@@ -468,3 +468,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: some movement in the eyes might make them more natural. Do not start the dog with a shake.
 
 **Decision**: her eyes glance about on their own every second or two and lead her head towards what she watches. The shake at the start was a bug: before the first frame `swim` was unset, which counted as climbing out of the lake. **Checked by script**: no shake in the first two seconds; still frames with the eyes looking different ways.
+
+**Feedback**: only the ears need fixing now: you can see through them at some angles; attach them to the head. The eye movement is good.
+
+**Decision**: each ear's root was an open end floating beside the head; it is now closed and sunk into the skull, so the ear grows out of the head. **Checked by script**: the turnaround, the face close up, a gallop strip.
