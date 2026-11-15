@@ -5,6 +5,8 @@ import * as THREE from '../vendor/three.module.min.js';
 import { STYLE } from './style.js';
 import { W, H, BOUNDS, TILE } from './world.js';
 import { paintTile } from './ground.js';
+import { makeWater, WATER_Y } from './water.js';
+let water = null;
 import * as M from './models.js';
 import { clamp, lerp, rng } from './util.js';
 
@@ -22,23 +24,22 @@ const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3
 const _mx = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
 
 let dog, car;
-// Swimming: water round her at the waterline (see-through, so what is under it shows faintly), rings spreading from her,
-// and a wake behind her when she moves. Only shown while she swims.
+// Swimming: rings spreading from her and a wake behind her when she moves, on the water's surface (her waterline is the
+// surface itself, src/water.js). Only shown while she swims.
 let swim = null, swimming = false;
 function makeSwim() {
-  const water = M.surf({ color: '#5DB4E0', transparent: true, opacity: 0.8, depthWrite: false });
-  const skin = new THREE.Mesh(new THREE.CircleGeometry(1, 32), water); skin.rotation.x = -Math.PI / 2; skin.scale.set(70, 38, 1); skin.position.set(-10, 0, 0);
   const foamMat = () => M.surf({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false });
   const rings = [0, 1].map((i) => { const m = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 40), foamMat()); m.rotation.x = -Math.PI / 2; m.userData.ph = i / 2; return m; });
   const wake = [1, -1].map((s) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), foamMat()); m.rotation.x = -Math.PI / 2; m.userData.s = s; return m; });
-  const g = new THREE.Group(); g.add(skin, ...rings, ...wake); g.visible = false;
+  for (const m of [...rings, ...wake]) m.renderOrder = 2;             // over the water's surface
+  const g = new THREE.Group(); g.add(...rings, ...wake); g.visible = false;
   return { g, rings, wake };
 }
 function updateSwim(p, t) {
   if (!!p.swim !== swimming) { swimming = !!p.swim; dog.root.traverse((o) => { if (o.isMesh) o.castShadow = !swimming; }); }
   swim.g.visible = swimming;
   if (!swimming) return;
-  swim.g.position.set(p.x, 16, p.y); swim.g.rotation.y = -p.heading;   // at the waterline, part way up her side; turned with her
+  swim.g.position.set(p.x, WATER_Y + 0.5, p.y); swim.g.rotation.y = -p.heading;   // on the water, turned with her
   const sp = Math.min(1, Math.hypot(p.vx, p.vy) / 110);
   for (const r of swim.rings) {
     const u = (t * 0.5 + r.userData.ph) % 1;
@@ -101,6 +102,7 @@ export function initScene(canvas, w) {
   for (const f of world.flocks) for (const b of f.birds) { const m = M.makeBird(b.color); scene.add(m.root); birds.push({ f, b, m }); }
   car = M.makeCar(); scene.add(car.root);
   dog = M.makeDog(); scene.add(dog.root); swim = makeSwim(); scene.add(swim.g);
+  water = makeWater(world); if (water) scene.add(water.mesh);
   resize();
 }
 
@@ -229,7 +231,7 @@ export function render(G, dt) {
   zoom = lerp(zoom, f.zoom || 1, 1 - Math.exp(-dt * 2));
   placeCamera();
 
-  dog.update(G.dog, t); updateSwim(G.dog, t);
+  dog.update(G.dog, t); updateSwim(G.dog, t); if (water) water.update(t);
   car.update(G.car, t, dt);
   streamTiles(camAim.x, camAim.z);
 

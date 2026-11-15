@@ -366,3 +366,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the trail lies across the direction she swims (a screenshot swimming north); the graphic got much worse than the first version, which was much better, just needing the fix.
 
 **Decision**: the cause was a code comment that had switched off the turning of the swim effects, so they never faced her way (unseen in tests that swam only sideways). Fixed; the ripples are back as in the version the owner preferred (round her), with the V opening behind her. **Checked by script**: swimming north and west, the waterline and wake along her. **Not checked**: by eye in motion.
+
+**Feedback**: asked whether shaders could do the water better. Proposed: (1) a water surface with its own shader, (2) ripples simulated on the GPU that she makes as she swims. Go.
+
+**Decision**: part 1 done: the lake's surface is a shader (depth from the shore, drifting wavelets, sparkles, foam lapping the beach), her waterline is the surface itself. **Checked by script**: the lake from above and close, swimming north and west (rings and wake over the surface), no errors. **Not checked**: on a real GPU; phones. Next: part 2, the ripple simulation.

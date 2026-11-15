@@ -75,7 +75,7 @@ export function paintTile(t, res = 1) {
     for (const [x, y, rad] of plazas) { Art.circ(c, x, y, rad - 46); c.stroke(); }
   }
 
-  // a lake: a sandy beach round it, then the water, deeper (darker) further out, a pale line where it laps the sand
+  // a lake: a sandy beach round it
   for (const [x0, y0, x1, y1, rad] of ground.filter((s) => s.beach).map((s) => s.beach)) {
     c.fillStyle = '#F0DDA8'; c.beginPath(); c.roundRect(x0, y0, x1 - x0, y1 - y0, rad); c.fill();
     for (let i = 0; i < 260; i++) {
@@ -84,18 +84,9 @@ export function paintTile(t, res = 1) {
       c.fillStyle = r() < 0.5 ? 'rgba(170,140,80,.22)' : 'rgba(255,248,220,.5)'; Art.circ(c, x, y, 1.5 + r() * 2.5); c.fill();
     }
   }
+  // the lake bed: plain, the water's surface over it (src/water.js) does the rest
   for (const [x0, y0, x1, y1, rad] of ground.filter((s) => s.water).map((s) => s.water)) {
-    const shape = (k) => { c.beginPath(); c.roundRect(x0 + k, y0 + k, x1 - x0 - 2 * k, y1 - y0 - 2 * k, Math.max(0, rad - k)); };
-    c.strokeStyle = 'rgba(255,255,255,.7)'; c.lineWidth = 14; shape(0); c.stroke();
-    c.fillStyle = '#7CCBEA'; shape(0); c.fill();
-    c.fillStyle = '#5DB4E0'; shape(60); c.fill();
-    c.fillStyle = '#4A9FD3'; shape(140); c.fill();
-    c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 3;           // a few ripples
-    for (let i = 0; i < 6; i++) {
-      const x = 40 + r() * 320, y = 40 + r() * 320;
-      if (tileSurface(d, x, y) !== 'water') continue;
-      c.beginPath(); c.arc(x, y, 14 + r() * 10, Math.PI * 1.15, Math.PI * 1.85); c.stroke();
-    }
+    c.fillStyle = '#4E9FC9'; c.beginPath(); c.roundRect(x0, y0, x1 - x0, y1 - y0, rad); c.fill();
   }
 
   // sandpits: a wooden rim round soft sand
