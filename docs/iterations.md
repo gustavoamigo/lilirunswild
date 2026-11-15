@@ -456,3 +456,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the first move of the eyes (high on the skull, looking out) was better; a bit more to the centre.
 
 **Decision**: that height, closer together (height 10.5, 8.6 from the middle), brow marks above. **Checked by script**: front, three-quarters, side.
+
+**Feedback**: the tongue still comes out through the jaw a little.
+
+**Decision**: tipped down as a whole, its middle went through the jaw. Now it is bent: flat along the jaw, curving down over the lip, and it slides out until the bend is at the lip. Hidden when in (a bark shows the open mouth without it). **Checked by script**: three-quarters, side and front, tongue out.

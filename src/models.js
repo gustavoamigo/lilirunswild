@@ -283,6 +283,18 @@ const HEAD_GEO = sweptGeo(HEAD_PROFILE, (x, y, z) => {
 // her tongue: flat and wide, thinner at the edges, a rounded tip, a darker groove along its middle
 const TONGUE_GEO = sweptGeo([[0, 0, 0, 0], [1.5, 0, 0.9, 3.3], [8, -0.3, 0.9, 3.8], [13, -0.9, 0.8, 3.4], [15.5, -1.2, 0, 0]],
   (x, y, z) => (Math.abs(z) < 0.5 && y > -0.6 ? '#D96479' : '#F28AA0'), 40, 24);
+// flat along the jaw for its first 7, then curving down over the lip (bent around a circle of radius 9), so no part of it
+// goes through the jaw when it hangs out
+{
+  const P = TONGUE_GEO.attributes.position, R = 9, B = 7;
+  for (let i = 0; i < P.count; i++) {
+    const x = P.getX(i), y = P.getY(i);
+    if (x <= B) continue;
+    const th = (x - B) / R;
+    P.setXY(i, B + (R + y) * Math.sin(th), -R + (R + y) * Math.cos(th));
+  }
+  TONGUE_GEO.computeVertexNormals();
+}
 // her lower jaw: a short rounded wedge under the muzzle, opened for a bark or panting
 const JAW_GEO = sweptGeo([[-1, 0, 0, 0], [2, -0.5, 3.4, 6], [10, -1, 3.6, 6.4], [17, -0.8, 2.8, 5], [20, -0.5, 0, 0]], () => FEATHER, 40, 32);
 
@@ -706,7 +718,8 @@ export function makeDog() {
     collarG.rotation.z = -0.6 + nk * 0.5;
     head.rotation.x = (p.state === 'daze' ? Math.sin(t * 9) * 0.25 : (p.tiltHead || 0) * 0.35) + shk * 1.35 + Math.sin(s2) * 0.07 * a;
     jaw.rotation.z = -Math.max(P.jaw, P.tongue * (0.3 + Math.sin(t * 15) * 0.07));
-    tongue.position.x = 4 + P.tongue * 9; tongue.rotation.z = -P.tongue * (0.55 + Math.sin(t * 15) * 0.08); tongue.visible = P.tongue > 0.05 || P.jaw > 0.2;
+    // out, it slides forward until its bend sits at the lip (x 20); a little sway side to side as she pants
+    tongue.position.x = 4 + P.tongue * 9; tongue.rotation.x = Math.sin(t * 15) * 0.06 * P.tongue; tongue.visible = P.tongue > 0.05;
     // galloping, her tail swings as the simulated one did (it hangs from a soft spring, so the run moves it), and hardly wags
     tail.rotation.z = lerp(P.tailUp, 0.3 + gTail, gw);
     tail.rotation.y = wagNow * (1 - 0.8 * gw) + P.bend * 0.8 + shakeAt(shakeT, 1) * 0.7; tail.rotation.x = shakeAt(shakeT, 0.9) * 0.6;
