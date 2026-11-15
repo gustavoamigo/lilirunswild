@@ -376,3 +376,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the water is hyper-realistic in a cartoon-style game; adapt to its language.
 
 **Decision**: same simulation, drawn flat: three colour bands by depth with clean edges, a few clean white wave marks drifting, thin white lines round the ripples' crests, a solid white foam band along the beach. Smooth shading, slope lighting, noisy wavelets and sparkles are gone. **Checked by script**: the lake from above, swimming north and west. **Not checked**: by eye in motion on a real GPU.
+
+**Feedback**: make the ripples milder, slower and just around the dog.
+
+**Decision**: half the wave speed, strong damping (they die out within a body length or two), gentler pushes from her paddling and the splash. **Checked by script**: close-ups swimming. **Not checked**: by eye in motion.

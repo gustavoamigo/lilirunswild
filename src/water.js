@@ -15,7 +15,8 @@ import { TILE } from './world.js';
 export const WATER_Y = 12;                              // how high the surface lies over the ground
 const CELL = 8;                                         // the distance map's resolution, in game units
 const FAR = 255;                                        // distances are stored up to this (in game units)
-const RIPPLE_CELL = 6, STEP = 1 / 60, DAMP = 0.985, PUSHES = 4;
+// ripples: gentle and slow, dying out within a body length or two of her (owner's wish): 30 steps a second, strongly damped
+const RIPPLE_CELL = 6, STEP = 1 / 30, DAMP = 0.94, PUSHES = 4;
 
 // The water tiles' bounding box, and for each cell of a grid over it, how far it is from the nearest point that is not water
 // (0 out of the water). A two-pass chamfer distance, good to a few per cent.
