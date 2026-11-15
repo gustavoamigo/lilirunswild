@@ -47,10 +47,12 @@ export function drawFx(c, project) {
         break;
       case 'star': c.rotate(p.rot); starPath(c, 0, 0, s); c.fill(); break;
       case 'heart': heartPath(c, 0, 0, s); c.fill(); break;
-      case 'drop':                                        // a cartoon water drop: white, outlined in blue so it shows on water
-        c.beginPath(); c.moveTo(0, -s * 1.5); c.quadraticCurveTo(s, -s * 0.2, s * 0.85, s * 0.35); c.arc(0, s * 0.35, s * 0.85, 0, Math.PI);
-        c.quadraticCurveTo(-s, -s * 0.2, 0, -s * 1.5); c.fill(); c.lineWidth = Math.max(1.5, s * 0.22); c.strokeStyle = '#3F95CE'; c.stroke();
+      case 'drop': {                                      // spray: a soft white puff, misty at its edge, spreading as it flies
+        const g = c.createRadialGradient(0, 0, 0, 0, 0, s);
+        g.addColorStop(0, 'rgba(255,255,255,0.95)'); g.addColorStop(0.45, 'rgba(245,252,255,0.6)'); g.addColorStop(1, 'rgba(235,248,255,0)');
+        c.fillStyle = g; c.beginPath(); c.arc(0, 0, s, 0, TAU); c.fill();
         break;
+      }
       case 'confetti': c.rotate(p.rot); c.fillRect(-s / 2, -s / 4, s, s / 2); break;
       case 'leaf': c.rotate(p.rot); c.beginPath(); c.ellipse(0, 0, s, s * 0.45, 0, 0, TAU); c.fill(); break;
       case 'note':

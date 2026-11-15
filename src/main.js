@@ -93,13 +93,13 @@ function shake(o) { if (!o) return; o.wob = 1; if (o.tree) { o.tree.wob = 1; lea
 function spray(x, y, n, up) {
   for (let i = 0; i < n; i++) {
     const a = Math.random() * TAU, s = 60 + Math.random() * 140;
-    spawn({ type: 'drop', x, z: y, y: 20, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: up * (0.6 + Math.random() * 0.6), g: 700, drag: 1, life: 0.9, size: 4 + Math.random() * 4, color: '#ffffff', alpha: 1 });
+    spawn({ type: 'drop', x, z: y, y: 20, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: up * (0.5 + Math.random() * 0.7), g: 600, drag: 1.6, life: 0.9 + Math.random() * 0.4, size: 7 + Math.random() * 9, grow: 18, color: '#ffffff', alpha: 0.9 });
   }
 }
 function land(fromHop) {
   dog.air = false; dog.vz = 0; dog.landT = 0.22;
   // a leap into the lake: a big splash, and a ring across the water
-  if (!fromHop && dog.state !== 'drive' && world.surfaceAt(dog.x, dog.y) === 'water') { spray(dog.x, dog.y, 36, 460); A.splash(); dog.splashed = 2.5; dog.swim = true; return; }
+  if (!fromHop && dog.state !== 'drive' && world.surfaceAt(dog.x, dog.y) === 'water') { spray(dog.x, dog.y, 60, 440); A.splash(); dog.splashed = 2.5; dog.swim = true; return; }
   dust(dog.x, dog.y, 6); A.land();
   const [, on] = floorAt(world, dog.x, dog.y, dog.z);
   if (on) on.wob = Math.max(on.wob, 0.6);
@@ -195,10 +195,10 @@ function updateDog(dt) {
   // out of the lake she shakes at once, and water flies off her sideways, more as the shake gets going
   if (p.shakeWet > 0) {
     p.shakeWet -= dt; p.shake = Math.max(p.shake, 0.05); p.vx *= Math.exp(-dt * 10); p.vy *= Math.exp(-dt * 10);
-    const k = 1.4 - p.shakeWet, n = k < 0.2 ? 0 : Math.random() < dt * 40 ? 2 : 0;
+    const k = 1.4 - p.shakeWet, n = k < 0.2 ? 0 : 3;
     for (let i = 0; i < n; i++) {
       const side = Math.random() < 0.5 ? 1 : -1, a = p.heading + side * Math.PI / 2 + (Math.random() - 0.5) * 1.2, along = (Math.random() - 0.5) * 60, s = 120 + Math.random() * 120;
-      spawn({ type: 'drop', x: p.x + Math.cos(p.heading) * along, z: p.y + Math.sin(p.heading) * along, y: 30 + Math.random() * 25, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 80 + Math.random() * 120, g: 700, drag: 1, life: 0.7, size: 3 + Math.random() * 3, color: '#ffffff', alpha: 1 });
+      spawn({ type: 'drop', x: p.x + Math.cos(p.heading) * along, z: p.y + Math.sin(p.heading) * along, y: 30 + Math.random() * 25, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 60 + Math.random() * 100, g: 300, drag: 2.2, life: 0.6 + Math.random() * 0.4, size: 5 + Math.random() * 7, grow: 22, color: '#ffffff', alpha: 0.75 });
     }
   }
   const was = p.zoom; p.zoom = p.runT >= ZOOM_AFTER && p.state === 'idle';

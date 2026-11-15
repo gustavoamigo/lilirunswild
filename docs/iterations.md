@@ -388,3 +388,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: as soon as she gets out of the lake she should shake, with water drops coming off her.
 
 **Decision**: climbing out, she stops and shakes at once (steering waits for it), drops flying off her sides. **Checked by script**: swimming out onto the beach with the key held: she shakes on the sand, drops fly. **Not checked**: by eye in motion.
+
+**Feedback**: does not like the water drops; it should be more splashy, not so well defined, like fog.
+
+**Decision**: the drops are now soft white puffs, misty at the edge, that spread as they fly; more of them, for the leap, the splash and the shake. **Checked by script**: a leap into the lake and the shake on the beach. **Not checked**: by eye in motion.
