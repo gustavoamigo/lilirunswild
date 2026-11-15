@@ -156,4 +156,4 @@ function loopAt(k, vol, rate, soften) {
 // The engine while she is driving: level 0..1 is how fast the car is going. It runs faster and a little louder with speed.
 export function engine(level, on) { loopAt('car-engine', on ? 0.25 + level * 0.15 : 0, 0.8 + level * 0.7); }
 // Her panting while she runs flat out: level 0..1 is how out of breath she is.
-export function panting(level) { loopAt('panting', level * 0.2, 1.05 + level * 0.2, 1800); }   // softened: raw, it rasped like sandpaper
+export function panting(level) { loopAt('panting', level * 0.13, 1.05 + level * 0.2, 1800); }   // softened: raw, it rasped like sandpaper

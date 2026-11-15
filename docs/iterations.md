@@ -408,3 +408,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: filter the breathing a little; it is too rough, like sandpaper.
 
 **Decision**: the panting plays through a gentle low-pass filter (1800 Hz), a touch louder to make up. **Not checked**: by ear.
+
+**Feedback**: lower the breathing's volume a little.
+
+**Decision**: panting gain 0.2 to 0.13 at most. **Not checked**: by ear.
