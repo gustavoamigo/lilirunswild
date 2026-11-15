@@ -496,3 +496,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: continue with the plan in the design doc.
 
 **Decision**: step 3, missions: the file format and its reader, the runner, the actions they need, and three missions (poo on the picnic table; drive to school; take the teddy from a boy and bring it home, which opens after the school). New in the game: a poo (she squats where a mission wants one), a teddy held by a boy outside the school, a tug of war with her play growl, carrying in her mouth, dropping at home or when she barks, mission cards at the top of the screen with a tick and confetti when done. **Checked by script**: each mission played through (a leap onto the table and a poo on it; driving past the school; tug, carry, drop at home), the cards opening and ticking, the teddy hugged, pulled and carried, no errors. **Not checked**: by eye in motion; sounds by ear. Next: step 4 (picture list, voice, saving, rewards). The dog park and the farm are still to come.
+
+**Feedback**: can't find the things the missions need.
+
+**Decision**: brought forward from step 4: a trail of white paw prints on the ground towards the place the followed mission needs (the car first for a drive, the boy with the teddy, then home), a bouncing marker when close, a big arrow at the screen edge when it is out of sight; tapping a card picks which mission to follow. **Checked by script**: the trail and arrow from home towards the car and towards the picnic table, tapping a card, no errors. **Not checked**: by eye in play.

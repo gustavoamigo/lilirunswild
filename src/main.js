@@ -757,8 +757,48 @@ function drawOverlay(t) {
     c.globalAlpha = k.done > 2.2 ? Math.max(0, 1 - (k.done - 2.2) / 0.8) : 1;
     Art.drawCard(c, cx, cy, r); Art.drawMissionPicture(c, k.m.picture, cx, cy, r * 0.8);
     if (k.done) Art.drawTick(c, cx + r * 0.55, cy + r * 0.55, r * 0.45);
+    else if (k === guided()) { c.strokeStyle = '#4FA653'; c.lineWidth = 4 * u; c.beginPath(); c.roundRect(cx - r - 4 * u, cy - r - 4 * u, r * 2 + 8 * u, r * 2 + 8 * u, r * 0.4); c.stroke(); }
+    k.rect = [cx - r, cy - r, r * 2, r * 2];
     c.globalAlpha = 1;
   });
+  drawTrail(t);
+}
+// The mission being followed: the one whose card was tapped, or else the newest open one.
+let chosen = null;
+const guided = () => (chosen && !chosen.done && cards.includes(chosen) ? chosen : [...cards].reverse().find((k) => !k.done) || null);
+input.onTap = (x, y) => {
+  const k = cards.find((q) => q.rect && !q.done && x >= q.rect[0] && x <= q.rect[0] + q.rect[2] && y >= q.rect[1] && y <= q.rect[1] + q.rect[3]);
+  if (!k) return false;
+  chosen = k; A.yip(); return true;
+};
+// Paw prints on the ground from her towards where the followed mission needs her, appearing one after another; near it
+// a bouncing marker over the place; out of sight, an arrow at the edge of the screen pointing the way.
+function drawTrail(t) {
+  const k = guided(); if (!k || dog.state === 'hop') return;
+  const at = missions.target(k.m, dog, car); if (!at) return;
+  const from = dog.state === 'drive' ? car : dog, dx = at.x - from.x, dy = at.y - from.y, d = Math.hypot(dx, dy), ux = dx / (d || 1), uy = dy / (d || 1);
+  const { w, h } = S.view;
+  if (d < 180) {
+    const [sx, sy, kk, ok] = S.project(at.x, 130 + Math.sin(t * 5) * 12, at.y);
+    if (ok) Art.drawMarker(c, sx, sy, Math.max(16, 26 * kk));
+    return;
+  }
+  const n = Math.min(7, Math.floor((d - 60) / 70)), wave = (t * 3) % (n + 3);
+  for (let i = 0; i < n; i++) {
+    const s = 90 + i * 70, side = i % 2 ? 1 : -1, x = from.x + ux * s - uy * side * 12, y = from.y + uy * s + ux * side * 12;
+    const [sx, sy, kk, ok] = S.project(x, 1, y); if (!ok) continue;
+    const [ax, ay] = S.project(x + ux * 10, 1, y + uy * 10);
+    c.save(); c.globalAlpha = Math.max(0.15, Math.min(1, 1 - Math.abs(wave - i) * 0.35)); c.translate(sx, sy); c.rotate(Math.atan2(ay - sy, ax - sx) + Math.PI / 2); c.scale(1, 0.6);
+    const ps = Math.max(12, 19 * kk); Art.drawPaw(c, 1.5, 2.5, ps, 'rgba(30,40,30,.45)'); Art.drawPaw(c, 0, 0, ps, '#FFFFFF'); c.restore();   // white with a shadow: shows on grass and road
+  }
+  // the place itself out of sight: an arrow at the edge of the screen
+  const [px, py, , pok] = S.project(at.x, 40, at.y), [qx, qy] = S.project(from.x, 40, from.y);
+  if (!pok || px < 0 || px > w || py < 0 || py > h) {
+    // inside a frame clear of the cards along the top and the buttons along the bottom
+    const a = Math.atan2(pok ? py - qy : dy, pok ? px - qx : dx), top = 130, bottom = h - 150, side = 60, cx = w / 2, cy = (top + bottom) / 2;
+    const s = Math.min((w / 2 - side) / Math.abs(Math.cos(a) || 1e-6), ((bottom - top) / 2) / Math.abs(Math.sin(a) || 1e-6));
+    Art.drawArrow(c, cx + Math.cos(a) * s, cy + Math.sin(a) * s, a, 34 + Math.sin(t * 6) * 4);
+  }
 }
 
 function resize() { S.resize(); hud.width = Math.round(S.view.w * S.view.dpr); hud.height = Math.round(S.view.h * S.view.dpr); }

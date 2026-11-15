@@ -118,7 +118,7 @@ The game reports what happens as plain events: she arrived at a spot, picked up 
 
 - A picture to-do list, opened with one large button: a card per open mission, stamped when done. Pressing a card says it again.
 - When a mission opens, the bubble shows its picture and the voice says it once.
-- A paw-print trail can lead to the nearest place of the current step, on if the child seems lost (a while with no progress), not always.
+- A paw-print trail leads to the nearest place of the current step (built in step 3, always on: without it the owner could not find what the missions needed), with an arrow at the edge of the screen when the place is out of sight; tapping a card picks which mission to follow.
 - Nothing ever fails or runs out of time.
 
 ## Building it, in steps

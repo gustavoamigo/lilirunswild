@@ -8,6 +8,7 @@ export const input = {
   target: null,          // world-space point he is heading for
   stick: null,           // game controller: { x, y, mag } while its stick or D-pad is pushed (see gamepad.js)
   onAction: null,        // ('jump' | 'bark' | 'car')
+  onTap: null,           // (x, y) => true if the overlay used the tap
 };
 
 const MOVE_KEYS = {
@@ -29,6 +30,7 @@ export const steerMag = () => (input.stick && ![...input.keys].some((k) => MOVE_
 export function initInput(canvas) {
   canvas.addEventListener('pointerdown', (e) => {
     e.preventDefault();
+    if (input.onTap?.(e.clientX, e.clientY)) return;   // something on the overlay took it (a mission card)
     input.sx = e.clientX; input.sy = e.clientY;
     input.pointerDown = true; input.tapPending = true;
     try { canvas.setPointerCapture(e.pointerId); } catch {}

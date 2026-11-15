@@ -77,6 +77,16 @@ export function makeRunner(missions, world, hooks = {}) {
       for (const w of runner.wants('go')) if (dog.state !== 'drive' && runner.near(w, dog.x, dog.y)) advance(w.m);
       for (const w of runner.wants('drive')) if (dog.state === 'drive' && runner.near(w, car.x, car.y)) advance(w.m);
     },
+    // where to go next for an open mission, from (x, y): the nearest place its step needs. A drive needs the car first,
+    // a take the person holding the thing, a bring the thing first if she does not have it.
+    target(m, dog, car) {
+      const s = runner.step(m), from = (list) => list.reduce((b, p) => (!b || Math.hypot(p.x - dog.x, p.y - dog.y) < Math.hypot(b.x - dog.x, b.y - dog.y) ? p : b), null);
+      if (s.action === 'drive') return dog.state === 'drive' ? from(spots(s.target)) : { x: car.x, y: car.y };
+      if (s.action === 'take') return from(world.people.filter((o) => o.holds && o.holds.kind === s.target));
+      if (s.action === 'bring') return dog.carry && dog.carry.kind === s.target ? from(spots(s.to)) : from(world.props.filter((o) => o.kind === s.target && !o.gone));
+      if (s.action === 'greet' || s.action === 'scare') return from(world.people);
+      return from(spots(s.target));
+    },
     start() { for (const m of missions) if (isOpen(m)) { opened.add(m.id); hooks.open?.(m); } },
   };
   return runner;
