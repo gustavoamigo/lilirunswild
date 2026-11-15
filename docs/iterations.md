@@ -416,3 +416,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: disable looking at the birds when she gets out of the water.
 
 **Decision**: while she shakes the lake off she ignores birds: no head turn, no yip, no thought bubble. **Checked by script**: page loads. **Not checked**: by eye.
+
+**Feedback**: also no bird-watching while swimming.
+
+**Decision**: done. **Not checked**: by eye.
