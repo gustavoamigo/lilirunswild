@@ -27,28 +27,23 @@ let dog, car;
 // Swimming: her waterline is the lake's surface, and she pushes the water as she goes (src/water.js), which makes her
 // ripples and wake. She casts no shadow while swimming (on the water it made her look as if she lay on top of it).
 let swimming = false;
-// A splash's crown: a ring of chunky water spikes that shoots up round where she landed, then falls back into the water.
+// A splash's crown: a sheet of water that shoots up round where she landed, flaring out, then falls back into the water.
 const CROWN_T = 0.8;
-// several shapes as one (positions and normals; nothing else is needed here)
-function mergeGeos(list) {
-  const pos = [], nor = [];
-  for (const g of list) { const n = g.toNonIndexed(); pos.push(...n.attributes.position.array); nor.push(...n.attributes.normal.array); }
-  const out = new THREE.BufferGeometry();
-  out.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); out.setAttribute('normal', new THREE.Float32BufferAttribute(nor, 3));
-  return out;
-}
 let crownGeo = null;
 const crowns = [];
 function crown(x, y) {
   if (!crownGeo) {
-    const parts = [];
-    for (let i = 0; i < 11; i++) {
-      const a = (i / 11) * Math.PI * 2 + (i % 2) * 0.15, h = i % 2 ? 0.75 : 1;
-      parts.push(new THREE.SphereGeometry(1, 8, 8).scale(0.24, h / 2, 0.24).translate(0, h / 2, 0).rotateZ(-0.2).rotateY(-a).translate(Math.cos(a), 0, Math.sin(a)));   // rounded tongues of water, not shards
+    // one sheet of water: an open ring that flares outward as it rises, its rim drawn up into points
+    const g = new THREE.CylinderGeometry(1, 1, 1, 48, 6, true).translate(0, 0.5, 0), P = g.attributes.position;
+    for (let k = 0; k < P.count; k++) {
+      const x = P.getX(k), y = P.getY(k), z = P.getZ(k), a = Math.atan2(z, x);
+      const rim = 0.65 + 0.35 * Math.pow(Math.abs(Math.cos(a * 4.5 + Math.sin(a * 3) * 0.6)), 3);   // uneven points
+      const r = 1 + 0.55 * y * y;
+      P.setXYZ(k, x * r, y * rim, z * r);
     }
-    crownGeo = mergeGeos(parts);
+    g.computeVertexNormals(); crownGeo = g;
   }
-  const mat = M.surf({ color: '#F2FBFF', transparent: true, opacity: 0.95 });
+  const mat = M.surf({ color: '#F2FBFF', transparent: true, opacity: 0.95, side: THREE.DoubleSide });
   const m = new THREE.Mesh(crownGeo, mat); m.position.set(x, 10, y); m.renderOrder = 2; scene.add(m);
   crowns.push({ m, mat, t: 0 });
 }
@@ -57,7 +52,7 @@ function updateCrowns(dt) {
     const c = crowns[i]; c.t += dt;
     const u = c.t / CROWN_T;
     if (u >= 1) { scene.remove(c.m); c.mat.dispose(); crowns.splice(i, 1); continue; }
-    c.m.scale.set(26 + u * 24, 75 * Math.sin(Math.min(1, u * 1.15) * Math.PI) + 2, 26 + u * 24);   // up fast, falling back as it spreads
+    c.m.scale.set(24 + u * 30, 70 * Math.sin(Math.min(1, u * 1.15) * Math.PI) + 2, 24 + u * 30);   // up fast, falling back as it spreads
     c.mat.opacity = 0.95 * (1 - u * u);
   }
 }

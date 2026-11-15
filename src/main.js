@@ -199,10 +199,11 @@ function updateDog(dt) {
   // out of the lake she shakes at once, and water flies off her sideways, more as the shake gets going
   if (p.shakeWet > 0) {
     p.shakeWet -= dt; p.shake = Math.max(p.shake, 0.05); p.vx *= Math.exp(-dt * 10); p.vy *= Math.exp(-dt * 10);
-    const k = 1.4 - p.shakeWet, n = k < 0.2 ? 0 : Math.random() < 0.6 ? 1 : 0;
-    for (let i = 0; i < n; i++) {
-      const side = Math.random() < 0.5 ? 1 : -1, a = p.heading + side * Math.PI / 2 + (Math.random() - 0.5) * 1.2, along = (Math.random() - 0.5) * 60, s = 120 + Math.random() * 120;
-      spawn({ type: 'drop', x: p.x + Math.cos(p.heading) * along, z: p.y + Math.sin(p.heading) * along, y: 30 + Math.random() * 25, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 60 + Math.random() * 100, g: 800, drag: 0.8, life: 0.5 + Math.random() * 0.3, size: 3 + Math.random() * 3, grow: -4, color: '#ffffff', alpha: 1 });
+    // spray flung off her coat in bursts, to one side and then the other with the shake's swing
+    const k = 1.4 - p.shakeWet, swing = Math.sin(k * 30), side = swing > 0 ? 1 : -1;
+    if (k > 0.2 && Math.abs(swing) > 0.7) for (let i = 0; i < 3; i++) {
+      const a = p.heading + side * Math.PI / 2 + (Math.random() - 0.5) * 0.9, along = (Math.random() - 0.5) * 50, s = 140 + Math.random() * 100;
+      spawn({ type: 'mist', x: p.x + Math.cos(p.heading) * along, z: p.y + Math.sin(p.heading) * along, y: 35 + Math.random() * 15, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 40 + Math.random() * 60, g: 200, drag: 3, life: 0.5, size: 9, grow: 34, color: '#ffffff', alpha: 0.9 });
     }
   }
   const was = p.zoom; p.zoom = p.runT >= ZOOM_AFTER && p.state === 'idle';

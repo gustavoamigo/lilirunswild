@@ -396,3 +396,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: too foggy now; is there something in between? How do people do water splashes?
 
 **Decision**: as cartoon games do: a crown of water (rounded tongues rising round her and falling back), a handful of chunky two-tone drops that shrink as they fall, and only a little mist at the foot. The shake throws a few small drops. **Checked by script**: the crown and drops in still frames. **Not checked**: by eye in motion.
+
+**Feedback**: almost; the crown looks like bowling pins. The drops in the shake are bad: too literal, not what was meant.
+
+**Decision**: the crown is one flaring sheet of water with a pointed rim; the shake flings soft spray off her coat in bursts, side to side with its swing. **Checked by script**: the crown and the shake spray in still frames. **Not checked**: by eye in motion.
