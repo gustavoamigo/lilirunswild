@@ -39,7 +39,7 @@ Built from the design in `docs/open-world-design.md` (steps 1 and 2 of 4 done: t
 
 ## Swimming
 
-On water (`world.surfaceAt` is `'water'`) she swims (`dog.swim`, in `updateDog`): at `SWIM` 0.5 of her speed, never in zoomies, sunk 27 so legs and belly are hidden under the ground (which is the water's surface), head up, forelegs paddling, a slow wag; a splash going in and out (`A.splash`, synthesised) and drips as she goes. Out of the water she is `drip`ping, and shakes herself the first time she stands still. The car cannot go in: its ends stop at the water's edge as at a wall.
+On water (`world.surfaceAt` is `'water'`) she swims (`dog.swim`, in `updateDog`): at `SWIM` 0.5 of her speed, never in zoomies; sunk 30 and bobbing, tilted chest-up so her rump is low, head up, legs stepping out of sight under the ground (which is the water's surface), a slow wag. Round her (`makeSwim`/`updateSwim` in `src/scene.js`): a see-through water ellipse at the waterline, 16 up, over her lower body; two soft rings spreading from her; a V of white streaks from her chest when she moves; she casts no shadow while swimming (a shadow on the water made her look as if she lay on top of it). First version: sunk, with a shadow, no waterline; the owner: it does not look like swimming. a splash going in and out (`A.splash`, synthesised) and drips as she goes. Out of the water she is `drip`ping, and shakes herself the first time she stands still. The car cannot go in: its ends stop at the water's edge as at a wall.
 
 ## Coordinates and camera
 

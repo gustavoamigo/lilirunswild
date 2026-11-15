@@ -392,9 +392,9 @@ export function makeDog() {
     } else if (p.spring > 0 && p.spring < 0.11 && !p.still) {
       // the last of a running run-up: haunches down under her, back doubled up, and her front end already coming off the ground
       T.pitch = 0.32; T.fl = 0.65; T.fr = 0.5; T.rf = 22; T.wf = T.wr = 1; T.y = -9; T.flex = 0.22; T.tailUp = 0.1;
-    } else if (p.swim) {                                 // swimming: low in the water (what is under it is hidden by the ground), head up, paddling
-      T.y = -27; T.pitch = -0.08; T.hp = 0.35; T.tailUp = 0.05; T.wag = 0.25; T.wagHz = 6;
-      T.fl = 0.5 + paddle * 0.5; T.fr = 0.5 - paddle * 0.5; T.rf = 24; T.wf = T.wr = 1;
+    } else if (p.swim) {                                 // swimming: low in the water (what is under it is hidden by the ground), head up
+      T.y = -30 + Math.sin(t * 5) * 1.5; T.pitch = 0.22; T.hp = 0.25; T.tailUp = -0.1; T.wag = 0.18; T.wagHz = 5;   // rump low, chest and head up
+      // the legs keep stepping under her, out of sight below the water
     } else if (p.state === 'paws') {                     // up on the hind legs, paws going like mad
       T.pitch = 0.98; T.fl = 0.25 + paddle * 0.4; T.fr = 0.25 - paddle * 0.4; T.rf = 26; T.wf = T.wr = 1; T.wag = 0.8; T.wagHz = 18; T.tongue = 1; T.hp = -0.45;
     } else if (p.state === 'drive') {                    // sitting at the wheel

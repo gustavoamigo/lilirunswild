@@ -22,6 +22,32 @@ const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3
 const _mx = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
 
 let dog, car;
+// Swimming: water round her at the waterline (see-through, so what is under it shows faintly), rings spreading from her,
+// and a wake behind her when she moves. Only shown while she swims.
+let swim = null, swimming = false;
+function makeSwim() {
+  const water = M.surf({ color: '#5DB4E0', transparent: true, opacity: 0.8, depthWrite: false });
+  const skin = new THREE.Mesh(new THREE.CircleGeometry(1, 32), water); skin.rotation.x = -Math.PI / 2; skin.scale.set(70, 38, 1); skin.position.set(-10, 0, 0);
+  const foamMat = () => M.surf({ color: '#ffffff', transparent: true, opacity: 0, depthWrite: false });
+  const rings = [0, 1].map((i) => { const m = new THREE.Mesh(new THREE.RingGeometry(0.92, 1, 40), foamMat()); m.rotation.x = -Math.PI / 2; m.userData.ph = i / 2; return m; });
+  const wake = [1, -1].map((s) => { const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), foamMat()); m.rotation.x = -Math.PI / 2; m.userData.s = s; return m; });
+  const g = new THREE.Group(); g.add(skin, ...rings, ...wake); g.visible = false;
+  return { g, rings, wake };
+}
+function updateSwim(p, t) {
+  if (!!p.swim !== swimming) { swimming = !!p.swim; dog.root.traverse((o) => { if (o.isMesh) o.castShadow = !swimming; }); }
+  swim.g.visible = swimming;
+  if (!swimming) return;
+  swim.g.position.set(p.x, 16, p.y);            // the waterline, part way up her side swim.g.rotation.y = -p.heading;
+  const sp = Math.min(1, Math.hypot(p.vx, p.vy) / 110);
+  for (const r of swim.rings) {
+    const u = (t * 0.5 + r.userData.ph) % 1;
+    r.scale.set(60 + u * 70, 40 + u * 50, 1); r.position.x = -15 - u * 40 * sp; r.material.opacity = (1 - u) * 0.3;
+  }
+  for (const w of swim.wake) {                         // two white streaks spreading back from her chest
+    const a = 0.35, sd = w.userData.s; w.scale.set(90, 5, 1); w.rotation.z = -sd * a; w.position.set(25 - 45 * Math.cos(a), 0, sd * 45 * Math.sin(a)); w.material.opacity = 0.4 * sp;
+  }
+}
 const trees = [], lamps = [], plats = [], props = [], people = [], birds = [], debris = [];
 
 export function initScene(canvas, w) {
@@ -44,7 +70,7 @@ export function initScene(canvas, w) {
   const far = new THREE.Mesh(new THREE.PlaneGeometry(16000, 16000), M.surf(world.studio ? { map: studioFloor() } : { color: '#9BD770' }));
   far.rotation.x = -Math.PI / 2; far.position.set(W / 2, -1, H / 2); far.receiveShadow = true; scene.add(far);
   if (world.studio) {
-    dog = M.makeDog(); scene.add(dog.root); car = { update() {} };
+    dog = M.makeDog(); scene.add(dog.root); car = { update() {} }; swim = makeSwim(); scene.add(swim.g);
     for (const o of world.people) { const m = M.makePerson(o.look); scene.add(m.root); people.push({ o, m }); }
     resize(); return;
   }
@@ -74,7 +100,7 @@ export function initScene(canvas, w) {
   for (const o of world.people) { const m = M.makePerson(o.look); scene.add(m.root); people.push({ o, m }); }
   for (const f of world.flocks) for (const b of f.birds) { const m = M.makeBird(b.color); scene.add(m.root); birds.push({ f, b, m }); }
   car = M.makeCar(); scene.add(car.root);
-  dog = M.makeDog(); scene.add(dog.root);
+  dog = M.makeDog(); scene.add(dog.root); swim = makeSwim(); scene.add(swim.g);
   resize();
 }
 
@@ -203,7 +229,7 @@ export function render(G, dt) {
   zoom = lerp(zoom, f.zoom || 1, 1 - Math.exp(-dt * 2));
   placeCamera();
 
-  dog.update(G.dog, t);
+  dog.update(G.dog, t); updateSwim(G.dog, t);
   car.update(G.car, t, dt);
   streamTiles(camAim.x, camAim.z);
 
