@@ -420,3 +420,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: also no bird-watching while swimming.
 
 **Decision**: done. **Not checked**: by eye.
+
+**Feedback**: her body is still not continuous; she looks like a balloon dog.
+
+**Decision**: the legs are smooth tapered limbs (one shape per bone, joints matching), the ears one smooth flap each bent through the swinging chain; the shape-from-profile builder no longer leaves ridges (people get slightly smoother too). Not yet: the head, chest and paws are still made of ovals. **Checked by script**: the turnaround standing, a trot and a gallop strip (no holes in the ears), the ears' swing, the people line-up. **Not checked**: by eye in motion.

@@ -154,6 +154,53 @@ const GUST = 0.9, GUST_AT = 600;
 const EAR_FLAT = [0.25, 0.6, 0.85, 1];      // for each piece of an ear, how far its flat faces her body's side rather than her head's
 const _a = new THREE.Vector3(), _b = new THREE.Vector3(), _x = new THREE.Vector3(), _y = new THREE.Vector3(), _z = new THREE.Vector3(), _inv = new THREE.Matrix4(), _rot = new THREE.Matrix4(), _p = new THREE.Vector3(), _side = new THREE.Vector3(), _t = new THREE.Vector3(), _o = new THREE.Vector3(), Z_AXIS = new THREE.Vector3(0, 0, 1), X_AXIS = new THREE.Vector3(1, 0, 0);
 
+// An ear's skin: a flat, rounded flap along a smooth curve through the root and the chain's four points. Its cross-section
+// is an ellipse, wide across the ear and thin through it; it is narrow at the root, broadest two thirds of the way down,
+// rounded off at the tip. Which way the flat faces turns from the head's side at the root to the body's side further down
+// (EAR_FLAT), and the flap sits a little out from the line, as the old separate pieces did.
+const EAR_K = 18, EAR_R = 12;
+let earMat;
+function earSkin() {
+  const n = (EAR_K + 1) * EAR_R, pos = new Float32Array(n * 3), col = new Float32Array(n * 3), idx = [];
+  for (let k = 0; k < EAR_K; k++) for (let r = 0; r < EAR_R; r++) {
+    const a = k * EAR_R + r, b = k * EAR_R + (r + 1) % EAR_R, c = a + EAR_R, d = b + EAR_R;
+    idx.push(a, c, b, b, c, d);
+  }
+  const base = new THREE.Color(EAR);
+  for (let k = 0; k <= EAR_K; k++) for (let r = 0; r < EAR_R; r++) {
+    const v = 0.9 + 0.12 * (1 - k / EAR_K), o = (k * EAR_R + r) * 3;          // a touch lighter at the root
+    col[o] = base.r * v; col[o + 1] = base.g * v; col[o + 2] = base.b * v;
+  }
+  const geo = new THREE.BufferGeometry();
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.setIndex(idx);
+  // drawn from both sides: in a gallop the flap twists, and a one-sided surface showed holes
+  const m = new THREE.Mesh(geo, earMat ||= mat('#ffffff', { vertexColors: true, side: THREE.DoubleSide })); m.castShadow = true; m.frustumCulled = false;
+  const curve = new THREE.CatmullRomCurve3([new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], false, 'centripetal');
+  const C = new THREE.Vector3(), T = new THREE.Vector3(), X = new THREE.Vector3(), Y = new THREE.Vector3(), Zv = new THREE.Vector3();
+  return {
+    mesh: m,
+    update(top, ends, s, bodySide) {
+      curve.points[0].copy(top); for (let i = 0; i < 4; i++) curve.points[i + 1].copy(ends[i]);
+      for (let k = 0; k <= EAR_K; k++) {
+        const u = k / EAR_K;
+        curve.getPointAt(u, C); curve.getTangentAt(u, T);
+        // width and thickness along the ear, and how far out from the line
+        const w = (u < 0.65 ? 6 + 4.8 * Math.sin((u / 0.65) * Math.PI / 2) : 10.8 * Math.sqrt(Math.max(0, 1 - ((u - 0.65) / 0.36) ** 2))) + 0.3;
+        const th = Math.max(0.8, w * 0.62), out = 4 + 2 * u;    // thick and soft, hanging clear of the collar
+        const f = u * 3, fi = Math.min(2, Math.floor(f)), flat = EAR_FLAT[fi] + (EAR_FLAT[fi + 1] - EAR_FLAT[fi]) * (f - fi);
+        Y.copy(T).negate();
+        Zv.copy(Z_AXIS).lerp(bodySide, flat).normalize();
+        X.crossVectors(Y, Zv); if (X.lengthSq() < 0.01) X.copy(X_AXIS); X.normalize(); Zv.crossVectors(X, Y);
+        for (let r = 0; r < EAR_R; r++) {
+          const a = (r / EAR_R) * Math.PI * 2, cx = Math.cos(a) * w, cz = Math.sin(a) * th + s * out, o = (k * EAR_R + r) * 3;
+          pos[o] = C.x + X.x * cx + Zv.x * cz; pos[o + 1] = C.y + X.y * cx + Zv.y * cz; pos[o + 2] = C.z + X.z * cx + Zv.z * cz;
+        }
+      }
+      geo.attributes.position.needsUpdate = true; geo.computeVertexNormals(); geo.computeBoundingSphere();
+    },
+  };
+}
+
 export function makeDog() {
   const root = new THREE.Group();                       // position + heading (+ landing squash)
   const lean = new THREE.Group();                       // rolls into a turn
@@ -222,9 +269,10 @@ export function makeDog() {
   const tongue = ball('#F58CA0', 7, 1.6, 4.2, 13, -0.2, 0, false); jaw.add(tongue);
   head.add(jaw);
   // ears: four soft pieces hung one from the next. They are not posed: they hang, swing and stream (swingEars).
+  // Each ear is one smooth flap (earSkin) bent through the swinging chain, not separate pieces.
   const ears = [1, -1].map((s) => {
-    const segs = [[8, 4.4], [9.5, 5.2], [10.5, 5.8], [8.5, 5]].map(([w, th], i) => { const m = mesh([blob(EAR, i === 3 ? 2 : 0, -EAR_SEG / 2, s * (1 + i * 0.5), w, EAR_SEG * 1.05, th)]); head.add(m); return m; });
-    return { s, segs, top: new THREE.Vector3(-1, 11, s * 13.5), pts: null, was: null };
+    const skin = earSkin(); head.add(skin.mesh);
+    return { s, skin, ends: [0, 1, 2, 3].map(() => new THREE.Vector3()), top: new THREE.Vector3(-1, 11, s * 13.5), pts: null, was: null };
   });
   const tail = group(-43, 52, 0, mesh([{ ...blob(COAT, -18, 2, 0, 22, 4.4, 4.6), geo: TAIL }, blob(LIVER, -3, 3, 0, 7.5, 4.4, 4.9)]));
   foreIn.add(collarG, tag, head); rearIn.add(tail);
@@ -232,11 +280,15 @@ export function makeDog() {
   // legs: three bones and a paw. Each bone hangs down from its joint, so its angle is how far it is swung forward.
   const g3 = (...parts) => merged(parts);
   const [fa, fb, fc] = FORE, [ha, hb, hc] = HIND;
+  // Each bone is one smooth tapered limb (limbGeo: rounded over the joint at the top, r0 there, r1 at the far end) whose far end
+  // is as thick as the next bone's top, so the joints flow into each other instead of showing as separate eggs.
+  const limb = (len, r0, r1, depth = 1) => { const g = limbGeo(len, r0, r1).clone(); g.scale(depth, 1, 1); return merged([{ geo: g, color: COAT, at: [0, 0, 0], scale: [1, 1, 1] }]); };
   const boneGeo = {
-    fore: [g3(blob(COAT, 0, -fa / 2, 0, 6.8, fa * 0.68, 7.2)), g3(blob(COAT, 0, -fb / 2, 0, 5.4, fb * 0.62, 5.6), blob(FEATHER, -4.4, -fb / 2, 0, 4.4, fb * 0.56, 4)), g3(blob(COAT, 0, -fc / 2, 0, 4.6, fc * 0.95, 4.9))],
-    hind: [g3(blob(COAT, -1.5, -ha / 2, 0, 10, ha * 0.78, 8.6)), g3(blob(COAT, 0, -hb / 2, 0, 5.8, hb * 0.64, 6), blob(FEATHER, -3.6, -hb * 0.45, 0, 4.4, hb * 0.5, 4.2)), g3(blob(COAT, 0, -hc / 2, 0, 4.2, hc * 0.72, 4.6), blob(FEATHER, -3, -hc / 2, 0, 3.4, hc * 0.6, 3.6))],
+    fore: [limb(fa, 7.2, 5.4), limb(fb, 5.4, 4.5), limb(fc, 4.5, 4.4)],
+    hind: [limb(ha, 10.5, 6.2, 1.15), limb(hb, 6.2, 4.4), limb(hc, 4.4, 4.2)],    // a broad ham, deeper than wide
   };
-  const pawGeo = merged([blob(FEATHER, 3, 0, 0, 8.6, 4.4, 7.4)]);
+  // a paw: low and rounded, toes forward, merging into the bone above
+  const pawGeo = merged([blob(FEATHER, 2.5, -0.5, 0, 7.6, 4, 6.4), blob(FEATHER, -1, 1.5, 0, 5, 4, 5)]);
   const part = (geo) => { const m = new THREE.Mesh(geo, vc()); m.castShadow = true; return m; };
   const legs = LEGS.map((L) => {
     const [a, b, c] = L.bones, geo = boneGeo[L.front ? 'fore' : 'hind'];
@@ -295,7 +347,7 @@ export function makeDog() {
     const re = root.matrixWorld.elements, bodySide = _side.set(re[8], re[9], re[10]).transformDirection(_inv);   // her body's sideways, as the head sees it
     for (const e of ears) {
       const top = _a.copy(e.top).applyMatrix4(head.matrixWorld);
-      if (!e.pts) { e.pts = e.segs.map((_, i) => top.clone().setY(top.y - (i + 1) * len)); e.was = e.pts.map((q) => q.clone()); e.at = top.clone(); e.wx = e.wz = 0; }
+      if (!e.pts) { e.pts = e.ends.map((_, i) => top.clone().setY(top.y - (i + 1) * len)); e.was = e.pts.map((q) => q.clone()); e.at = top.clone(); e.wx = e.wz = 0; }
       else if (jx || jy || jz) for (let i = 0; i < 4; i++) { e.pts[i].x += jx; e.pts[i].z += jy; e.was[i].x += jx; e.was[i].z += jy; e.pts[i].y += jz; e.was[i].y += jz; }
       // how fast the head is going over the ground (a jump in position is not speed), smoothed over a few frames
       if (dt > 0 && !(jx || jy)) {
@@ -351,17 +403,9 @@ export function makeDog() {
           if (hit) q.copy(_b).applyMatrix4(head.matrixWorld).sub(off);
         }
       }
-      let from = e.top;
-      e.segs.forEach((m, i) => {
-        const to = _b.copy(e.pts[i]).applyMatrix4(_inv);
-        _y.copy(from).sub(to).normalize();
-        // which way the flat of the ear faces: out from her head where it joins, out from her body further down. Faced
-        // with her head all the way, the whole ear swung round like a stiff flap whenever she turned her head.
-        _z.copy(Z_AXIS).lerp(bodySide, EAR_FLAT[i]).normalize();
-        _x.crossVectors(_y, _z); if (_x.lengthSq() < 0.01) _x.copy(X_AXIS); _x.normalize(); _z.crossVectors(_x, _y);
-        m.position.copy(from); m.quaternion.setFromRotationMatrix(_rot.makeBasis(_x, _y, _z));
-        from = m.userData.end = (m.userData.end || new THREE.Vector3()).copy(to);
-      });
+      // the chain in the head's own coordinates, and the flap drawn through it
+      e.pts.forEach((q, i) => e.ends[i].copy(q).applyMatrix4(_inv));
+      e.skin.update(e.top, e.ends, e.s, bodySide);
     }
   }
 
@@ -817,11 +861,14 @@ const STEP_TURN = 0.45, STEP_T = 0.45;
 // A smooth shape from a profile: [y, half depth (x), half width (z)] from the bottom up, eased between the points. The
 // torso and the limbs are each one such shape, so no joint shows as a ball and no seam as a band.
 function profileGeo(pts) {
-  const g = new THREE.SphereGeometry(1, 20, 28), P = g.attributes.position, y0 = pts[0][0], y1 = pts[pts.length - 1][0];
+  const g = new THREE.SphereGeometry(1, 20, 40), P = g.attributes.position, y0 = pts[0][0], y1 = pts[pts.length - 1][0];
   const at = (y) => {
     let i = 0; while (i < pts.length - 2 && pts[i + 1][0] < y) i++;
-    const [ya, xa, za] = pts[i], [yb, xb, zb] = pts[i + 1], e = clamp((y - ya) / (yb - ya || 1), 0, 1), s = (1 - Math.cos(e * Math.PI)) / 2;
-    return [lerp(xa, xb, s), lerp(za, zb, s)];
+    // through the points on a smooth curve (Catmull-Rom); easing in and out of each point made a ridge at every one
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    const e = clamp((y - p1[0]) / (p2[0] - p1[0] || 1), 0, 1), e2 = e * e, e3 = e2 * e;
+    const cr = (a, b, c, d) => 0.5 * (2 * b + (c - a) * e + (2 * a - 5 * b + 4 * c - d) * e2 + (3 * b - a - 3 * c + d) * e3);
+    return [Math.max(0, cr(p0[1], p1[1], p2[1], p3[1])), Math.max(0, cr(p0[2], p1[2], p2[2], p3[2]))];
   };
   for (let i = 0; i < P.count; i++) {
     const v = P.getY(i), r = Math.sqrt(Math.max(1 - v * v, 0)), y = lerp(y0, y1, Math.acos(-clamp(v, -1, 1)) / Math.PI), [rx, rz] = at(y);
