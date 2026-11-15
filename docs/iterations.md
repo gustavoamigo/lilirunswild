@@ -380,3 +380,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: make the ripples milder, slower and just around the dog.
 
 **Decision**: half the wave speed, strong damping (they die out within a body length or two), gentler pushes from her paddling and the splash. **Checked by script**: close-ups swimming. **Not checked**: by eye in motion.
+
+**Feedback**: the gentler ripples are good. Jumping into the water should make a splash.
+
+**Decision**: a leap into the lake throws up a fountain of cartoon water drops (white, outlined in blue; plain white puffs did not show on the water), a splash sound and a ring on the water; the jump-in-the-water splash uses the same drops. **Checked by script**: a running leap from the beach into the lake. **Not checked**: by eye in motion.

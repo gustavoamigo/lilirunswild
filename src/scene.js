@@ -33,7 +33,7 @@ function updateSwim(p, t) {
   const sp = Math.min(1, Math.hypot(p.vx, p.vy) / 110), hx = Math.cos(p.heading), hy = Math.sin(p.heading);
   // her chest, paddling: pushing the water up and down in rhythm (a steady push would pile it into a mound), harder as she goes
   water.push(p.x + hx * 34, p.y + hy * 34, 10, (0.1 + 0.2 * sp) * Math.sin(t * 6));
-  if (p.splashed) { water.push(p.x + hx * 30, p.y + hy * 30, 18, 1.6); p.splashed = false; }
+  if (p.splashed) { water.push(p.x + hx * 30, p.y + hy * 30, 18, p.splashed); p.splashed = 0; }   // how hard: set by what splashed
 }
 const trees = [], lamps = [], plats = [], props = [], people = [], birds = [], debris = [];
 

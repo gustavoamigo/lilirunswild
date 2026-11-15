@@ -89,8 +89,17 @@ function leaves(t) {
 function shake(o) { if (!o) return; o.wob = 1; if (o.tree) { o.tree.wob = 1; leaves(o.tree); } }
 
 // -------------------------------------------------------------------- dog --
+// spray thrown up from the water: a jump in the water, a leap into it
+function spray(x, y, n, up) {
+  for (let i = 0; i < n; i++) {
+    const a = Math.random() * TAU, s = 60 + Math.random() * 140;
+    spawn({ type: 'drop', x, z: y, y: 20, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: up * (0.6 + Math.random() * 0.6), g: 700, drag: 1, life: 0.9, size: 4 + Math.random() * 4, color: '#ffffff', alpha: 1 });
+  }
+}
 function land(fromHop) {
   dog.air = false; dog.vz = 0; dog.landT = 0.22;
+  // a leap into the lake: a big splash, and a ring across the water
+  if (!fromHop && dog.state !== 'drive' && world.surfaceAt(dog.x, dog.y) === 'water') { spray(dog.x, dog.y, 36, 460); A.splash(); dog.splashed = 2.5; dog.swim = true; return; }
   dust(dog.x, dog.y, 6); A.land();
   const [, on] = floorAt(world, dog.x, dog.y, dog.z);
   if (on) on.wob = Math.max(on.wob, 0.6);
@@ -104,11 +113,8 @@ function jump() {
   // in the water the jump is a splash: she slaps the water, spray flies up, and she surges on a little
   if (dog.swim) {
     if (G.t - (dog.splashAt || -9) < 0.5) return;
-    dog.splashAt = G.t; dog.splashed = true; A.splash(); dog.barkT = 0.2;
-    for (let i = 0; i < 14; i++) {
-      const a = Math.random() * TAU, s = 60 + Math.random() * 120;
-      spawn({ x: dog.x + Math.cos(dog.heading) * 30, z: dog.y + Math.sin(dog.heading) * 30, y: 20, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 160 + Math.random() * 160, g: 700, drag: 1, life: 0.7, size: 6 + Math.random() * 5, color: '#E6F6FC', alpha: 0.9 });
-    }
+    dog.splashAt = G.t; dog.splashed = 1.6; A.splash(); dog.barkT = 0.2;
+    spray(dog.x + Math.cos(dog.heading) * 30, dog.y + Math.sin(dog.heading) * 30, 14, 270);
     dog.vx += Math.cos(dog.heading) * 120; dog.vy += Math.sin(dog.heading) * 120;
     return;
   }
