@@ -228,15 +228,17 @@ function eyeMaterial() {
 // rz; the profile points [x, cy, ry, rz] are joined by smooth curves (Catmull-Rom) and the ends close in round caps.
 // `paint(x, y, z)` gives each point's colour, so markings are part of the one surface.
 const _pc = new THREE.Color();
+// [cy, ry, rz] of a swept shape's cross-section at x
+function profileAt(pts, x) {
+  let i = 0; while (i < pts.length - 2 && pts[i + 1][0] < x) i++;
+  const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+  const e = clamp((x - p1[0]) / (p2[0] - p1[0] || 1), 0, 1), e2 = e * e, e3 = e2 * e;
+  const cr = (a, b, c, d) => 0.5 * (2 * b + (c - a) * e + (2 * a - 5 * b + 4 * c - d) * e2 + (3 * b - a - 3 * c + d) * e3);
+  return [1, 2, 3].map((k) => cr(p0[k], p1[k], p2[k], p3[k]));
+}
 function sweptGeo(pts, paint, along = 90, around = 56) {
   const x0 = pts[0][0], x1 = pts[pts.length - 1][0];
-  const at = (x) => {
-    let i = 0; while (i < pts.length - 2 && pts[i + 1][0] < x) i++;
-    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
-    const e = clamp((x - p1[0]) / (p2[0] - p1[0] || 1), 0, 1), e2 = e * e, e3 = e2 * e;
-    const cr = (a, b, c, d) => 0.5 * (2 * b + (c - a) * e + (2 * a - 5 * b + 4 * c - d) * e2 + (3 * b - a - 3 * c + d) * e3);
-    return [1, 2, 3].map((k) => cr(p0[k], p1[k], p2[k], p3[k]));
-  };
+  const at = (x) => profileAt(pts, x);
   const pos = [], col = [], idx = [], c = new THREE.Color();
   for (let a = 0; a <= along; a++) {
     // rings bunched towards the ends, where the caps curve fastest
@@ -261,10 +263,11 @@ function sweptGeo(pts, paint, along = 90, around = 56) {
 // Lili's head: a domed skull, a stop below the eyes, a square muzzle, the nose at its end. Brown over each eye and ear, a
 // white blaze from the nose up over the crown, freckles on the muzzle, the nose leather at the tip.
 const FRECKLES = [[28, 0, 8.2], [24.5, -2.5, 9], [29, -4, 7.2], [26, 2, 8.6], [31, -1.5, 6.6]];
-const HEAD_GEO = sweptGeo([
+const HEAD_PROFILE = [
   [-13.5, 7, 0, 0], [-10, 7, 11, 12], [-3, 7, 15.5, 15], [6, 6, 15, 14.5], [13, 3, 12, 12], [18, 0.5, 9.5, 10.5],
   [24, -0.5, 8.6, 9.4], [30, 0, 7.6, 8.2], [34, 1, 6, 6.4], [37.6, 1.8, 0, 0],
-], (x, y, z) => {
+];
+const HEAD_GEO = sweptGeo(HEAD_PROFILE, (x, y, z) => {
   const az = Math.abs(z), soft = (d, w) => clamp(0.5 - d / w, 0, 1);                     // 1 inside, 0 outside, a soft edge w wide
   const nose = soft(Math.hypot((x - 37) / 3.2, (y - 2.5) / 4.2, az / 4.6) - 1, 0.25);     // the nose leather, at the tip
   if (nose > 0) return [x > 18 && y < -4 ? FEATHER : COAT, NOSE, Math.min(1, nose * 2)];
@@ -277,8 +280,22 @@ const HEAD_GEO = sweptGeo([
   if (brow > 0 && patch > 0.5) return [LIVER, '#8A5A3E', Math.min(1, brow * 2)];
   return [base, LIVER, Math.min(1, Math.max(patch, fr) * 2)];
 }, 220, 96);
+// her tongue: flat and wide, thinner at the edges, a rounded tip, a darker groove along its middle
+const TONGUE_GEO = sweptGeo([[0, 0, 0, 0], [1.5, 0, 0.9, 3.3], [8, -0.3, 0.9, 3.8], [13, -0.9, 0.8, 3.4], [15.5, -1.2, 0, 0]],
+  (x, y, z) => (Math.abs(z) < 0.5 && y > -0.6 ? '#D96479' : '#F28AA0'), 40, 24);
 // her lower jaw: a short rounded wedge under the muzzle, opened for a bark or panting
 const JAW_GEO = sweptGeo([[-1, 0, 0, 0], [2, -0.5, 3.4, 6], [10, -1, 3.6, 6.4], [17, -0.8, 2.8, 5], [20, -0.5, 0, 0]], () => FEATHER, 40, 32);
+
+// Where an eye sits: a round eyeball of radius EYE_R behind the skin of the head, only a shallow cap (EYE_CAP) showing
+// through it, as a real eye in its socket. The skin's point and its outward normal come from the head's profile; the
+// ball's centre is that far in along the normal, and the iris faces along the normal, turned a little forward.
+const EYE_R = 4.4, EYE_CAP = 1.5, EYE_AT = [16.2, 7.2];
+function eyeSocket(s) {
+  const [x, y] = EYE_AT, F = (px, py, pz) => { const [cy, ry, rz] = profileAt(HEAD_PROFILE, px); return ((py - cy) / ry) ** 2 + (pz / rz) ** 2 - 1; };
+  const [cy, ry, rz] = profileAt(HEAD_PROFILE, x), z = s * rz * Math.sqrt(Math.max(0, 1 - ((y - cy) / ry) ** 2));
+  const h = 0.01, n = new THREE.Vector3((F(x + h, y, z) - F(x - h, y, z)) / (2 * h), (F(x, y + h, z) - F(x, y - h, z)) / (2 * h), (F(x, y, z + h) - F(x, y, z - h)) / (2 * h)).normalize();
+  return { at: new THREE.Vector3(x, y, z).addScaledVector(n, -(EYE_R - EYE_CAP)), look: n.clone().add(new THREE.Vector3(0.35, 0, 0)).normalize() };
+}
 
 export function makeDog() {
   const root = new THREE.Group();                       // position + heading (+ landing squash)
@@ -335,13 +352,18 @@ export function makeDog() {
   const headMesh = new THREE.Mesh(HEAD_GEO, vc()); headMesh.castShadow = true; head.add(headMesh);
   const eyes = [1, -1].map((s) => {
     // one eyeball, its iris, pupil, shine and the dark line along its top painted on it (eyeTexture), looking forward
-    const ball1 = new THREE.Mesh(EYE_GEO, eyeMaterial()); ball1.scale.set(4.2, 5.0, 3.8);
-    const e = group(15.4, 7.6, s * 7.6, ball1);       // set into the head, only its front showing
+    const { at, look } = eyeSocket(s);
+    const ball1 = new THREE.Mesh(EYE_GEO, eyeMaterial()); ball1.scale.setScalar(EYE_R);
+    ball1.quaternion.setFromUnitVectors(X_AXIS, look);  // the painted iris faces out through the skin
+    const e = group(at.x, at.y, at.z, ball1);
     head.add(e); return e;
   });
   const jawMesh = new THREE.Mesh(JAW_GEO, vc()); jawMesh.castShadow = true;
   const jaw = group(12, -6, 0, jawMesh);
-  const tongue = ball('#F58CA0', 7, 1.6, 4.2, 13, -0.2, 0, false); jaw.add(tongue);
+  // the tongue: one flat, soft shape with a rounded tip and a groove down its middle, rooted at the back of the jaw; out,
+  // it slides forward and hangs down over her lower lip
+  const tongueMesh = new THREE.Mesh(TONGUE_GEO, vc()); tongueMesh.castShadow = true;
+  const tongue = group(4, 1.2, 0, tongueMesh); jaw.add(tongue);
   head.add(jaw);
   // ears: four soft pieces hung one from the next. They are not posed: they hang, swing and stream (swingEars).
   // Each ear is one smooth flap (earSkin) bent through the swinging chain, not separate pieces.
@@ -682,7 +704,7 @@ export function makeDog() {
     collarG.rotation.z = -0.6 + nk * 0.5;
     head.rotation.x = (p.state === 'daze' ? Math.sin(t * 9) * 0.25 : (p.tiltHead || 0) * 0.35) + shk * 1.35 + Math.sin(s2) * 0.07 * a;
     jaw.rotation.z = -Math.max(P.jaw, P.tongue * (0.3 + Math.sin(t * 15) * 0.07));
-    tongue.scale.x = 4 + P.tongue * 6; tongue.position.x = 9 + P.tongue * 7; tongue.visible = P.tongue > 0.05 || P.jaw > 0.2;
+    tongue.position.x = 4 + P.tongue * 9; tongue.rotation.z = -P.tongue * (0.55 + Math.sin(t * 15) * 0.08); tongue.visible = P.tongue > 0.05 || P.jaw > 0.2;
     // galloping, her tail swings as the simulated one did (it hangs from a soft spring, so the run moves it), and hardly wags
     tail.rotation.z = lerp(P.tailUp, 0.3 + gTail, gw);
     tail.rotation.y = wagNow * (1 - 0.8 * gw) + P.bend * 0.8 + shakeAt(shakeT, 1) * 0.7; tail.rotation.x = shakeAt(shakeT, 0.9) * 0.6;

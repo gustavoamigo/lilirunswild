@@ -444,3 +444,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the mouth is three or four balloons blended together; the eyeballs stick out of her head.
 
 **Decision**: the head is now one smooth surface from skull to nose with her markings, freckles, nose and brows painted on; the lower jaw is one smooth piece; the eyes are set into the head. Still ovals: neck, chest and paws. **Checked by script**: the turnaround, the face close up, the shake, no errors.
+
+**Feedback**: the eyes pop out of her head (a screenshot from the front three-quarters); the tongue out is horrible.
+
+**Decision**: each eye is a round ball sunk behind the skin, only a shallow cap showing, placed from the head's own surface, the iris facing out through it. The tongue is a flat, soft tongue shape with a rounded tip and a groove, hanging over her lower lip. **Checked by script**: her face from the front, three-quarters and the side, tongue in and out.
