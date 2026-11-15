@@ -440,3 +440,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: balls stick out of her eyeball; an eye is one ball, not several. Do a much better job.
 
 **Decision**: each eye is now one ball with the iris, pupil, shines and top line painted on it as a texture. **Checked by script**: her face from the front and both sides.
+
+**Feedback**: the mouth is three or four balloons blended together; the eyeballs stick out of her head.
+
+**Decision**: the head is now one smooth surface from skull to nose with her markings, freckles, nose and brows painted on; the lower jaw is one smooth piece; the eyes are set into the head. Still ovals: neck, chest and paws. **Checked by script**: the turnaround, the face close up, the shake, no errors.

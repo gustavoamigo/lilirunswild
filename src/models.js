@@ -224,6 +224,62 @@ function eyeMaterial() {
   return eyeMat;
 }
 
+// A smooth shape along x (forward): at each x a cross-section ellipse, centred at height cy, half-height ry, half-width
+// rz; the profile points [x, cy, ry, rz] are joined by smooth curves (Catmull-Rom) and the ends close in round caps.
+// `paint(x, y, z)` gives each point's colour, so markings are part of the one surface.
+const _pc = new THREE.Color();
+function sweptGeo(pts, paint, along = 90, around = 56) {
+  const x0 = pts[0][0], x1 = pts[pts.length - 1][0];
+  const at = (x) => {
+    let i = 0; while (i < pts.length - 2 && pts[i + 1][0] < x) i++;
+    const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(pts.length - 1, i + 2)];
+    const e = clamp((x - p1[0]) / (p2[0] - p1[0] || 1), 0, 1), e2 = e * e, e3 = e2 * e;
+    const cr = (a, b, c, d) => 0.5 * (2 * b + (c - a) * e + (2 * a - 5 * b + 4 * c - d) * e2 + (3 * b - a - 3 * c + d) * e3);
+    return [1, 2, 3].map((k) => cr(p0[k], p1[k], p2[k], p3[k]));
+  };
+  const pos = [], col = [], idx = [], c = new THREE.Color();
+  for (let a = 0; a <= along; a++) {
+    // rings bunched towards the ends, where the caps curve fastest
+    const t = a / along, u = (1 - Math.cos(t * Math.PI)) / 2, x = lerp(x0, x1, u);
+    const [cy, ry, rz] = at(x), tip = a === 0 || a === along;    // the end rings close to a point
+    for (let b = 0; b < around; b++) {
+      const th = (b / around) * Math.PI * 2, y = cy + (tip ? 0 : Math.cos(th) * Math.max(ry, 0.05)), z = tip ? 0 : Math.sin(th) * Math.max(rz, 0.05);
+      const p = paint(x, y, z);
+      if (Array.isArray(p)) c.set(p[0]).lerp(_pc.set(p[1]), p[2]); else c.set(p);
+      pos.push(x, y, z); col.push(c.r, c.g, c.b);
+    }
+  }
+  for (let a = 0; a < along; a++) for (let b = 0; b < around; b++) {
+    const p = a * around + b, q = a * around + (b + 1) % around;
+    idx.push(p, q, p + around, q, q + around, p + around);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(col, 3));
+  g.setIndex(idx); g.computeVertexNormals();
+  return g;
+}
+// Lili's head: a domed skull, a stop below the eyes, a square muzzle, the nose at its end. Brown over each eye and ear, a
+// white blaze from the nose up over the crown, freckles on the muzzle, the nose leather at the tip.
+const FRECKLES = [[28, 0, 8.2], [24.5, -2.5, 9], [29, -4, 7.2], [26, 2, 8.6], [31, -1.5, 6.6]];
+const HEAD_GEO = sweptGeo([
+  [-13.5, 7, 0, 0], [-10, 7, 11, 12], [-3, 7, 15.5, 15], [6, 6, 15, 14.5], [13, 3, 12, 12], [18, 0.5, 9.5, 10.5],
+  [24, -0.5, 8.6, 9.4], [30, 0, 7.6, 8.2], [34, 1, 6, 6.4], [37.6, 1.8, 0, 0],
+], (x, y, z) => {
+  const az = Math.abs(z), soft = (d, w) => clamp(0.5 - d / w, 0, 1);                     // 1 inside, 0 outside, a soft edge w wide
+  const nose = soft(Math.hypot((x - 37) / 3.2, (y - 2.5) / 4.2, az / 4.6) - 1, 0.25);     // the nose leather, at the tip
+  if (nose > 0) return [x > 18 && y < -4 ? FEATHER : COAT, NOSE, Math.min(1, nose * 2)];
+  let fr = 0;
+  for (const [fx, fy, fz] of FRECKLES) fr = Math.max(fr, soft(Math.hypot(x - fx, y - fy, az - fz) - 1.1, 0.7));
+  const blaze = 2.8 + Math.max(0, x - 4) * 0.12;                                          // the white blaze, wider down the muzzle
+  const patch = Math.min(soft(blaze - az, 1.6), soft(x - 16, 3), soft(-6 - y, 2));        // brown over the eyes, cheeks and ears
+  const base = x > 18 && y < -4 ? FEATHER : COAT;
+  const brow = soft(Math.hypot((x - 14.5) / 2.6, (y - 12.3) / 1.2, (az - 7.4) / 3.2) - 1, 0.5);   // a soft lighter mark over each eye
+  if (brow > 0 && patch > 0.5) return [LIVER, '#8A5A3E', Math.min(1, brow * 2)];
+  return [base, LIVER, Math.min(1, Math.max(patch, fr) * 2)];
+}, 220, 96);
+// her lower jaw: a short rounded wedge under the muzzle, opened for a bark or panting
+const JAW_GEO = sweptGeo([[-1, 0, 0, 0], [2, -0.5, 3.4, 6], [10, -1, 3.6, 6.4], [17, -0.8, 2.8, 5], [20, -0.5, 0, 0]], () => FEATHER, 40, 32);
+
 export function makeDog() {
   const root = new THREE.Group();                       // position + heading (+ landing squash)
   const lean = new THREE.Group();                       // rolls into a turn
@@ -275,23 +331,16 @@ export function makeDog() {
   // head
   const head = group(HEAD[0], HEAD[1], 0);
   head.scale.setScalar(1.1);
-  head.add(mesh([
-    blob(COAT, 4, 4, 0, 16, 15, 15), blob(COAT, 2, 12, 0, 11, 9, 11),
-    blob(COAT, 22, -1, 0, 13, 8.5, 9), blob(FEATHER, 20, -6, 5, 9, 5.5, 5), blob(FEATHER, 20, -6, -5, 9, 5.5, 5),
-    blob(NOSE, 34.5, 2.5, 0, 4.5, 3.8, 5.2),
-    // the brown is a patch over each eye and ear, with a white blaze left between them from her nose to the back of her head
-    ...[1, -1].flatMap((s) => [blob(LIVER, 3, 5, s * 7.5, 15.5, 14.5, 9.5), blob(LIVER, 1, 12, s * 6.5, 10.5, 8, 6),
-      blob(LIVER, 28, 0, s * 8.2, 1.3, 1.3, 1), blob(LIVER, 24.5, -2.5, s * 9, 1.1, 1.1, 1), blob(LIVER, 29, -4, s * 7.2, 1, 1, 1)]),   // freckles
-  ]));
+  // the head: one smooth surface from the back of the skull to the tip of the nose, its markings painted on (headGeo)
+  const headMesh = new THREE.Mesh(HEAD_GEO, vc()); headMesh.castShadow = true; head.add(headMesh);
   const eyes = [1, -1].map((s) => {
     // one eyeball, its iris, pupil, shine and the dark line along its top painted on it (eyeTexture), looking forward
     const ball1 = new THREE.Mesh(EYE_GEO, eyeMaterial()); ball1.scale.set(4.2, 5.0, 3.8);
-    const e = group(14.6, 8.6, s * 9.4, ball1);
+    const e = group(15.4, 7.6, s * 7.6, ball1);       // set into the head, only its front showing
     head.add(e); return e;
   });
-  // soft brows, thin and high over the eyes (heavy ones sitting on them looked stern)
-  const brows = [1, -1].map((s) => { const b = mesh([blob('#7A4A32', 0, 0, 0, 4, 1.1, 3.4)], false); b.position.set(14, 15.6, s * 8.6); head.add(b); return b; });
-  const jaw = group(12, -6, 0, mesh([blob(FEATHER, 9, -1.5, 0, 10, 3.6, 6.5)], false));
+  const jawMesh = new THREE.Mesh(JAW_GEO, vc()); jawMesh.castShadow = true;
+  const jaw = group(12, -6, 0, jawMesh);
   const tongue = ball('#F58CA0', 7, 1.6, 4.2, 13, -0.2, 0, false); jaw.add(tongue);
   head.add(jaw);
   // ears: four soft pieces hung one from the next. They are not posed: they hang, swing and stream (swingEars).
@@ -640,7 +689,6 @@ export function makeDog() {
 
     blink = (t % 3.7) < 0.12 || p.state === 'daze' || shakeT < 1.25 ? 0.15 : 1;
     eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); });
-    brows.forEach((b, i) => { b.rotation.x = (i ? -1 : 1) * (p.point > 0.5 ? 0.45 : -0.08); b.position.y = 15.2 + (p.barkT > 0 || p.point > 0.5 ? 1.2 : 0); });
 
     const sq = clamp((p.landT || 0) / 0.22, 0, 1);
     root.scale.set(1 + sq * 0.03, 1 - sq * 0.07, 1 + sq * 0.03);
