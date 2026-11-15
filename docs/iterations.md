@@ -460,3 +460,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the tongue still comes out through the jaw a little.
 
 **Decision**: tipped down as a whole, its middle went through the jaw. Now it is bent: flat along the jaw, curving down over the lip, and it slides out until the bend is at the lip. Hidden when in (a bark shows the open mouth without it). **Checked by script**: three-quarters, side and front, tongue out.
+
+**Feedback**: it looks like she has a tumour on her chest.
+
+**Decision**: a separate oval of chest feathering stood out between her front legs; removed, the chest is now the body's own smooth surface. **Checked by script**: the turnaround.

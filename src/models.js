@@ -354,7 +354,8 @@ export function makeDog() {
     bodyAt.needsUpdate = bodyN.needsUpdate = true;
   }
   g.add(body);
-  foreIn.add(mesh([blob(FEATHER, 37, 39, 0, 9, 14, 12), blob(COAT, 37, 60, 0, 13, 19, 13, [0, 0, -0.6])]));
+  // the neck, from the chest up to the head (a separate oval of feathering on the chest stood out like a lump: gone)
+  foreIn.add(mesh([blob(COAT, 37, 60, 0, 13, 19, 13, [0, 0, -0.6])]));
   const collar = new THREE.Mesh(new THREE.TorusGeometry(12.5, 3, 8, 20), mat('#E9B9B4'));
   collar.rotation.set(Math.PI / 2, 0, 0); const collarG = group(39, 62, 0, collar); collarG.rotation.z = -0.6;
   const tag = ball('#C4CAD3', 3.2, 3.2, 1.5, 49, 53, 0);
