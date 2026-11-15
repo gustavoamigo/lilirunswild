@@ -89,6 +89,7 @@ export const KINDS = {
   pot:   { r: 23, h: 40, tough: 240, breaks: true, mess: true },
   plate: { r: 18, h: 10, tough: 0, fly: 1.2, pop: 240, drag: 1.2, fragile: true, mess: true },
   ball:  { r: 13, h: 26, tough: 0, fly: 1.5, pop: 300, drag: 0.7, rolls: true },
+  teddy: { r: 18, h: 40, tough: 0, fly: 1.1, pop: 200, drag: 1.6, tumbles: true },
   apple: { r: 8, h: 14, tough: 0, fly: 1.4, pop: 240, drag: 1.0, rolls: true },
 };
 
@@ -166,6 +167,8 @@ export function buildTown(tiles, pop) {
     const o = { look: p.look, nature: p.nature, heading: FACING[p.facing] || 0, state: 'stand', t: 0, cool: 0, walk: null, seed: people.length * 2 };
     if (p.walk) { const [a, b] = p.walk.map(place); o.walk = { ax: a[0], ay: a[1], bx: b[0], by: b[1], dir: 1 }; [o.x, o.y] = a; o.state = 'walk'; }
     else [o.x, o.y] = place(p.at);
+    // something held: a prop that stays in their arms until it is taken from them (updatePeople keeps it there)
+    if (p.holds) { o.holds = prop(p.holds, o.x, o.y, 40); o.holds.held = o; }
     people.push(o);
   }
   // The parked car is a thing he can jump onto (and so into). Its line is moved with the car.

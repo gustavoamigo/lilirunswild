@@ -294,7 +294,7 @@ export function render(G, dt) {
   // what is left behind: broken pots and plates, spilt rubbish
   for (let i = debris.length; i < G.debris.length; i++) {
     const d = G.debris[i], m = M.makeShards(d.kind);
-    m.position.set(d.x, 0, d.y); m.rotation.y = d.dir; m.receiveShadow = true; scene.add(m); debris.push(m);
+    m.position.set(d.x, d.z || 0, d.y); m.rotation.y = d.dir; m.receiveShadow = true; scene.add(m); debris.push(m);
   }
   for (const e of people) e.m.update(e.o, t);
   for (const e of birds) {

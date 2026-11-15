@@ -4,7 +4,7 @@
 // at: [col, row, x, y]: the map square (counting from 0, top left, as in world/map.txt) and the place within it (0 to
 // 400 across, 0 to 400 down). walk: two such places; they walk to and fro between them, and may cross several squares.
 // facing: north, south, east or west. look: how they look (LOOKS in src/models.js: 0 to 2, 5 and 9 adults, the rest
-// children). nature: how they take to dogs: lover, meh or nervous (children like dogs more whatever theirs).
+// children). holds: a prop in their arms (a teddy). nature: how they take to dogs: lover, meh or nervous (children like dogs more whatever theirs).
 export default {
   car: { at: [4, 2, 200, 248], facing: 'east' },
   people: [
@@ -18,5 +18,6 @@ export default {
     { look: 8, nature: 'meh', walk: [[12, 4, 60, 60], [12, 4, 340, 60]] },
     { look: 5, nature: 'nervous', walk: [[7, 5, 20, 80], [7, 5, 380, 80]] },        // past the picnic table
     { look: 2, nature: 'nervous', at: [12, 6, 140, 345], facing: 'north' },         // watching the road works
+    { look: 10, nature: 'meh', at: [12, 1, 250, 345], facing: 'south', holds: 'teddy' },   // a boy with his teddy outside the school
   ],
 };

@@ -5,9 +5,10 @@ import * as A from './audio.js';
 import * as Art from './art.js';
 import { input, keyVector, steerMag, initInput } from './input.js';
 import { pollPad } from './gamepad.js';
-import { spawn, updateFx, drawFx, burst } from './fx.js';
+import { spawn, updateFx, drawFx, burst, confettiColor } from './fx.js';
 import { loadTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js';
 import { CAR, PERSON_LOOKS, isChild, personVoice } from './models.js';
+import { loadMissions, makeRunner } from './missions.js';
 import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
 
 const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560;
@@ -47,7 +48,14 @@ const dog = {
   barkT: 0, landT: 0, spring: 0, bow: 0, idleT: 0, happy: 0, excited: 0, puff: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
 };
 const car = { ...world.car, v: 0, steer: 0, bump: 0, on: false, rev: false, skidT: 0 };
-const G = { t: 0, mess: 0, birds: 0, pop: 0, dog, car, world, props: world.props, people: world.people, flocks: world.flocks, debris: [], focus: { x: dog.x, y: dog.y, vx: 0, vy: 0, zoom: 1 }, input };
+// missions: shown as cards at the top of the screen when they open, stamped when done (step 4 brings the picture list,
+// the voice and saving)
+const cards = [];
+const missions = makeRunner(STUDIO ? [] : await loadMissions(), world, {
+  open: (m) => cards.push({ m, t: 0, done: 0 }),
+  done: (m) => { const k = cards.find((c) => c.m === m); if (k) k.done = 0.01; A.aww(); G.pop = 1; for (let i = 0; i < 24; i++) spawn({ type: 'confetti', x: dog.x, z: dog.y, y: 120, vx: (Math.random() - 0.5) * 300, vz: (Math.random() - 0.5) * 300, vy: 200 + Math.random() * 200, g: 500, drag: 1, life: 1.4, size: 9, rot: Math.random() * 6, vr: 8, color: confettiColor() }); },
+});
+const G = { t: 0, mess: 0, birds: 0, pop: 0, missions, dog, car, world, props: world.props, people: world.people, flocks: world.flocks, debris: [], focus: { x: dog.x, y: dog.y, vx: 0, vy: 0, zoom: 1 }, input };
 window.__G = G;
 
 const angDiff = (a, b) => { let d = (a - b) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
@@ -146,6 +154,7 @@ function bark() {
   if (dog.state === 'daze' || dog.state === 'hop') return;
   const driving = dog.state === 'drive';
   dog.barkT = 0.26; dog.bow = 0; dog.idleT = 0;
+  if (dog.carry) drop();                              // she opens her mouth to bark: whatever she carries falls
   if (driving) A.horn(); else A.bark();
   const hx = Math.cos(dog.heading), hy = Math.sin(dog.heading);
   for (let i = 0; i < 3; i++) spawn({ type: 'ring', x: dog.x + hx * 70, z: dog.y + hy * 70, y: dog.z + 70, vx: hx * 260, vz: hy * 260, drag: 2, life: 0.45, delay: i * 0.07, size: 10, grow: 90, color: '#ffffff', alpha: 0.9 });
@@ -166,7 +175,7 @@ function updateDog(dt) {
   if (p.state === 'drive') return;                    // the car carries him (updateCar)
   if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 1.4; p.state = 'idle'; } }
 
-  let st = p.state === 'idle' ? steering(p.x, p.y, 34) : ZERO;
+  let st = p.state === 'idle' && !(p.poo > 0) ? steering(p.x, p.y, 34) : ZERO;
   const sp0 = Math.hypot(p.vx, p.vy);
   // A pointer that sits near her means "come here, slowly". One that is being swept past her on its way to the
   // other side is near her too, for a moment, and means nothing of the kind: while it is moving and she is
@@ -284,8 +293,20 @@ function updateDog(dt) {
     } else if (into > 0) { p.vx += hit.nx * into; p.vy += hit.ny * into; }
   }
 
+  // ---- a mission wants a poo here, and she has stopped: she squats and does one ----
+  const still = p.state === 'idle' && !st.mag && !p.air && Math.hypot(p.vx, p.vy) < 20;
+  if (still && !(p.poo > 0) && missions.wants('poo').some((w) => missions.near(w, p.x, p.y))) { p.pooT = (p.pooT || 0) + dt; if (p.pooT > 0.8) { p.poo = POO_T; p.pooT = 0; } }
+  else p.pooT = 0;
+  if (p.poo > 0 && (p.poo -= dt) <= 0) {
+    G.debris.push({ kind: 'poo', x: p.x - Math.cos(p.heading) * 30, y: p.y - Math.sin(p.heading) * 30, z: p.z, dir: Math.random() * TAU });
+    A.plop(); missions.event('poo', { x: p.x, y: p.y });
+  }
+  // ---- carrying something to where a mission wants it: she drops it there once she stands still ----
+  if (still && p.carry && missions.wants('bring').some((w) => w.s.target === p.carry.kind && missions.near(w, p.x, p.y))) { p.dropT = (p.dropT || 0) + dt; if (p.dropT > 0.6) drop(); }
+  else p.dropT = 0;
+
   // ---- nothing to do? Ask for a game. ----
-  if (p.state === 'idle' && !st.mag && !p.air && !p.point && !p.happy) {
+  if (p.state === 'idle' && !st.mag && !p.air && !p.point && !p.happy && !(p.poo > 0)) {
     p.idleT += dt;
     if (p.idleT > 4.5) { p.idleT = 0; if (p.fidget++ % 2) p.shake = 1.4; else p.bow = 1.3; }
   } else p.idleT = 0;
@@ -335,6 +356,17 @@ function updateHop(dt) {
   p.vz = k < 0.5 ? 300 : -300;
   if (k < 0.8 && dist(h.x0, h.y0, to.x, to.y) > 5) p.heading += angDiff(Math.atan2(to.y - h.y0, to.x - h.x0), p.heading) * (1 - Math.exp(-dt * 12));
   if (k >= 1) { p.hop = null; p.state = 'idle'; land(true); h.then?.(); }
+}
+// What she carries in her mouth: kept there every frame, and dropped (it falls, then lies there) when she reaches where
+// a mission wants it, or barks.
+const MOUTH = 86, MOUTH_UP = 22, POO_T = 1.6, TUG_T = 1.4;
+function carryAt() {
+  const o = dog.carry; if (!o) return;
+  o.x = dog.x + Math.cos(dog.heading) * MOUTH; o.y = dog.y + Math.sin(dog.heading) * MOUTH; o.z = dog.z + MOUTH_UP; o.dir = dog.heading;
+}
+function drop() {
+  const o = dog.carry; dog.carry = null; o.carried = false; o.rest = false; o.vx = o.vy = o.vz = 0; o.cool = 0.5;
+  missions.event('bring', { thing: o.kind, x: dog.x, y: dog.y });
 }
 function enterCar() {
   dog.state = 'drive'; dog.air = false; dog.vx = dog.vy = dog.vz = 0; dog.zoom = false; dog.runT = 0; dog.point = 0;
@@ -453,7 +485,7 @@ function updateProps(dt) {
     for (const s of [1, -1]) movers.push({ x: car.x + hx * CAR.half * s, y: car.y + hy * CAR.half * s, z: 0, r: CAR.r, top: 70, vx: hx * car.v, vy: hy * car.v, air: true });
   }
   for (const o of world.props) {
-    if (o.gone) continue;
+    if (o.gone || o.held || o.carried) continue;          // in someone's arms or her mouth: they place it
     const K = KINDS[o.kind];
     o.wob = Math.max(0, o.wob - dt * 3);
     if (!o.rest) {
@@ -515,6 +547,7 @@ function reaction(o, manner, mayLove = true) {
 function respond(o, r) {
   const toDog = Math.atan2(dog.y - o.y, dog.x - o.x);
   o.t = 0; o.cool = 4;
+  missions.event(r === 'love' ? 'greet' : r === 'scared' ? 'scare' : 'meh', { who: isChild(o.look) ? 'child' : 'adult' });
   if (r === 'love') { o.state = dist(o.x, o.y, dog.x, dog.y) > 75 ? 'approach' : 'love'; o.heading = o.state === 'love' ? toDog : o.heading; if (o.state === 'love') { A.aww(); hearts(o.x, o.y, 120); } }
   else if (r === 'scared') { o.state = 'scared'; o.runDir = toDog + Math.PI; A.scream(personVoice(o.look)); }
   else { o.state = baseState(o); o.glance = 1.4; }
@@ -540,6 +573,7 @@ function updatePeople(dt) {
     const dd = dist(o.x, o.y, dog.x, dog.y), toDog = Math.atan2(dog.y - o.y, dog.x - o.x);
     const face = (a, r) => { o.heading += angDiff(a, o.heading) * (1 - Math.exp(-dt * r)); };
     o.glanceYaw = clamp(angDiff(toDog, o.heading), -1.2, 1.2);
+    if (o.holds && o.state !== 'tug') { const h = o.holds; h.x = o.x + Math.cos(o.heading) * 14; h.y = o.y + Math.sin(o.heading) * 14; h.z = isChild(o.look) ? 52 : 80; h.dir = o.heading; }
     const walkTo = (x, y, v) => { const d = dist(o.x, o.y, x, y) || 1, s = Math.min(d, v * dt); o.x += (x - o.x) / d * s; o.y += (y - o.y) / d * s; face(Math.atan2(y - o.y, x - o.x), 8); return d; };
     if (o.state === 'walk') {
       // to and fro along their walk (from a to b and back); off it, they head back to the end they were making for
@@ -555,6 +589,17 @@ function updatePeople(dt) {
       if (k >= 1) { if (o.next) respond(o, o.next); else o.state = baseState(o); o.next = null; }
     }
     else if (o.state === 'approach') { if (walkTo(dog.x, dog.y, 80) < 75 || o.t > 3) { o.state = 'love'; o.t = 0; A.aww(); hearts(o.x, o.y, 120); } }
+    else if (o.state === 'tug') {
+      // she has hold of their toy: they pull it back and forth between them, then let go, scream and run
+      face(toDog, 8);
+      const toy = o.holds, k = Math.sin(o.t * 16) * 6;
+      toy.x = (o.x + dog.x) / 2 + Math.cos(toDog) * k; toy.y = (o.y + dog.y) / 2 + Math.sin(toDog) * k; toy.z = 40;
+      if (o.t > TUG_T) {
+        o.holds = null; toy.held = null; toy.carried = true; dog.carry = toy;
+        respond(o, 'scared'); o.cool = 6;
+        missions.event('take', { thing: toy.kind, from: isChild(o.look) ? 'child' : 'adult' });
+      }
+    }
     else if (o.state === 'love') {
       face(toDog, 6);
       if (dd < 130) { dog.happy = Math.max(dog.happy, 0.4); if (isChild(o.look)) dog.excited = 0.4; }    // being petted: happy, and by a child, beside herself
@@ -601,6 +646,12 @@ function updatePeople(dt) {
         o.state = 'sit'; o.t = 0; o.cool = 4.5; o.heading = toDog; o.next = reaction(o, 'crash');
         A.oof(); stars(o.x, o.y, 150, 7); G.mess++; G.pop = 1;
         dog.vx = nx * 150; dog.vy = ny * 150;
+      } else if (o.holds && dog.state === 'idle' && sp > 40 && !dog.carry) {
+        // they have a toy: she grabs it, and it is a tug of war (her play growl)
+        o.state = 'tug'; o.t = 0; o.cool = 4; o.heading = toDog;
+        dog.state = 'tug'; dog.stT = TUG_T; dog.vx = dog.vy = 0; dog.heading = toDog + Math.PI; dog.runT = 0;
+        dog.x = o.x + nx * 62; dog.y = o.y + ny * 62;
+        A.playGrowl();
       } else if (dog.state === 'idle' && sp > 40 && o.state !== 'love' && o.state !== 'approach') {
         // paws up for a proper hello, unless they are frightened of her
         const r = reaction(o, 'paws');
@@ -659,6 +710,10 @@ function update(dt) {
   updateCar(dt);
   updateProps(dt);
   updatePeople(dt);
+  carryAt();
+  missions.update(dog, car);
+  for (const k of cards) { k.t += dt; if (k.done) k.done += dt; }
+  for (let i = cards.length - 1; i >= 0; i--) if (cards[i].done > 3) cards.splice(i, 1);
   updateBirds(dt);
   for (const o of world.obstacles) o.wob = Math.max(0, o.wob - dt * 2.2);
   for (const o of world.platforms) o.wob = Math.max(0, o.wob - dt * 3);
@@ -694,6 +749,16 @@ function drawOverlay(t) {
   Art.drawPaw(c, x + 18 * u, y, 20 * u * pop); Art.drawNum(c, G.mess, x + 46 * u, y + 2 * u, 34 * u);
   const x2 = x + 46 * u + c.measureText(G.mess).width + 30 * u;
   Art.drawBird(c, x2 + 20 * u, y + 2 * u, 22 * u); Art.drawNum(c, G.birds, x2 + 50 * u, y + 2 * u, 34 * u);
+  // the open missions: a card each along the top, its picture on it; done, a green tick, then it goes
+  const s = 66 * u, gap = 12 * u, x0 = w / 2 - (cards.length * (s + gap) - gap) / 2;
+  cards.forEach((k, i) => {
+    const pop = Math.min(1, k.t * 4), bob = k.done ? 1 + Math.sin(Math.min(1, k.done * 3) * Math.PI) * 0.25 : pop;
+    const cx = x0 + i * (s + gap) + s / 2, cy = 14 * u + s / 2, r = Math.max(2, (s / 2) * bob);
+    c.globalAlpha = k.done > 2.2 ? Math.max(0, 1 - (k.done - 2.2) / 0.8) : 1;
+    Art.drawCard(c, cx, cy, r); Art.drawMissionPicture(c, k.m.picture, cx, cy, r * 0.8);
+    if (k.done) Art.drawTick(c, cx + r * 0.55, cy + r * 0.55, r * 0.45);
+    c.globalAlpha = 1;
+  });
 }
 
 function resize() { S.resize(); hud.width = Math.round(S.view.w * S.view.dpr); hud.height = Math.round(S.view.h * S.view.dpr); }
@@ -701,6 +766,7 @@ function resize() { S.resize(); hud.width = Math.round(S.view.w * S.view.dpr); h
 // ---- wiring ----
 function act(a) { A.initAudio(); if (a === 'jump') jump(); else if (a === 'bark') bark(); else carAction(); }
 G.api = { jump, bark, car: carAction, knock, enterCar, leaveCar, flyAway };
+missions.start();
 input.onAction = act;
 const btnCar = document.getElementById('btn-car'), btnMute = document.getElementById('btn-mute');
 for (const [id, a] of [['btn-jump', 'jump'], ['btn-bark', 'bark'], ['btn-car', 'car']]) {

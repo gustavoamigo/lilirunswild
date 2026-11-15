@@ -37,6 +37,20 @@ Built from the design in `docs/open-world-design.md` (steps 1 and 2 of 4 done: t
 - **Buildings** (houses, Lili's home, the school) face south on their tile (front door that way) and turn with it (`dir`). They are solid: a row of circles along each (`kind: 'house'` obstacles), so she bonks into them at a gallop. Benches and stalls turn with their tile too (`dir`). A building between the camera and her fades to see-through, like trees (it stood in the way of the road beyond it).
 - **Only what is near is built** (`streamTiles` in `src/scene.js`): each tile keeps what stands on it and does not move (`t.things`: trees, lamps, benches and the table, buildings, kennels); within 3 tiles to either side, 4 ahead (north, where the camera looks) and 2 behind, times the camera's zoom, its ground is painted and its things built, nearest first, two tiles a frame; beyond 2 more it is dropped (meshes removed, textures and materials freed). Painting a tile takes 1 to 2 ms. People, birds, props, flowers, the car and the hedge are always there. The ground beyond what is built is plain grass, which the fog mostly hides.
 
+## Missions (`src/missions.js`, `missions/`)
+
+Step 3 of `docs/open-world-design.md`. A mission is a markdown file in `missions/`, listed in `missions/list.txt`; its header (a small subset of YAML, read by `parseMission`) gives `id`, `needs` (missions that must be done first), `picture` (drawn by `Art.drawMissionPicture`), `say` (for the voice, step 4) and `steps`; notes for us go below it. A step is one action with a tag as its target: `poo: <spot>`, `drive: <spot>`, `go: <spot>`, `take: <thing>` with `from: child | adult`, `bring: <thing>` with `to: <spot>`, `greet`, `scare` (`who`). Spots are the tiles' `spots` tags (`table`, `school-door`, `home`, ...), so a mission works wherever the town has one; "there" is within `NEAR` (drive 350, so the road in front of a building counts; poo and bring 110; go 120).
+
+The runner (`makeRunner`) keeps which missions are done and each open one's step. The game tells it what happens (`missions.event`: `poo`, `take`, `bring`, `greet`, `scare`); it checks `go` and `drive` itself each frame (`missions.update`). `missions.wants(action)` lists the open steps of an action, for what the game offers to do: a poo, dropping what she carries. Nothing in Lili's or people's code knows about missions.
+
+What the game does for them (`src/main.js`):
+- **Poo**: when an open mission wants a poo near where she has stopped (standing still 0.8 s), she squats (`dog.poo`, 1.6 s, a pose in `makeDog`) and leaves a poo there, also up on the table (`G.debris` kind `poo`, at her height), with a plop.
+- **Toys**: a person can hold a prop (`holds: 'teddy'` in `world/people.js`), hugged to their chest. Trotting into them she grabs it: a tug of war (`state 'tug'` for both, `TUG_T` 1.4 s, her recorded play growl), then they let go, scream and run, and she carries it in her mouth (`dog.carry`, kept there by `carryAt`). This happens with or without a mission.
+- **Dropping**: she drops what she carries when she stands still where a `bring` step wants it, or when she barks.
+- **On screen**: a card per open mission along the top, its picture on it; done: a green tick, confetti, an "aww", then the card goes. The picture list, the voice, saving progress and rewards are step 4.
+
+The first three: `poo-on-the-table`, `drive-to-school`, `steal-the-teddy` (needs `drive-to-school`; the boy with the teddy waits outside the school).
+
 ## The car knocks down light poles
 
 A light pole hit by the car at more than 150 (`updateCar`) goes over: it stops being solid (taken out of `world.obstacles`), tips over its base away from the car, faster and faster, in 0.55 s, bounces once on the ground and stays lying there (`o.fallen`, drawn in `render`); a crash (sound, the car shudders), stars, one on the mess counter, and the car stops dead and rocks back at 45, so the pole falls in front of it (it ploughed on at 0.75 at first, too light; then kept 0.2 and rolled onto the fallen pole, which showed through the car). Lili running into a pole only shakes it. Fallen poles do not stand up again (yet).

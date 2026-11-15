@@ -41,6 +41,10 @@ Agreed with the owner (2026-11-15), built one district at a time, each with a fe
 
 See *Design rules* in `CLAUDE.md`: not violent, he is a dog, the camera never turns, one finger is enough.
 
+## Missions
+
+Ideas of things to do, shown as picture cards at the top of the screen; never required, nothing fails. The first three: do a poo on the picnic table; drive the car to the school; once that is done, take the teddy from the boy outside the school (a tug of war, her growl, he screams and runs) and bring it home. More come as files in `missions/`.
+
 ## Where it is going
 
 An open-world game for children of 6 and 7: one big town built from reusable tiles, and missions as files with dependencies, no points or timers. Proposed in `docs/open-world-design.md`, not built yet.

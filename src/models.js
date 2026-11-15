@@ -551,6 +551,10 @@ export function makeDog() {
     } else if (p.spring > 0 && p.spring < 0.11 && !p.still) {
       // the last of a running run-up: haunches down under her, back doubled up, and her front end already coming off the ground
       T.pitch = 0.32; T.fl = 0.65; T.fr = 0.5; T.rf = 22; T.wf = T.wr = 1; T.y = -9; T.flex = 0.22; T.tailUp = 0.1;
+    } else if (p.poo > 0) {                              // a poo: haunches right down, tail up, still
+      T.pitch = 0.42; T.hl = T.hr = 1.0; T.rh = 22; T.wh = 1; T.y = -8; T.tailUp = 1.0; T.wag = 0; T.hp = 0.2;
+    } else if (p.state === 'tug') {                      // pulling a toy: braced back on her haunches, head shaking it
+      T.pitch = 0.22; T.y = -6; T.yaw = Math.sin(t * 16) * 0.35; T.hp = 0.1; T.wag = 0.7; T.wagHz = 16; T.tailUp = 0.8;
     } else if (p.swim) {                                 // swimming: low in the water (what is under it is hidden by the ground), head up
       T.y = -30 + Math.sin(t * 5) * 1.5; T.pitch = 0.22; T.hp = 0.25; T.tailUp = -0.1; T.wag = 0.18; T.wagHz = 5;   // rump low, chest and head up
       // the legs keep stepping under her, out of sight below the water
@@ -816,6 +820,7 @@ const LOOKS = [
   { kid: true, skin: '#F6D2B0', hair: ['#B5482A', 'tails'], top: ['#9B6FD8', 'short'], bottom: ['#F2A33A', 'skirt'], shoes: '#4FA653' },
   { kid: true, skin: '#E8B58E', hair: ['#E8C66A', 'short'], top: ['#4FA3E0', 'long'], bottom: ['#3C4A66', 'trousers'], shoes: '#E9545B' },
   { kid: false, voice: 'woman', skin: '#F2C29B', hair: ['#D9A441', 'bun'], top: ['#E86A8E', 'long'], bottom: ['#5C6B4A', 'trousers'], shoes: '#3A2E2A' },
+  { kid: true, skin: '#F6D2B0', hair: ['#8B3A2A', 'short'], top: ['#E9545B', 'short'], bottom: ['#4FA3E0', 'shorts'], shoes: '#F2F2F2' },
 ];
 export const PERSON_LOOKS = LOOKS.length;
 export const isChild = (look) => LOOKS[look % LOOKS.length].kid;
@@ -917,6 +922,12 @@ export function makePerson(look) {
       T.hy = 0.45 * Math.sin(t * 0.31 + seed * 2) * Math.max(0, Math.sin(t * 0.17 + seed));
       T.hp = 0.06 * Math.sin(t * 0.23 + seed);
     }
+    if (o.state === 'tug') {                                 // holding on to their toy: leaning back, both arms pulling
+      T.lean = -0.3 + Math.sin(t * 16) * 0.06; T.knee0 = T.knee1 = -0.35; T.thigh0 = T.thigh1 = 0.2; T.y = -2;
+      T.sh0 = T.sh1 = 1.35; T.out0 = T.out1 = 0.15; T.elbow0 = T.elbow1 = 0.15; T.hp = 0.15;
+    } else if (o.holds && (o.state === 'stand' || o.state === 'walk') && !o.pace) {   // hugging their toy to their chest
+      T.sh0 = T.sh1 = 0.75; T.out0 = T.out1 = 0.05; T.elbow0 = T.elbow1 = 1.5;
+    }
     if (o.state === 'love') {                               // down on their haunches by her, one hand stroking her, the other on a knee
       T.thigh0 = T.thigh1 = 1.25; T.knee0 = T.knee1 = -2.1; T.ankle0 = T.ankle1 = 0;
       T.y = -(B.thigh * 0.685 + B.shin * 0.34); T.lean = 0.45; T.hp = -0.35; T.roll = 0;
@@ -969,7 +980,7 @@ export function makePerson(look) {
     head.rotation.set(0, S.hy - S.twist - S.yaw + tw * 0.4, S.hp + S.lean * 0.6);
     blink = (t + seed) % 4.1 < 0.12 ? 0.15 : 1;
     eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); });
-    smile.visible = !(open.visible = o.state === 'wobble' || o.state === 'hop' || o.state === 'sit' || run || o.state === 'breath');
+    smile.visible = !(open.visible = o.state === 'wobble' || o.state === 'hop' || o.state === 'sit' || run || o.state === 'breath' || o.state === 'tug');
     root.position.set(o.x + offX, 0, o.y + offY); root.rotation.y = -fh;
     o.feet = legs;                                           // for tests
   }
@@ -1041,16 +1052,24 @@ export function makeProp(kind) {
   else if (kind === 'pot') parts = [{ geo: CONE, color: '#C9683F', at: [0, 15, 0], scale: [20, 30, 20], rot: [Math.PI, 0, 0], flat: true }, cyl('#D97B50', 0, 30, 0, 22, 6), cyl('#5A4636', 0, 32.5, 0, 18, 2),
     blob('#4FA653', 0, 42, 0, 12, 10, 12), blob('#FF7FA0', 7, 52, 3, 6.5), blob('#FFD23F', -6, 54, -4, 6), blob('#FF7FA0', -2, 50, 8, 5.5), blob('#ffffff', 2, 57, -3, 5)];
   else if (kind === 'plate') parts = [cyl('#ffffff', 0, 1.5, 0, 17, 3), cyl('#E9EDF2', 0, 3, 0, 12, 1), blob('#F6A6C1', 0, 9, 0, 9, 6.5, 9), blob('#E0453A', 0, 16, 0, 3)];
+  else if (kind === 'teddy') { mid = 12; parts = [   // a teddy bear: tummy, head, ears, muzzle, arms, legs
+    blob('#B5793F', 0, -2, 0, 7, 8, 6), blob('#E8C08A', 2.5, -2, 0, 4, 5, 4.5), blob('#B5793F', 0, 9, 0, 6, 5.5, 5.5),
+    blob('#B5793F', -1, 14, 4, 2.2), blob('#B5793F', -1, 14, -4, 2.2), blob('#E8C08A', 5, 8, 0, 2.4, 2, 2.6), blob('#2A1C14', 6.8, 8.6, 0, 0.9),
+    blob('#2A1C14', 4.6, 10.8, 2.2, 0.7), blob('#2A1C14', 4.6, 10.8, -2.2, 0.7), blob('#B5793F', 1, 0, 6.5, 2.4, 4.5, 2.4), blob('#B5793F', 1, 0, -6.5, 2.4, 4.5, 2.4),
+    blob('#B5793F', 2, -9, 3.5, 3, 2.6, 2.8), blob('#B5793F', 2, -9, -3.5, 3, 2.6, 2.8)]; }
   else if (kind === 'apple') { mid = 7; parts = [blob('#D9342B', 0, 0, 0, 8, 7.5, 8), cyl('#6E4630', 0, 8, 0, 1, 4), blob('#4FA653', 3, 9, 0, 3, 1.2, 2)]; }
   else { mid = 13; parts = [blob('#D7E84A', 0, 0, 0, 13), { geo: new THREE.TorusGeometry(12.6, 1.2, 6, 20), color: '#ffffff', at: [0, 0, 0], scale: [1, 1, 1], rot: [0.5, 0.4, 0], flat: true }]; }
   // A bin or cone falls over its base's edge (FOOT: how far that is from the middle), so it ends up lying on its side on
   // the ground; tipped about the middle, half of it went into the ground
   const foot = FOOT[kind] || 0;
+  if (kind === 'teddy') { mid *= 1.7; for (const p of parts) { p.at = p.at.map((v) => v * 1.7); p.scale = p.scale.map((v) => v * 1.7); } }   // a big, huggable teddy
   tip.position.x = foot; spin.position.set(-foot, mid, 0); spin.add(mesh(parts));
   return { root, tip, spin };
 }
 // What is left of something that broke.
 export function makeShards(kind) {
+  // a cartoon poo: a soft brown swirl of three
+  if (kind === 'poo') return mesh([blob('#7A4A2A', 0, 3, 0, 7, 3.5, 7), blob('#86532F', 0, 7, 0, 5, 3, 5), blob('#93603A', 0.5, 10.5, 0, 3, 2.6, 3)]);
   const c = kind === 'pot' ? ['#C9683F', '#D97B50', '#5A4636', '#4FA653', '#FF7FA0'] : kind === 'bin' ? ['#F4E9B0', '#ffffff', '#8FB7E0', '#E8B04A', '#C9D1D9'] : ['#ffffff', '#E9EDF2', '#F6A6C1', '#ffffff', '#E0453A'];
   const parts = [], wide = kind === 'bin' ? 2.4 : 1;
   for (let i = 0; i < 9; i++) { const a = i * 2.4, d = (6 + ((i * 7) % 5) * 5) * wide; parts.push(box(c[i % c.length], Math.cos(a) * d, 1.8, Math.sin(a) * d, 9 - (i % 3) * 2, 3, 6 + (i % 2) * 3, [0, a, 0.25])); }

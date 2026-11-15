@@ -1,6 +1,6 @@
 # Open world and missions: design
 
-Status: approved; steps 1 (tiles) and 2 (bigger town, only nearby tiles built) done 2026-11-15, see *The town: tiles on a map* in `docs/tech.md`.
+Status: approved; steps 1 (tiles), 2 (bigger town, only nearby tiles built) and 3 (missions) done 2026-11-15, see *The town: tiles on a map* and *Missions* in `docs/tech.md`. Choices made in step 3: a poo happens on its own when she stands still where an open mission wants one; she drops what she carries on her own where a mission wants it (or when she barks); grabbing a toy from someone works with or without a mission.
 
 ## What the game becomes
 

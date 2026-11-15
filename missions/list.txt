@@ -1,0 +1,4 @@
+# The missions, one file each in this folder (docs/open-world-design.md, "Missions"). The game reads this list.
+poo-on-the-table
+drive-to-school
+steal-the-teddy

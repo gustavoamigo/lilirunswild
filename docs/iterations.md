@@ -492,3 +492,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: you can see the pole through the car.
 
 **Decision**: the car kept rolling onto the pole it had knocked down; now it stops dead and rocks back a little, so the pole lies in front of it. **Checked by script**: the car's position after the crash stays short of the pole's base.
+
+**Feedback**: continue with the plan in the design doc.
+
+**Decision**: step 3, missions: the file format and its reader, the runner, the actions they need, and three missions (poo on the picnic table; drive to school; take the teddy from a boy and bring it home, which opens after the school). New in the game: a poo (she squats where a mission wants one), a teddy held by a boy outside the school, a tug of war with her play growl, carrying in her mouth, dropping at home or when she barks, mission cards at the top of the screen with a tick and confetti when done. **Checked by script**: each mission played through (a leap onto the table and a poo on it; driving past the school; tug, carry, drop at home), the cards opening and ticking, the teddy hugged, pulled and carried, no errors. **Not checked**: by eye in motion; sounds by ear. Next: step 4 (picture list, voice, saving, rewards). The dog park and the farm are still to come.
