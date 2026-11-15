@@ -372,3 +372,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Decision**: part 1 done: the lake's surface is a shader (depth from the shore, drifting wavelets, sparkles, foam lapping the beach), her waterline is the surface itself. **Checked by script**: the lake from above and close, swimming north and west (rings and wake over the surface), no errors. **Not checked**: on a real GPU; phones. Next: part 2, the ripple simulation.
 
 **Decision** (part 2 of the water): ripples simulated on the GPU. She pushes the water with her chest as she paddles, a splash drops a big ring; the waves spread, cross and bounce off the shore, lit on their slopes. The hand-made rings and wake are gone. **Checked by script**: swimming north and west (rings spread from her, crowding ahead as she goes), a splash ring, driving and the town, no errors. **Not checked**: on a real GPU and phones (the test browser renders in software, so its waves run slower).
+
+**Feedback**: the water is hyper-realistic in a cartoon-style game; adapt to its language.
+
+**Decision**: same simulation, drawn flat: three colour bands by depth with clean edges, a few clean white wave marks drifting, thin white lines round the ripples' crests, a solid white foam band along the beach. Smooth shading, slope lighting, noisy wavelets and sparkles are gone. **Checked by script**: the lake from above, swimming north and west. **Not checked**: by eye in motion on a real GPU.

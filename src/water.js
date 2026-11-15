@@ -1,6 +1,6 @@
-// The lake's surface: one see-through sheet over all the water in town, drawn by a shader. Under it the ground is painted
-// a plain lake-bed blue (ground.js); the sheet adds the depth (darker further from the shore), wavelets that drift,
-// sparkles, and foam lapping the beach. It lies a little above the ground, so what is lower than it (Lili's legs and
+// The lake's surface: one see-through sheet over all the water in town, drawn by a shader in the game's flat cartoon style
+// (realistic shading and sparkles did not fit): bands of colour by depth, clean white wave marks drifting, white rings
+// where the ripples crest, a white band of foam lapping the beach. Under it the ground is painted a plain lake-bed blue. It lies a little above the ground, so what is lower than it (Lili's legs and
 // belly when she swims) shows through, tinted: that is her waterline.
 //
 // Ripples (`ripples`): the water's height is simulated on the GPU over a grid of the lake, a wave step 60 times a second, and
@@ -73,30 +73,27 @@ const FRAG = /* glsl */ `
   void main() {
     float d = texture2D(shore, (vMap - box.xy) / (box.zw - box.xy)).r * ${FAR.toFixed(1)};   // from the shore, in game units
     if (d < 1.0) discard;
-    float deep = smoothstep(10.0, 220.0, d);
-    vec3 col = mix(vec3(0.53, 0.82, 0.93), vec3(0.20, 0.52, 0.78), deep);
-    // ripples: light on the slopes facing the sun (north-west), shade on the others, white on the crests
+    // flat colour bands, as the rest of the town is drawn: shallow, middle and deep, with clean edges
+    float band = step(45.0, d) + step(130.0, d);
+    vec3 col = band < 0.5 ? vec3(0.49, 0.80, 0.92) : band < 1.5 ? vec3(0.36, 0.71, 0.88) : vec3(0.29, 0.62, 0.83);
+    // ripples from the simulation, drawn as clean white rings where the waves crest
     vec2 uv = (vMap - box.xy) / (box.zw - box.xy);
     float h = texture2D(ripple, uv).r * hasRipple;
-    float gx = (texture2D(ripple, uv + vec2(rippleTexel.x, 0.0)).r - texture2D(ripple, uv - vec2(rippleTexel.x, 0.0)).r) * hasRipple;
-    float gy = (texture2D(ripple, uv + vec2(0.0, rippleTexel.y)).r - texture2D(ripple, uv - vec2(0.0, rippleTexel.y)).r) * hasRipple;
-    col += vec3(clamp(-(gx + gy) * 1.6, -0.25, 0.4));
-    col = mix(col, vec3(0.95, 0.98, 1.0), smoothstep(0.35, 0.8, h) * 0.6);
-    // wavelets: thin bright crescents where two drifting noise fields cross a level, slowly changing
-    vec2 p = vMap / 70.0;
-    float n = noise(p + vec2(time * 0.10, time * 0.06)) * 0.6 + noise(p * 2.1 - vec2(time * 0.07, -time * 0.11)) * 0.4;
-    float line = smoothstep(0.035, 0.0, abs(n - 0.55)) * smoothstep(0.3, 0.7, noise(p * 0.7 + time * 0.03));
-    col = mix(col, vec3(0.92, 0.97, 1.0), line * 0.55);
-    // sparkles: where the light catches the water, now and then
-    float s = noise(vMap / 9.0 + time * 0.8) * noise(vMap / 13.0 - time * 0.5);
-    col += vec3(pow(s, 9.0) * 6.0);
-    // foam lapping the beach: a band along the shore whose width breathes in and out, with a ragged edge
-    float lap = 14.0 + 7.0 * sin(time * 1.6 + noise(vMap / 40.0) * 6.0) + noise(vMap / 12.0 + time * 0.4) * 8.0;
-    float foam = smoothstep(lap + 3.0, lap - 2.0, d);
-    col = mix(col, vec3(1.0), foam * 0.9);
-    float alpha = mix(0.55, 0.85, deep);
-    alpha = max(alpha, foam * 0.95);
-    alpha *= smoothstep(1.0, 4.0, d);
+    float ring = smoothstep(0.09, 0.11, h) * (1.0 - smoothstep(0.15, 0.17, h));      // a thin line round each crest
+    col = mix(col, vec3(1.0), ring * 0.9);
+    // a few clean wave marks drifting slowly: short white arcs, placed one per cell of a coarse grid
+    vec2 g = vMap / 90.0 + vec2(time * 0.04, time * 0.02), id = floor(g), f = fract(g) - 0.5;
+    vec2 o = vec2(hash(id), hash(id + 7.3)) - 0.5;
+    vec2 q = f - o * 0.5;
+    float r = length(q * vec2(1.0, 1.6));
+    float arc = smoothstep(0.035, 0.0, abs(r - 0.17)) * step(q.y, -0.02) * step(0.45, hash(id + 3.1));
+    col = mix(col, vec3(1.0), arc * 0.7 * (0.6 + 0.4 * sin(time * 0.8 + hash(id) * 6.0)));
+    // foam along the beach: a solid white band, its edge softly waving
+    float lap = 13.0 + 4.0 * sin(time * 1.4 + vMap.x * 0.03 + vMap.y * 0.02);
+    float foam = step(d, lap);
+    col = mix(col, vec3(1.0), foam);
+    float alpha = foam > 0.5 ? 0.95 : band < 0.5 ? 0.7 : 0.85;
+    alpha *= smoothstep(1.0, 3.0, d);
     gl_FragColor = vec4(col, alpha);
     #include <fog_fragment>
   }`;
