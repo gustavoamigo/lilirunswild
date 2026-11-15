@@ -274,7 +274,14 @@ export function render(G, dt) {
     e.mat.opacity = lerp(e.mat.opacity, front ? 0.25 : 1, 1 - Math.exp(-dt * 9));
     e.mat.depthWrite = e.mat.opacity > 0.9;
   }
-  for (const e of lamps) e.m.rotation.z = Math.sin(t * 30) * (e.o.wob || 0) * 0.06;
+  for (const e of lamps) {
+    const o = e.o;
+    if (!o.fallen) { e.m.rotation.set(0, 0, Math.sin(t * 30) * (o.wob || 0) * 0.06); continue; }
+    // knocked down by the car: it tips over its base away from the car, faster and faster, and bounces once on the ground
+    o.fallT += dt;
+    const down = 0.55, a = o.fallT < down ? (Math.PI / 2) * (o.fallT / down) ** 2 : Math.PI / 2 - 0.12 * Math.abs(Math.sin((o.fallT - down) * 14)) * Math.exp(-(o.fallT - down) * 7);
+    e.m.rotation.set(0, -o.fallDir, -a);
+  }
   for (const e of plats) { e.m.rotation.z = Math.sin(t * 34) * e.o.wob * 0.03; e.m.position.y = Math.abs(Math.sin(t * 34)) * e.o.wob * 2; }
 
   for (const e of props) {

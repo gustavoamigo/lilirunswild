@@ -23,7 +23,7 @@ Lili, liver and white: a white body, brown sides to her head with a white blaze 
 
 ## The car
 
-An open red car, one in town. Steer where it should go; steering against the way it faces brakes and then reverses. It is quick (about one and a half times a gallop), slides a little, knocks over anything loose, scares birds, and people hop out of its way. Hitting something solid stops it with a crunch and a bounce. Bark is the horn. E hops out over whichever side has room.
+An open red car, one in town. Steer where it should go; steering against the way it faces brakes and then reverses. It is quick (about one and a half times a gallop), slides a little, knocks over anything loose, scares birds, and people hop out of its way. It knocks light poles flat (they topple away from it, and count on the mess counter). Hitting anything else solid stops it with a crunch and a bounce. Bark is the horn. E hops out over whichever side has room.
 
 ## The town
 

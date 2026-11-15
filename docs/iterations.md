@@ -480,3 +480,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: her ears do not move up and down when she jumps.
 
 **Decision**: in the air they are softer again and carried only a third by her rise and fall: they lag, float up near the top and drop on landing, still without the flutter. **Checked by script**: the ear tip's height through a jump from a stand (rises about 12) and from a run (about 25, up near the head), then back down.
+
+**Feedback**: make the car destroy things like the light poles.
+
+**Decision**: a pole hit by the car topples away from it with a crash and stars, bounces once and lies there, no longer solid; the car ploughs on, slowed a little; it counts on the mess counter. Only the car does it. **Checked by script**: driving into a pole (falls, not solid after, car keeps going, counter up), the fallen pole lying on the pavement. **Not checked**: by eye in motion. Open: should poles stand up again; should the car knock down other things (benches, café tables, trees?).
