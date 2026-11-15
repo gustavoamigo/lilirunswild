@@ -424,3 +424,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: her body is still not continuous; she looks like a balloon dog.
 
 **Decision**: the legs are smooth tapered limbs (one shape per bone, joints matching), the ears one smooth flap each bent through the swinging chain; the shape-from-profile builder no longer leaves ridges (people get slightly smoother too). Not yet: the head, chest and paws are still made of ovals. **Checked by script**: the turnaround standing, a trot and a gallop strip (no holes in the ears), the ears' swing, the people line-up. **Not checked**: by eye in motion.
+
+**Feedback**: the eyes are a little creepy.
+
+**Decision**: small dark beads sunk in the dark patch under heavy, slanted brows looked stern. Now: bigger, rounder eyes set forward, warm dark brown, a large and a small shine, a lighter ring of fur round each so they stand out from the patch, thinner level brows set higher. **Checked by script**: her face from the front and both sides. **Not checked**: blinking and the bark/point brow lift by eye.

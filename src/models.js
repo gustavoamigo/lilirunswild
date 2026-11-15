@@ -261,10 +261,14 @@ export function makeDog() {
       blob(LIVER, 28, 0, s * 8.2, 1.3, 1.3, 1), blob(LIVER, 24.5, -2.5, s * 9, 1.1, 1.1, 1), blob(LIVER, 29, -4, s * 7.2, 1, 1, 1)]),   // freckles
   ]));
   const eyes = [1, -1].map((s) => {
-    const e = group(14.5, 8, s * 9.6, ball(mat('#2A1C14', { roughness: 0.25 }), 3.7, 3.9, 3.2, 0, 0, 0, false), ball('#ffffff', 1.1, 1.1, 1.1, 2.4, 1.6, s * 0.9, false));
+    // big, round and set forward, warm dark brown, with a large shine and a small one: friendly, not beady
+    const e = group(15.3, 8.4, s * 9.4, ball(mat('#33200F', { roughness: 0.2 }), 4.4, 4.7, 3.6, 0, 0, 0, false),
+      ball('#ffffff', 1.55, 1.55, 1.2, 2.9, 1.9, s * 0.4, false), ball('#ffffff', 0.7, 0.7, 0.6, 3.2, -1.3, -s * 1.1, false),
+      ball('#9A6A48', 2.2, 5.9, 5.6, 0.4, 0, 0, false));    // a soft lighter ring of fur round it, so it does not sink into the dark patch
     head.add(e); return e;
   });
-  const brows = [1, -1].map((s) => { const b = mesh([blob(EAR, 0, 0, 0, 5, 1.6, 4)], false); b.position.set(13.5, 13.4, s * 8.5); head.add(b); return b; });
+  // soft brows, thin and high over the eyes (heavy ones sitting on them looked stern)
+  const brows = [1, -1].map((s) => { const b = mesh([blob(EAR, 0, 0, 0, 4, 1.1, 3.4)], false); b.position.set(14, 15.2, s * 8.6); head.add(b); return b; });
   const jaw = group(12, -6, 0, mesh([blob(FEATHER, 9, -1.5, 0, 10, 3.6, 6.5)], false));
   const tongue = ball('#F58CA0', 7, 1.6, 4.2, 13, -0.2, 0, false); jaw.add(tongue);
   head.add(jaw);
@@ -614,7 +618,7 @@ export function makeDog() {
 
     blink = (t % 3.7) < 0.12 || p.state === 'daze' || shakeT < 1.25 ? 0.15 : 1;
     eyes.forEach((e) => { e.scale.y = lerp(e.scale.y, blink, 0.5); });
-    brows.forEach((b, i) => { b.rotation.x = (i ? -1 : 1) * (p.point > 0.5 ? 0.5 : 0.15); b.position.y = 13.4 + (p.barkT > 0 || p.point > 0.5 ? 1.5 : 0); });
+    brows.forEach((b, i) => { b.rotation.x = (i ? -1 : 1) * (p.point > 0.5 ? 0.45 : -0.08); b.position.y = 15.2 + (p.barkT > 0 || p.point > 0.5 ? 1.2 : 0); });
 
     const sq = clamp((p.landT || 0) / 0.22, 0, 1);
     root.scale.set(1 + sq * 0.03, 1 - sq * 0.07, 1 + sq * 0.03);
