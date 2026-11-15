@@ -476,3 +476,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: attach her ears a little higher.
 
 **Decision**: the ear roots moved up the skull (root at height 15.5, from 11). **Checked by script**: face and turnaround.
+
+**Feedback**: her ears do not move up and down when she jumps.
+
+**Decision**: in the air they are softer again and carried only a third by her rise and fall: they lag, float up near the top and drop on landing, still without the flutter. **Checked by script**: the ear tip's height through a jump from a stand (rises about 12) and from a run (about 25, up near the head), then back down.

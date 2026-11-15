@@ -456,7 +456,7 @@ export function makeDog() {
   function swingEars(dt, jx, jy, jz, calm, fling = 0) {
     const still = 1 - calm;              // in the air: stiffer and more damped, so they ride along instead of whipping about
     head.updateWorldMatrix(true, false); _inv.copy(head.matrixWorld).invert();
-    const len = EAR_SEG * _a.setFromMatrixScale(head.matrixWorld).y, n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n, keep = Math.exp(-h * EAR_DRAG * (1 + 3 * still));
+    const len = EAR_SEG * _a.setFromMatrixScale(head.matrixWorld).y, n = Math.max(1, Math.ceil(dt / 0.008)), h = dt / n, keep = Math.exp(-h * EAR_DRAG * (1 + 0.6 * still));
     earT += dt;
     const me = head.matrixWorld.elements, side = Math.hypot(me[8], me[9], me[10]) || 1;
     const re = root.matrixWorld.elements, bodySide = _side.set(re[8], re[9], re[10]).transformDirection(_inv);   // her body's sideways, as the head sees it
@@ -499,7 +499,7 @@ export function makeDog() {
           // an ear is not a string: it has some spring in it, most where it joins the head
           // towards hanging where gravity and the wind together would hang it
           const r = (i + 1) * len, gw = (i + 1) / 4 * r;    // the gust moves the tip most
-          q.lerp(_b.set(tk.x + wdx * r + (ux / ul * gu + ox * go) * gw, tk.y + wdy * r + uy / ul * gu * gw, tk.z + wdz * r + (uz / ul * gu + oz * go) * gw), 1 - Math.exp(-h * EAR_SPRING[i] * (1 + 3 * still) * (1 - 0.8 * fling)));
+          q.lerp(_b.set(tk.x + wdx * r + (ux / ul * gu + ox * go) * gw, tk.y + wdy * r + uy / ul * gu * gw, tk.z + wdz * r + (uz / ul * gu + oz * go) * gw), 1 - Math.exp(-h * EAR_SPRING[i] * (1 + 0.6 * still) * (1 - 0.8 * fling)));
         }
         for (let it = 0; it < 2; it++) for (let i = 0; i < 4; i++) {
           const q = e.pts[i], up = i ? e.pts[i - 1] : tk;
@@ -741,7 +741,7 @@ export function makeDog() {
     // Ears are heavy and she is not falling far: in the air her rise and fall carries them with her, and they are
     // not flapped about as they are by a run. Otherwise she takes off with them like wings.
     const air = p.air || p.state === 'hop'; earCalm = air ? 0 : lerp(earCalm, 1, 1 - Math.exp(-dt * 4));     // from the moment she leaves the ground; settling back slowly after landing, so they do not slap
-    const jz = fresh0 || jumped ? 0 : (p.z - pz) * lerp(1, 0.7, earCalm); pz = p.z;
+    const jz = fresh0 || jumped ? 0 : (p.z - pz) * lerp(0.35, 0.7, earCalm); pz = p.z;   // in the air only a third of her rise and fall carries them: they lag and float
     swingEars(dt, jumped ? jx : 0, jumped ? jy : 0, jz, earCalm, clamp(Math.sin(Math.PI * clamp(shakeT / 0.95, 0, 1)) * 1.6, 0, 1));
   }
   return { root, update };
