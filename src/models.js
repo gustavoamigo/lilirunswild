@@ -261,13 +261,17 @@ export function makeDog() {
       blob(LIVER, 28, 0, s * 8.2, 1.3, 1.3, 1), blob(LIVER, 24.5, -2.5, s * 9, 1.1, 1.1, 1), blob(LIVER, 29, -4, s * 7.2, 1, 1, 1)]),   // freckles
   ]));
   const eyes = [1, -1].map((s) => {
-    // a spaniel's eye: a soft almond, dark warm brown, set just forward of the fur, one quiet shine
-    const e = group(15, 8.2, s * 9.4, ball(mat('#2E1C10', { roughness: 0.3 }), 3.5, 3.4, 3.0, 0, 0, 0, false),
-      ball('#ffffff', 0.95, 0.95, 0.8, 2.6, 1.3, s * 0.3, false));
+    // a cartoon eye, as in children's TV: white, a big warm brown iris, a dark pupil, two shines, a dark line along the top
+    const e = group(14.6, 8.6, s * 9.4,
+      ball('#FFFFFF', 4.2, 5.0, 3.6, 0, 0, 0, false),
+      ball('#8A5A2E', 2.0, 3.9, 3.3, 2.3, 0.5, 0, false),
+      ball('#1E120A', 1.6, 2.6, 2.2, 3.4, 0.5, 0, false),
+      ball('#ffffff', 0.9, 0.9, 0.75, 4.4, 1.9, -s * 0.8, false), ball('#ffffff', 0.45, 0.45, 0.4, 4.2, -1.0, s * 0.9, false),
+      ball('#3A2416', 3.0, 0.55, 3.6, 1.6, 4.7, 0, false));
     head.add(e); return e;
   });
   // soft brows, thin and high over the eyes (heavy ones sitting on them looked stern)
-  const brows = [1, -1].map((s) => { const b = mesh([blob(EAR, 0, 0, 0, 4, 1.1, 3.4)], false); b.position.set(14, 15.2, s * 8.6); head.add(b); return b; });
+  const brows = [1, -1].map((s) => { const b = mesh([blob('#7A4A32', 0, 0, 0, 4, 1.1, 3.4)], false); b.position.set(14, 15.6, s * 8.6); head.add(b); return b; });
   const jaw = group(12, -6, 0, mesh([blob(FEATHER, 9, -1.5, 0, 10, 3.6, 6.5)], false));
   const tongue = ball('#F58CA0', 7, 1.6, 4.2, 13, -0.2, 0, false); jaw.add(tongue);
   head.add(jaw);
