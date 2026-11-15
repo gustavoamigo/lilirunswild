@@ -276,7 +276,7 @@ const HEAD_GEO = sweptGeo(HEAD_PROFILE, (x, y, z) => {
   const blaze = 2.8 + Math.max(0, x - 4) * 0.12;                                          // the white blaze, wider down the muzzle
   const patch = Math.min(soft(blaze - az, 1.6), soft(x - 16, 3), soft(-6 - y, 2));        // brown over the eyes, cheeks and ears
   const base = x > 18 && y < -4 ? FEATHER : COAT;
-  const brow = soft(Math.hypot((x - 14.5) / 2.6, (y - 12.3) / 1.2, (az - 7.4) / 3.2) - 1, 0.5);   // a soft lighter mark over each eye
+  const brow = soft(Math.hypot((x - 13.5) / 2.2, (y - 14.6) / 1.3, (az - 6.4) / 3) - 1, 0.5);   // a soft lighter mark over each eye
   if (brow > 0 && patch > 0.5) return [LIVER, '#8A5A3E', Math.min(1, brow * 2)];
   return [base, LIVER, Math.min(1, Math.max(patch, fr) * 2)];
 }, 220, 96);
@@ -289,12 +289,14 @@ const JAW_GEO = sweptGeo([[-1, 0, 0, 0], [2, -0.5, 3.4, 6], [10, -1, 3.6, 6.4], 
 // Where an eye sits: a round eyeball of radius EYE_R behind the skin of the head, only a shallow cap (EYE_CAP) showing
 // through it, as a real eye in its socket. The skin's point and its outward normal come from the head's profile; the
 // ball's centre is that far in along the normal, and the iris faces along the normal, turned a little forward.
-const EYE_R = 4.4, EYE_CAP = 1.5, EYE_AT = [16.2, 7.2];
+const EYE_R = 4.2, EYE_CAP = 1.6, EYE_AT = [9.5, 6.2];       // height and how far from the middle: on the front of the skull, facing forward
 function eyeSocket(s) {
-  const [x, y] = EYE_AT, F = (px, py, pz) => { const [cy, ry, rz] = profileAt(HEAD_PROFILE, px); return ((py - cy) / ry) ** 2 + (pz / rz) ** 2 - 1; };
-  const [cy, ry, rz] = profileAt(HEAD_PROFILE, x), z = s * rz * Math.sqrt(Math.max(0, 1 - ((y - cy) / ry) ** 2));
+  const F = (px, py, pz) => { const [cy, ry, rz] = profileAt(HEAD_PROFILE, px); return ((py - cy) / ry) ** 2 + (pz / rz) ** 2 - 1; };
+  // coming back from the nose, the first point of the head at that height and spacing: the front of the skull
+  const y = EYE_AT[0], z = s * EYE_AT[1];
+  let x = 37; while (x > 0 && F(x, y, z) > 0) x -= 0.05;
   const h = 0.01, n = new THREE.Vector3((F(x + h, y, z) - F(x - h, y, z)) / (2 * h), (F(x, y + h, z) - F(x, y - h, z)) / (2 * h), (F(x, y, z + h) - F(x, y, z - h)) / (2 * h)).normalize();
-  return { at: new THREE.Vector3(x, y, z).addScaledVector(n, -(EYE_R - EYE_CAP)), look: n.clone().add(new THREE.Vector3(0.35, 0, 0)).normalize() };
+  return { at: new THREE.Vector3(x, y, z).addScaledVector(n, -(EYE_R - EYE_CAP)), look: n.clone().add(new THREE.Vector3(0.3, -0.1, 0)).normalize() };
 }
 
 export function makeDog() {
@@ -363,7 +365,7 @@ export function makeDog() {
   // the tongue: one flat, soft shape with a rounded tip and a groove down its middle, rooted at the back of the jaw; out,
   // it slides forward and hangs down over her lower lip
   const tongueMesh = new THREE.Mesh(TONGUE_GEO, vc()); tongueMesh.castShadow = true;
-  const tongue = group(4, 1.2, 0, tongueMesh); jaw.add(tongue);
+  const tongue = group(4, 3.2, 0, tongueMesh); jaw.add(tongue);      // lying on the jaw, not inside it (the jaw's white covered it)
   head.add(jaw);
   // ears: four soft pieces hung one from the next. They are not posed: they hang, swing and stream (swingEars).
   // Each ear is one smooth flap (earSkin) bent through the swinging chain, not separate pieces.

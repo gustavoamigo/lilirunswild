@@ -448,3 +448,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the eyes pop out of her head (a screenshot from the front three-quarters); the tongue out is horrible.
 
 **Decision**: each eye is a round ball sunk behind the skin, only a shallow cap showing, placed from the head's own surface, the iris facing out through it. The tongue is a flat, soft tongue shape with a rounded tip and a groove, hanging over her lower lip. **Checked by script**: her face from the front, three-quarters and the side, tongue in and out.
+
+**Feedback**: the eyes are misplaced, almost on her nose (a screenshot from the front); part of the tongue is white.
+
+**Decision**: the eyes are placed by height and spacing on the front of the skull, above the muzzle, facing forward; the tongue lay partly inside the white lower jaw and now lies on it. **Checked by script**: her face from the front, three-quarters and side, tongue in and out.
