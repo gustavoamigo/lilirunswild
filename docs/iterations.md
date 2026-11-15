@@ -452,3 +452,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the eyes are misplaced, almost on her nose (a screenshot from the front); part of the tongue is white.
 
 **Decision**: the eyes are placed by height and spacing on the front of the skull, above the muzzle, facing forward; the tongue lay partly inside the white lower jaw and now lies on it. **Checked by script**: her face from the front, three-quarters and side, tongue in and out.
+
+**Feedback**: the first move of the eyes (high on the skull, looking out) was better; a bit more to the centre.
+
+**Decision**: that height, closer together (height 10.5, 8.6 from the middle), brow marks above. **Checked by script**: front, three-quarters, side.

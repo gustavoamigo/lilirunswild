@@ -276,7 +276,7 @@ const HEAD_GEO = sweptGeo(HEAD_PROFILE, (x, y, z) => {
   const blaze = 2.8 + Math.max(0, x - 4) * 0.12;                                          // the white blaze, wider down the muzzle
   const patch = Math.min(soft(blaze - az, 1.6), soft(x - 16, 3), soft(-6 - y, 2));        // brown over the eyes, cheeks and ears
   const base = x > 18 && y < -4 ? FEATHER : COAT;
-  const brow = soft(Math.hypot((x - 13.5) / 2.2, (y - 14.6) / 1.3, (az - 6.4) / 3) - 1, 0.5);   // a soft lighter mark over each eye
+  const brow = soft(Math.hypot((x - 10.5) / 2.4, (y - 15.4) / 1.2, (az - 7.6) / 3) - 1, 0.5);   // a soft lighter mark over each eye
   if (brow > 0 && patch > 0.5) return [LIVER, '#8A5A3E', Math.min(1, brow * 2)];
   return [base, LIVER, Math.min(1, Math.max(patch, fr) * 2)];
 }, 220, 96);
@@ -289,7 +289,7 @@ const JAW_GEO = sweptGeo([[-1, 0, 0, 0], [2, -0.5, 3.4, 6], [10, -1, 3.6, 6.4], 
 // Where an eye sits: a round eyeball of radius EYE_R behind the skin of the head, only a shallow cap (EYE_CAP) showing
 // through it, as a real eye in its socket. The skin's point and its outward normal come from the head's profile; the
 // ball's centre is that far in along the normal, and the iris faces along the normal, turned a little forward.
-const EYE_R = 4.2, EYE_CAP = 1.6, EYE_AT = [9.5, 6.2];       // height and how far from the middle: on the front of the skull, facing forward
+const EYE_R = 4.2, EYE_CAP = 1.6, EYE_AT = [10.5, 8.6];       // height and how far from the middle: on the front of the skull, facing forward
 function eyeSocket(s) {
   const F = (px, py, pz) => { const [cy, ry, rz] = profileAt(HEAD_PROFILE, px); return ((py - cy) / ry) ** 2 + (pz / rz) ** 2 - 1; };
   // coming back from the nose, the first point of the head at that height and spacing: the front of the skull
