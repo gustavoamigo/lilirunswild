@@ -346,3 +346,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the town needs a school, a park, a lake, a town centre and an amusement park; asked what else. Suggested places for a dog and for children of 6 and 7 (dog park, vet, butcher, postman, farm, fire station, building site, football pitch, train station, ice-cream van, woods, beach). Agreed order: town centre with the butcher, lake with a little beach, dog park, farm.
 
 **Decision**: the town centre, in the middle block below the park: the butcher's, the baker's and a café (what they sell shown in pictures, since the players cannot read) facing south onto a paved square with a fountain, two benches and four market stalls with apples. New: paving, shops, fixtures (the kennel, fountain and café tables are one kind of thing now), stalls she can jump onto, apples that roll. Found on the way: benches in a turned tile were drawn unturned. **Checked by script**: the square from above and close up, a leap onto a stall from the front (lands on top, apples fly), no errors. **Not checked**: by eye in play. Next: the lake.
+
+**Feedback**: the road looks worse than before the tiles; the owner wants it plain, without texture, as it was.
+
+**Decision**: the asphalt speckles are gone (plain asphalt); the sand's pebbles thinned to the old density. **Checked by script**: the same view before tiles and now, side by side. **Not checked**: on the owner's screen.

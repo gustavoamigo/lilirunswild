@@ -64,7 +64,7 @@ export function paintTile(t, res = 1) {
     for (const [x, y, rad] of plazas) { Art.circ(c, x, y, rad + (w - PATH_HALF * 2) / 2); c.fill(); }
   }
   if (paths.length || plazas.length) {
-    for (let i = 0; i < 400; i++) {                  // pebbles and speckles on the sand
+    for (let i = 0; i < 260; i++) {                  // pebbles and speckles on the sand, as thinly as before tiles
       const x = r() * TILE, y = r() * TILE;
       if (tileSurface(d, x, y) !== 'path') continue;
       const big = r() < 0.12;
@@ -88,7 +88,7 @@ export function paintTile(t, res = 1) {
     }
   }
 
-  // roads: pavement and its stones, kerb, asphalt and its speckles, the dashed middle line
+  // roads: pavement and its stones, kerb, plain asphalt (the owner prefers it without speckles), the dashed middle line
   if (roads.length) {
     const full = (ROAD_HALF + WALK) * 2;
     const band = (w, color) => { c.strokeStyle = color; c.lineWidth = w; for (const g of roads) { trace(c, g); c.stroke(); } };
@@ -96,12 +96,6 @@ export function paintTile(t, res = 1) {
     c.fillStyle = 'rgba(120,110,95,.16)';
     for (let x = 0; x < TILE; x += 50) for (let y = 0; y < TILE; y += 50) if (tileSurface(d, x + 3, y + 3) === 'walk') { c.fillRect(x, y, 48, 2.5); c.fillRect(x, y, 2.5, 48); }
     band(ROAD_HALF * 2 + 10, '#9A958B'); band(ROAD_HALF * 2, '#6F7480');
-    for (let i = 0; i < 900; i++) {
-      const x = r() * TILE, y = r() * TILE;
-      if (tileSurface(d, x, y) !== 'road') continue;
-      c.fillStyle = r() < 0.5 ? `rgba(40,44,54,${0.1 + r() * 0.14})` : `rgba(210,214,224,${0.08 + r() * 0.1})`;
-      Art.circ(c, x, y, 1.2 + r() * 2.4); c.fill();
-    }
     c.strokeStyle = '#F4E9B0'; c.lineWidth = 7;
     for (const g of roads) {
       // a whole number of dash-and-gap lengths (about 100), each a gap's half, a dash, a gap's half: so the line runs on
