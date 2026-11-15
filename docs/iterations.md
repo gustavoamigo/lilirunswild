@@ -370,3 +370,5 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: asked whether shaders could do the water better. Proposed: (1) a water surface with its own shader, (2) ripples simulated on the GPU that she makes as she swims. Go.
 
 **Decision**: part 1 done: the lake's surface is a shader (depth from the shore, drifting wavelets, sparkles, foam lapping the beach), her waterline is the surface itself. **Checked by script**: the lake from above and close, swimming north and west (rings and wake over the surface), no errors. **Not checked**: on a real GPU; phones. Next: part 2, the ripple simulation.
+
+**Decision** (part 2 of the water): ripples simulated on the GPU. She pushes the water with her chest as she paddles, a splash drops a big ring; the waves spread, cross and bounce off the shore, lit on their slopes. The hand-made rings and wake are gone. **Checked by script**: swimming north and west (rings spread from her, crowding ahead as she goes), a splash ring, driving and the town, no errors. **Not checked**: on a real GPU and phones (the test browser renders in software, so its waves run slower).

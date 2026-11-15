@@ -104,7 +104,7 @@ function jump() {
   // in the water the jump is a splash: she slaps the water, spray flies up, and she surges on a little
   if (dog.swim) {
     if (G.t - (dog.splashAt || -9) < 0.5) return;
-    dog.splashAt = G.t; A.splash(); dog.barkT = 0.2;
+    dog.splashAt = G.t; dog.splashed = true; A.splash(); dog.barkT = 0.2;
     for (let i = 0; i < 14; i++) {
       const a = Math.random() * TAU, s = 60 + Math.random() * 120;
       spawn({ x: dog.x + Math.cos(dog.heading) * 30, z: dog.y + Math.sin(dog.heading) * 30, y: 20, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 160 + Math.random() * 160, g: 700, drag: 1, life: 0.7, size: 6 + Math.random() * 5, color: '#E6F6FC', alpha: 0.9 });
