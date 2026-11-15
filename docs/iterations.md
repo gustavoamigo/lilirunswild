@@ -384,3 +384,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: the gentler ripples are good. Jumping into the water should make a splash.
 
 **Decision**: a leap into the lake throws up a fountain of cartoon water drops (white, outlined in blue; plain white puffs did not show on the water), a splash sound and a ring on the water; the jump-in-the-water splash uses the same drops. **Checked by script**: a running leap from the beach into the lake. **Not checked**: by eye in motion.
+
+**Feedback**: as soon as she gets out of the lake she should shake, with water drops coming off her.
+
+**Decision**: climbing out, she stops and shakes at once (steering waits for it), drops flying off her sides. **Checked by script**: swimming out onto the beach with the key held: she shakes on the sand, drops fly. **Not checked**: by eye in motion.

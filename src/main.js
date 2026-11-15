@@ -162,7 +162,8 @@ function updateDog(dt) {
   if (p.state === 'drive') return;                    // the car carries him (updateCar)
   if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 1.4; p.state = 'idle'; } }
 
-  let st = p.state === 'idle' ? steering(p.x, p.y, 34) : ZERO;
+  // shaking the lake off: she stands still for it, whatever she is asked
+  let st = p.state === 'idle' && !(p.shakeWet > 0) ? steering(p.x, p.y, 34) : ZERO;
   const sp0 = Math.hypot(p.vx, p.vy);
   // A pointer that sits near her means "come here, slowly". One that is being swept past her on its way to the
   // other side is near her too, for a moment, and means nothing of the kind: while it is moving and she is
@@ -188,10 +189,18 @@ function updateDog(dt) {
   if (studio.gait === 'trot') p.runT = 0; else if (studio.gait === 'gallop' && st.mag > 0.5 && !p.push) p.runT = ZOOM_AFTER;
   // ---- in the lake she swims: slowly, low in the water, splashing; out of it she shakes herself dry when she stops ----
   const wet = !STUDIO && onFoot() && !p.air && world.surfaceAt(p.x, p.y) === 'water';
-  if (wet !== p.swim) { dust(p.x, p.y, 10, { speed: 120, color: '#E6F6FC', size: 7 }); if (wet) A.splash(); else p.drip = true; }
+  if (wet !== p.swim) { dust(p.x, p.y, 10, { speed: 120, color: '#E6F6FC', size: 7 }); if (wet) A.splash(); else { p.shake = 1.4; p.shakeWet = 1.4; p.drip = false; } }
   p.swim = wet;
   if (wet) { p.runT = 0; p.dripT = (p.dripT || 0) - dt; if (p.dripT <= 0 && sp0 > 30) { p.dripT = 0.18; dust(p.x + Math.cos(p.heading) * 30, p.y + Math.sin(p.heading) * 30, 2, { speed: 50, color: '#E6F6FC', size: 6 }); } }
-  else if (p.drip && !st.mag && !p.air && p.state === 'idle') { p.drip = false; p.shake = 1.4; }
+  // out of the lake she shakes at once, and water flies off her sideways, more as the shake gets going
+  if (p.shakeWet > 0) {
+    p.shakeWet -= dt; p.shake = Math.max(p.shake, 0.05); p.vx *= Math.exp(-dt * 10); p.vy *= Math.exp(-dt * 10);
+    const k = 1.4 - p.shakeWet, n = k < 0.2 ? 0 : Math.random() < dt * 40 ? 2 : 0;
+    for (let i = 0; i < n; i++) {
+      const side = Math.random() < 0.5 ? 1 : -1, a = p.heading + side * Math.PI / 2 + (Math.random() - 0.5) * 1.2, along = (Math.random() - 0.5) * 60, s = 120 + Math.random() * 120;
+      spawn({ type: 'drop', x: p.x + Math.cos(p.heading) * along, z: p.y + Math.sin(p.heading) * along, y: 30 + Math.random() * 25, vx: Math.cos(a) * s, vz: Math.sin(a) * s, vy: 80 + Math.random() * 120, g: 700, drag: 1, life: 0.7, size: 3 + Math.random() * 3, color: '#ffffff', alpha: 1 });
+    }
+  }
   const was = p.zoom; p.zoom = p.runT >= ZOOM_AFTER && p.state === 'idle';
   if (p.zoom && !was) { A.whoosh(); dust(p.x, p.y, 8, { speed: 110 }); }
 
