@@ -387,7 +387,7 @@ export function makeDog() {
   // Each ear is one smooth flap (earSkin) bent through the swinging chain, not separate pieces.
   const ears = [1, -1].map((s) => {
     const skin = earSkin(); head.add(skin.mesh);
-    return { s, skin, ends: [0, 1, 2, 3].map(() => new THREE.Vector3()), top: new THREE.Vector3(-1, 11, s * 13.5), pts: null, was: null };
+    return { s, skin, ends: [0, 1, 2, 3].map(() => new THREE.Vector3()), top: new THREE.Vector3(-1, 15.5, s * 12.2), pts: null, was: null };
   });
   const tail = group(-43, 52, 0, mesh([{ ...blob(COAT, -18, 2, 0, 22, 4.4, 4.6), geo: TAIL }, blob(LIVER, -3, 3, 0, 7.5, 4.4, 4.9)]));
   foreIn.add(collarG, tag, head); rearIn.add(tail);

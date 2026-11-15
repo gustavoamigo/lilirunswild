@@ -472,3 +472,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: only the ears need fixing now: you can see through them at some angles; attach them to the head. The eye movement is good.
 
 **Decision**: each ear's root was an open end floating beside the head; it is now closed and sunk into the skull, so the ear grows out of the head. **Checked by script**: the turnaround, the face close up, a gallop strip.
+
+**Feedback**: attach her ears a little higher.
+
+**Decision**: the ear roots moved up the skull (root at height 15.5, from 11). **Checked by script**: face and turnaround.
