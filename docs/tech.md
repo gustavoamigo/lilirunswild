@@ -1,6 +1,6 @@
 # Tech
 
-Three.js r170 (vendored), plain ES modules, no build step, and no asset files but sounds (`sounds/`): `lili-growl-*.wav` are Lili's own play growl, the sound she makes pulling on something, recorded by the owner and kept for pulling a toy from someone; the rest (bark, panting, car engine, horn and crash, a man's yell, a woman's and a child's scream) are generated (*Generated sounds* below) and everything else is synthesised in `src/audio.js`. Same architecture as wheek.
+Three.js r170 (vendored), plain ES modules, no build step, and no asset files but sounds (`sounds/`): `lili-growl-*.wav` are Lili's own play growl, the sound she makes pulling on something, recorded by the owner and kept for pulling a toy from someone; the rest (bark, panting, car engine, horn and crash, a man's yell, a woman's and a child's scream) are generated (*Generated sounds* below), the lines said out loud (`sounds/voice/*.mp3`) are made by a speech model (*The voice* below), and everything else is synthesised in `src/audio.js`. Same architecture as wheek.
 
 ## Files
 
@@ -20,6 +20,7 @@ Three.js r170 (vendored), plain ES modules, no build step, and no asset files bu
 | `src/input.js`, `src/gamepad.js` | Keys, pointer, pad |
 | `src/style.js` | `?style=real` (default) or `toon` |
 | `tools/serve.py` | Local server with caching off |
+| `tools/voice.py` | Makes the clip of every line the game says (see *The voice* below) |
 | `tools/sim/` | Lili's skeleton in a physics engine, to capture movement from instead of posing it (see below) |
 
 ## The town: tiles on a map
@@ -48,7 +49,7 @@ Events the game sends (`src/main.js`): `zoom`, `jump`, `bark`, `honk`, `chase` (
 
 What the game does for them (`src/main.js`, section "jobs" and around it):
 - **The card** (`drawJob`): top middle, or under the counters when the screen is too narrow (`cardBox`). New, it is drawn big in the middle for 2.4 s and eases to its place. Pictures from the step in hand if it has its own, else the job's; pips for a count, or one per step. The words (`ui.say`) are drawn under it while it is new or just tapped. Tapping it (`input.onTap`) says it again and sets `ui.helpT` (14 s of guidance).
-- **Said out loud** (`A.speak`): the browser's speech synthesis, an English voice, a little slow and high; it waits for the first touch (browsers allow no sound before one) and stops when muted. A stand-in for recordings.
+- **Said out loud** (`A.speak(text)`): a clip per line (*The voice* below), found by its words in `sounds/voice/lines.json`, fetched and decoded the first time it is said. One line at a time (a new one cuts the last short); it waits for the first touch (browsers allow no sound before one) and stops when muted. A line with no clip is not said: there is no other voice to fall back on.
 - **Finding the way** (`guided`, `drawTrail`): on for levels 1 and 2, and otherwise while `ui.helpT` runs or after 25 s with no progress (`missions.quiet()`). White paw prints with a shadow from her (or the car) towards `missions.target`, lighting up one after another; within 180 a bouncing marker; out of sight, a green arrow at the edge of the screen. The bark or jump button pulses (class `hint`) when the step wants it.
 - **Done** (`jobDone`, `drawCelebration`, `updateJobs`): fanfare, confetti, praise; the sticker grows in the middle, then flies to the book button (2.6 s); if a level opened, a banner with its stars; the next job starts 3.6 s after (6.4 s with a banner). None left: free play.
 - **The sticker book** (`#btn-book`, `drawBook`, `tapBook`): drawn on the overlay; while it is open `frame` skips `update` (the town waits) and the action buttons are hidden. `bookLayout` picks the number of columns that gives the biggest stickers for the screen. Tapping a sticker of an open level starts that job; a locked one says how many stickers are missing. Escape or the button closes it.
@@ -156,6 +157,17 @@ Sound effects can be generated on this machine with Stability AI's Stable Audio 
 - **Into the game**: `~/stable-audio/.venv/bin/python tools/sound_prep.py <seed> <name> [--loop]` writes `sounds/<name>.wav` from the file with that seed: mono, silence trimmed, faded, peak −1 dB; a loop is crossfaded end into start instead; `--span=A,B` keeps only seconds A to B, to loop a stretch with no gap in it (check a loop's loudness over time: a silent stretch is a gap every time round). Then load it in `loadVoice` and play it from `src/audio.js`.
 - **In the game now** (seed: file): 1995100440 bark, 336555405 man-yell (a frightened man), 43737709 woman-scream-1 and 559133282 woman-scream-2 (one or the other, at random), 1216753226 cup-break-1 ("plate shattering on the floor") and 1741754685 cup-break-2 ("ceramic cup breaking on the floor"), 1 s each ( the table's plates breaking, one or the other; the pots keep the synthesised smash), 887578184 bin-1 and 1314752365 bin-2 ("plastic trash bin falling over"), 1342402161 bin-3 and 1223742836 bin-4 ("metal trash can knocked over"), 1 s each (a bin knocked over, one of the four at random), 1997700765 child-scream ("5 year old child screaming", 2.4 s), 593775792 car-engine (`--span=0.15,2.15`: the clip goes silent near its end, which looped as a gap; a loop: faster with speed, 0.8 to 1.5 times, and a little louder), 1649600267 car-crash, 1167704597 car-horn, 2013129909 panting ("cocker spaniel panting while running, steady rhythmic breathing", played through a low-pass filter at 1800 Hz: raw it sounded like sandpaper, `--span=0.25,2.15`: the clip fades in and goes silent at the end; a loop at gain 0.18 at most: `dog.puff` builds over about 3 s of zoomies; she pants only while she is flat out, from half to full as `puff` builds, and stops when she stops running; tongue out while standing still out of breath). Still synthesised: the paw steps (a generated step sounded horrible).
 - Each sound has a row in `~/stable-audio/out/generation_log.csv` (date, prompt, seed, duration, steps, model revision). The outputs are ours; the owner decided no credits file is kept in the game.
+
+## The voice (`tools/voice.py`, `~/lili-voice`)
+
+Everything the game says is a clip, the same on every device. The browser's own voice (`speechSynthesis`) was used first and the owner found it horrible: it is a different voice on each device and robotic on most.
+
+- **The lines** are the `say:` and `praise:` of every job in `missions/` and the game's own (`SAY` and `PRAISE` in `src/main.js`). A line said by the game must be one of these, word for word: no line is put together from parts (so "Get more stickers first!", not a number of them).
+- **Making them**: `~/lili-voice/.venv/bin/python tools/voice.py` writes `sounds/voice/<its words>.mp3` for each line (mono, 24 kHz, 48 kbit/s, silence trimmed, all at one loudness) and `sounds/voice/lines.json` (line: file), and removes clips of lines no longer said. Run it after changing or adding a line, and commit the clips. `--voice=NAME --out=DIR --only=N` makes a few lines in another voice to compare.
+- **The model** is Kokoro 82M (`hexgrad/Kokoro-82M`, Apache 2.0, `kokoro` 0.9.4 from PyPI), running on the processor in `~/lili-voice/.venv` (Python 3.12 made with `uv venv`, `torch` from the CPU index, `kokoro`, `soundfile`, `faster-whisper`): under a second a line. The voice is `af_heart` at speed 0.9. `SPOKEN` in the tool respells a word the model would say wrong ("Lili" is given to it as "Lily").
+- **Checking them**: nobody can listen from a script, so `tools/voice.py --check` has a speech recognizer (Whisper small, in the same environment) write down what each clip says and lists the lines whose words differ. "Bark! Woof, woof!" is always listed: the recognizer writes "with with", though the model was given the right sounds for "woof" and "Woof! You did it!" is heard right. The check says the words are there, not that the voice is pleasant: that needs ears.
+- **Other voices to compare** are at `http://linuxpc.tailafeefd.ts.net:8791/` while `python3 -m http.server 8791 --directory ~/lili-voice/listen` runs (not restarted on reboot).
+- In tests, `__G.api.spoken` is `{ said, silent }`: the lines played, and the lines that had no clip.
 
 ## The simulated skeleton (`tools/sim/`)
 

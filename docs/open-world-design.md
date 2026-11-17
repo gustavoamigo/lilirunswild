@@ -183,7 +183,7 @@ Each step is playable and shown to the owner before the next.
 
 ## Open questions for the owner
 
-- The voice: the jobs are said by the browser's own voice, in English, which is a stand-in. Which language do the children speak, and whose voice should it be? (A recorded family voice would suit a game about your dog; the words are all in the job files.)
+- The voice: the jobs are said by clips made with a speech model, in English (docs/tech.md, "The voice"; the browser's own voice was horrible). Which language do the children speak? And a recorded family voice would still suit a game about your dog best: a recording can take the place of any clip in `sounds/voice/`.
 - Rewards beyond stickers: things for Lili to wear for finishing a level?
 
 ## References

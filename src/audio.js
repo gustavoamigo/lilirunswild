@@ -33,7 +33,7 @@ for (const ev of ['touchend', 'click', 'keydown']) window.addEventListener(ev, u
 
 export function setMuted(m) {
   muted = m;
-  if (m) { waiting = null; try { window.speechSynthesis?.cancel(); } catch {} }
+  if (m) { waiting = null; hush(); }
   if (ac) master.gain.setTargetAtTime(m ? 0 : 1, ac.currentTime, 0.03);
 }
 export const isMuted = () => muted;
@@ -162,25 +162,27 @@ export function engine(level, on) { loopAt('car-engine', on ? 0.25 + level * 0.1
 export function panting(level) { loopAt('panting', level * 0.13, 1.05 + level * 0.2, 1800); }   // softened: raw, it rasped like sandpaper
 
 // ---- jobs: said out loud, and the sounds of getting on with them ----
-// A job is said by the browser's own voice (speechSynthesis): the children this is for are only starting to read. Until
-// the first touch or key nothing may sound, so what was to be said waits for it. Recordings can replace this later:
-// the words are all in the job files.
-let touched = false, waiting = null, talker;
-function pickVoice() {
-  const all = window.speechSynthesis.getVoices().filter((v) => /^en/i.test(v.lang));
-  return all.find((v) => /female|samantha|karen|moira|tessa|serena|zira|libby|sonia|google uk english female/i.test(v.name)) || all.find((v) => v.default) || all[0] || null;
-}
+// The children this is for are only starting to read, so every job is said. Each line is a clip in sounds/voice/, made
+// by tools/voice.py (docs/tech.md, "The voice") and found by its words in lines.json; a line with no clip is not said.
+// Until the first touch or key nothing may sound, so what was to be said waits for it. One line at a time: a new one
+// cuts the last short.
+let touched = false, waiting = null, lines = null, talking = null, turn = 0;
+const said = {}, here = (f) => new URL(`../sounds/voice/${f}`, import.meta.url);
+export const spoken = { said: [], silent: [] };          // for tests: what was played, and lines with no clip
+fetch(here('lines.json')).then((r) => r.json()).then((t) => { lines = t; if (touched && waiting) { const w = waiting; waiting = null; speak(w); } }).catch(() => { lines = {}; });
+const clip = (k) => (said[k] ||= fetch(here(`${k}.mp3`)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)));
+function hush() { turn++; if (talking) { try { talking.stop(); } catch {} talking = null; } }
 export function speak(text) {
-  const synth = window.speechSynthesis;
-  if (!synth || !text || muted) return;
-  if (!touched) { waiting = text; return; }
-  try {
-    synth.cancel();
-    const u = new SpeechSynthesisUtterance(text);
-    talker ||= pickVoice(); if (talker) u.voice = talker;
-    u.lang = talker ? talker.lang : 'en-GB'; u.rate = 0.92; u.pitch = 1.25; u.volume = 1;
-    synth.speak(u);
-  } catch {}
+  if (!text || muted) return;
+  if (!touched || !lines) { waiting = text; return; }
+  hush();
+  const k = lines[text], mine = turn;
+  if (!k || !ac) { if (!k) spoken.silent.push(text); return; }
+  clip(k).then((buf) => {
+    if (mine !== turn || muted) return;
+    const src = ac.createBufferSource(); src.buffer = buf; src.connect(master); src.start();
+    talking = src; spoken.said.push(text);
+  }).catch(() => { delete said[k]; });
 }
 export function fanfare() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.11, i === 3 ? 0.5 : 0.16, { type: 'triangle', vol: 0.16, attack: 0.01 })); tone(1319, 0.44, 0.45, { type: 'sine', vol: 0.08, attack: 0.02 }); }
 export function chime() { tone(880, 0, 0.12, { type: 'sine', vol: 0.14 }); tone(1320, 0.08, 0.22, { type: 'sine', vol: 0.12 }); }

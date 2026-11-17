@@ -54,7 +54,7 @@ const missions = makeRunner(STUDIO ? [] : await loadMissions(), world, {
   start: (m) => jobStarted(m),
   step: (m, s) => stepStarted(m, s),
   progress: () => { ui.pip = 1; A.ding(); },
-  oops: () => { ui.oops = 1; A.oops(); A.speak('Oops! Gently. Try again.'); },
+  oops: () => { ui.oops = 1; A.oops(); A.speak(SAY.oops); },
   done: (m, first, levels) => jobDone(m, first, levels),
 });
 const ui = { card: null, cele: null, banner: null, nextT: 0, book: false, helpT: 0, sayT: 0, pip: 0, oops: 0, bonePop: 0, fly: [], free: false, saidAll: false, tidyT: 0, saveT: 10, rect: null, boneAt: [0, 0] };
@@ -838,6 +838,9 @@ function drawOverlay(t) {
 // loud, shown as pictures on a card at the top, and pointed to in the town (paw prints, a marker, an arrow at the
 // screen's edge, the button to press pulsing). Done, it becomes a sticker in the sticker book and the next one starts
 // by itself. Nothing is timed and nothing can be failed.
+// What the game itself says (a job's own words are in its file). Each line is a clip made by tools/voice.py: run it
+// after changing one.
+const SAY = { oops: 'Oops! Gently. Try again.', jobs: 'Wow! New jobs!', all: 'You did every job! You are the best dog in town!', more: 'Get more stickers first!', wait: 'Not yet!' };
 const PRAISE = ['Good girl, Lili!', 'Well done!', 'Woof! You did it!', 'Clever dog!', 'Hooray!'];
 const picture = (m) => missions.step()?.picture || m.picture;
 const words = (m) => missions.step()?.say || m.say;
@@ -868,13 +871,13 @@ function updateJobs(dt) {
   if (k && (k.t += dt) > 2.6) {                       // the sticker has reached the book
     ui.cele = null; bookN.textContent = missions.done.size; A.chime();
     btnBook.classList.remove('pop'); void btnBook.offsetWidth; btnBook.classList.add('pop');
-    if (k.levels.length) { ui.banner = { level: k.levels[k.levels.length - 1], t: 0 }; A.fanfare(); A.speak('Wow! New jobs!'); }
+    if (k.levels.length) { ui.banner = { level: k.levels[k.levels.length - 1], t: 0 }; A.fanfare(); A.speak(SAY.jobs); }
   }
   if (ui.banner && (ui.banner.t += dt) > 2.6) ui.banner = null;
   if (!missions.job() && !ui.free && (ui.nextT -= dt) <= 0) {
     const m = missions.next();
     if (m) missions.start(m);
-    else { ui.free = true; if (!ui.saidAll) { ui.saidAll = true; A.speak('You did every job! You are the best dog in town!'); } }
+    else { ui.free = true; if (!ui.saidAll) { ui.saidAll = true; A.speak(SAY.all); } }
   }
   // the button the job wants pressed pulses
   const s = guided() ? missions.step() : null, a = s && s.action, at = s && missions.target(dog, car), close = !!at && dist(at.x, at.y, dog.x, dog.y) < 330;
@@ -1079,7 +1082,7 @@ function tapBook(x, y) {
   const it = ui.layout?.items.find((q) => Math.hypot(q.x - x, q.y - y) < q.r * 1.15);
   if (!it) return;
   A.initAudio();
-  if (!missions.available(it.m)) { const n = missions.missing(it.m.level); A.oops(); A.speak(n > 0 ? `Get ${n} more sticker${n > 1 ? 's' : ''} first!` : 'Not yet!'); return; }
+  if (!missions.available(it.m)) { const n = missions.missing(it.m.level); A.oops(); A.speak(n > 0 ? SAY.more : SAY.wait); return; }
   closeBook(); missions.start(it.m);
 }
 
@@ -1087,7 +1090,7 @@ function resize() { S.resize(); hud.width = Math.round(S.view.w * S.view.dpr); h
 
 // ---- wiring ----
 function act(a) { A.initAudio(); if (ui.book) return; if (a === 'jump') jump(); else if (a === 'bark') bark(); else carAction(); }
-G.api = { jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save };
+G.api = { jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save, spoken: A.spoken };
 input.onAction = act;
 const btnCar = document.getElementById('btn-car'), btnMute = document.getElementById('btn-mute'), btnBook = document.getElementById('btn-book'), bookN = document.getElementById('book-n');
 const btnBark = document.getElementById('btn-bark'), btnJump = document.getElementById('btn-jump'), actions = document.getElementById('actions'), keysHelp = document.getElementById('keys');

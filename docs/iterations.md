@@ -550,3 +550,14 @@ Each iteration: what was built → what to test → feedback received → what t
 **Found on the way**: `node --check` passes a module with a name declared twice; the game did not start and the check said nothing. Check a `.mjs` copy and load the page once (docs/tech.md, test hooks). More than two test browsers at once overload this machine and the game in them does not start.
 
 **Not checked**: touch on a real phone or tablet; a gamepad; whether a five year old now gets up first time, which only a child can tell us.
+
+**Feedback**: the voice that says the jobs is horrible. (It was the browser's own speech synthesis.)
+
+**Decision**: every line is now a clip, the same on every device, made on this machine by a speech model (Kokoro 82M, voice `af_heart`, a little slow) with `tools/voice.py` (docs/tech.md, "The voice"). The browser's voice is gone altogether: a line with no clip is not said, so nothing can fall back to it. 47 lines, 0.6 MB as mp3. To keep every line a whole clip, the book now says "Get more stickers first!" without the number. The game's own lines are in one place (`SAY`, `PRAISE` in `src/main.js`). Six lines in ten voices of the same model are on a listening page (`http://linuxpc.tailafeefd.ts.net:8791/`) for the owner to pick another, or to say none will do; a recorded family voice is still the better answer for a game about your own dog.
+
+**Checked by script**:
+- A speech recognizer wrote down what each of the 47 clips says: 46 match their words. "Bark! Woof, woof!" is written "Bark with with"; the model was given the right sounds for "woof", and "Woof! You did it!" is heard right, so this is likely the recognizer.
+- Every line a job can say (37) has a clip, and all 47 files load.
+- In the browser: nothing is said before the first key; then the first job's line; after the job, the praise and the next job's line; a tap on the card says it again; muted, a tap says nothing; no errors.
+
+**Not checked**: how it sounds. I cannot hear it, and the check only says the words are there. Loudness against the barks and the car; on a phone or tablet.

@@ -53,7 +53,7 @@ An open-world game for children of 5 to 7: one big town built from reusable tile
 
 ## Not decided yet
 
-- The voice that says the jobs: which language, whose voice (the browser's own for now).
+- The voice that says the jobs: which language, and whether a family voice should replace the generated one (docs/tech.md, "The voice").
 - Rewards beyond stickers (things for Lili to wear).
 - Camera: fixed and looking north, as in wheek. A camera that follows behind the car, turning with it, would break "up means away"; to decide when driving matters more.
 - How big the town gets, more cars, traffic, people who react for longer (chasing him, calling him).
