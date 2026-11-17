@@ -6,12 +6,13 @@ import * as Art from './art.js';
 import { input, keyVector, steerMag, initInput } from './input.js';
 import { pollPad } from './gamepad.js';
 import { spawn, updateFx, drawFx, burst, confettiColor } from './fx.js';
-import { loadTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js';
+import { loadTown, pushOut, floorAt, platDist, nearestOn, KINDS, BOUNDS } from './world.js';
 import { CAR, PERSON_LOOKS, isChild, personVoice } from './models.js';
 import { loadMissions, makeRunner } from './missions.js';
 import { clamp, lerp, dist, easeInOut, easeOut, TAU } from './util.js';
 
 const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560;
+const AIM_FAR = 260, AIM_SPEED = 540;   // jumping at something to get up onto: from how far, and how fast she may fly to it
 // a spaniel's trot and flat-out run for her size (84 game units to the metre: 2.5 and 5.5 m/s); flat out is the simulated gallop's own speed
 const TROT = 210, ZOOM = 460, ZOOM_AFTER = 0.9;      // run flat out for this long and he gets the zoomies
 // the about-turn's slide takes a third of a second from flat out, down to SKID_END, whatever her top speed
@@ -113,11 +114,14 @@ function spray(x, y, n, up) {
 }
 function land(fromHop) {
   dog.air = false; dog.vz = 0; dog.landT = 0.22;
+  const aim = dog.aim; dog.aim = null;
   // a leap into the lake: a big splash, and a ring across the water
   if (!fromHop && dog.state !== 'drive' && world.surfaceAt(dog.x, dog.y) === 'water') { spray(dog.x, dog.y, 16, 440); dog.crown = 1; A.splash(); dog.splashed = 2.5; dog.swim = true; missions.event('splash', { x: dog.x, y: dog.y }); missions.event('swim', { x: dog.x, y: dog.y }); return; }
   dust(dog.x, dog.y, 6); A.land();
   const [, on] = floorAt(world, dog.x, dog.y, dog.z);
   if (on) { on.wob = Math.max(on.wob, 0.6); if (!fromHop) missions.event('hop', { kind: on.kind, id: on, x: dog.x, y: dog.y }); }
+  // up on what she jumped at: she stops there for a moment (or she would run straight off the other side)
+  if (aim && on === aim.o) { dog.vx *= 0.15; dog.vy *= 0.15; dog.stay = 0.6; dog.zoom = false; dog.runT = 0; input.target = null; }
   // landing on the car is as good as opening the door
   if (!fromHop && on === world.carPlat) enterCar();
 }
@@ -145,11 +149,45 @@ function jump() {
   const hx = Math.cos(dog.heading), hy = Math.sin(dog.heading), from = dog.still ? 0 : sp * dog.spring, far = from + Math.max(sp, 240) * 0.55;
   dog.high = false;
   for (let d = 30; d < far && !dog.high; d += 20) for (const o of [0, 22, -22]) dog.high ||= floorAt(world, dog.x + hx * d - hy * o, dog.y + hy * d + hx * o, 1e4)[0] > dog.z + 30;
+  dog.aim = jumpAim();
+  if (dog.aim) {
+    dog.high = true;
+    // too far for a jump from where she stands: a few bounds at it first
+    if (dog.still && dist(dog.aim.x, dog.aim.y, dog.x, dog.y) > 150) { dog.still = false; dog.spring = 0.3; }
+  }
+}
+// What she is jumping at: something to get up onto (the table, a bench, a market stall, the car) that is near and
+// roughly in front of her; or right beside her and not behind; or right beside her wherever she looks, if she is
+// standing (she turns to birds on her own when she stands, and a jump on the spot beside the table means the table).
+// The jump then lands on it: she turns to it over the run-up and leaves the ground at the speed that brings her down
+// on its middle (takeOff). Children of five aim roughly, and without this the table was very hard to get onto.
+function jumpAim() {
+  const hx = Math.cos(dog.heading), hy = Math.sin(dog.heading), standing = Math.hypot(dog.vx, dog.vy) < 60;
+  let best = null, least = 9;
+  for (const o of world.platforms) {
+    if (o.off || o.h <= dog.z + 30 || o.h > dog.z + JUMP_UP * JUMP_UP / (2 * GRAV) - 8) continue;
+    // the part of it nearest to the way she is heading (a bench is long: she lands on the end she is running at)
+    let c = nearestOn(o, dog.x, dog.y), near = 1e9;
+    for (let d = 0; d <= AIM_FAR; d += 20) {
+      const x = dog.x + hx * d, y = dog.y + hy * d, q = nearestOn(o, x, y), e = Math.hypot(q[0] - x, q[1] - y);
+      if (e < near - 1) { near = e; c = q; }
+    }
+    const D = Math.hypot(c[0] - dog.x, c[1] - dog.y), off = Math.abs(angDiff(Math.atan2(c[1] - dog.y, c[0] - dog.x), dog.heading));
+    if (D > AIM_FAR || off > (D < o.r + DOG_R + 50 ? (standing ? 4 : 1.6) : 0.9)) continue;
+    if (off + D / 300 < least) { least = off + D / 300; best = { o, x: c[0], y: c[1] }; }
+  }
+  return best;
 }
 function takeOff() {
-  const sp = Math.max(Math.hypot(dog.vx, dog.vy), 240);
+  let sp = Math.max(Math.hypot(dog.vx, dog.vy), 240);
+  dog.vz = dog.high ? JUMP_UP : JUMP_V;
+  const a = dog.aim;
+  if (a) {                                             // straight at what she is jumping at, to come down on it
+    const down = (dog.vz + Math.sqrt(Math.max(0, dog.vz * dog.vz - 2 * GRAV * (a.o.h - dog.z)))) / GRAV;
+    dog.heading = Math.atan2(a.y - dog.y, a.x - dog.x); sp = Math.min(dist(a.x, a.y, dog.x, dog.y) / down, AIM_SPEED);
+  }
   dog.vx = Math.cos(dog.heading) * sp; dog.vy = Math.sin(dog.heading) * sp;
-  dog.vz = dog.high ? JUMP_UP : JUMP_V; dog.air = true; dog.flight = 2 * dog.vz / GRAV;
+  dog.air = true; dog.flight = 2 * dog.vz / GRAV;
   A.jump(); dust(dog.x, dog.y, 4); missions.event('jump', { x: dog.x, y: dog.y });
 }
 
@@ -179,7 +217,8 @@ function updateDog(dt) {
   if (p.state === 'drive') return;                    // the car carries him (updateCar)
   if (p.state !== 'idle') { p.stT -= dt; if (p.stT <= 0) { if (p.state === 'paws') p.happy = 2; else if (p.state === 'daze') p.shake = 1.4; p.state = 'idle'; } }
 
-  let st = p.state === 'idle' && !(p.poo > 0) ? steering(p.x, p.y, 34) : ZERO;
+  p.stay = Math.max(0, (p.stay || 0) - dt);
+  let st = p.state === 'idle' && !(p.poo > 0) && !(p.stay > 0) ? steering(p.x, p.y, 34) : ZERO;
   const sp0 = Math.hypot(p.vx, p.vy);
   // A pointer that sits near her means "come here, slowly". One that is being swept past her on its way to the
   // other side is near her too, for a moment, and means nothing of the kind: while it is moving and she is
@@ -188,13 +227,19 @@ function updateDog(dt) {
   p.ptrX = input.sx; p.ptrY = input.sy;
   if (p.zoom && input.pointerDown && p.sweepT < 0.3 && sp0 > 1) st = st.mag ? { x: st.x, y: st.y, mag: 1 } : { x: p.vx / sp0, y: p.vy / sp0, mag: 1 };
   if (p.spring > 0) {                                  // the run-up to a jump: straight on, as fast as she can, whatever the pointer says
-    if (p.state !== 'idle' || p.air) p.spring = 0;
+    if (p.state !== 'idle' || p.air) { p.spring = 0; p.aim = null; }
     else {
       p.spring -= dt; p.skid = p.push = false;
       st = p.still ? ZERO : st.mag ? { x: st.x, y: st.y, mag: 1 } : { x: Math.cos(p.heading), y: Math.sin(p.heading), mag: 1 };
+      if (p.aim) {                                     // jumping at something: she turns to it, and goes up once she is at its foot
+        const ax = p.aim.x - p.x, ay = p.aim.y - p.y, D = Math.hypot(ax, ay) || 1;
+        if (p.still) p.heading += angDiff(Math.atan2(ay, ax), p.heading) * (1 - Math.exp(-dt * 16));
+        else { st = { x: ax / D, y: ay / D, mag: 1 }; if (D < p.aim.o.r + DOG_R + 16) p.spring = 0; }
+      }
       if (p.spring <= 0) takeOff();
     }
   }
+  if (p.air && p.aim) st = ZERO;                       // on her way to what she jumped at: nothing turns her
   watchBirds(st, dt);
   if ((st.mag && !(p.shakeWet > 0)) || p.air) p.shake = 0;          // shaking the lake off goes on as she walks
 
@@ -288,7 +333,7 @@ function updateDog(dt) {
   }
 
   // ---- bumping into solid things ----
-  const hit = pushOut(world, p, DOG_R);
+  const hit = pushOut(world, p, DOG_R, p.air && !!p.aim);   // (a jump aimed at something is not stopped by its side on the way up)
   if (hit) {
     const into = -(p.vx * hit.nx + p.vy * hit.ny);
     if (into > BONK && hit.o && p.state === 'idle') {

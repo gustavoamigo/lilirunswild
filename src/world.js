@@ -200,8 +200,9 @@ export function buildTown(tiles, pop) {
 }
 
 // Slide something round out of anything solid. Returns what it hit hardest into, as
-// { nx, ny, o } (the way out, and the thing), or null if it touched nothing.
-export function pushOut(world, p, rad) {
+// { nx, ny, o } (the way out, and the thing), or null if it touched nothing. `over`: she is on her way up onto
+// something (a jump aimed at it, src/main.js), and the sides of things to stand on do not stop her.
+export function pushOut(world, p, rad, over = false) {
   let hit = null;
   for (const o of world.obstacles) {
     const dx = p.x - o.x, dy = p.y - o.y, d = Math.hypot(dx, dy), min = o.r + rad;
@@ -212,7 +213,7 @@ export function pushOut(world, p, rad) {
   // benches, the table and the car are solid from the side, but not once he is up on top
   const z = p.z || 0;
   for (const o of world.platforms) {
-    if (o.off || z >= o.h - STEP) continue;
+    if (over || o.off || z >= o.h - STEP) continue;
     const [cx, cy] = nearestOn(o, p.x, p.y), dx = p.x - cx, dy = p.y - cy, d = Math.hypot(dx, dy), min = o.r + rad - 4;
     if (d >= min) continue;
     if (d < 0.001) { p.y += min; hit = { nx: 0, ny: 1, o }; continue; }

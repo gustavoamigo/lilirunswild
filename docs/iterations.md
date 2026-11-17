@@ -528,3 +528,25 @@ Each iteration: what was built → what to test → feedback received → what t
 
 **Checked by script**: screenshots of the start at 1100×700, on a phone and in the studio: her face is to the camera. **Not checked**: nothing else changed.
 
+
+**Feedback**: jumping on the picnic table is really hard; maybe she should snap to the table.
+
+**Decision**: a jump at something to get up onto lands on it (`jumpAim` in `src/main.js`, docs/tech.md "Jump"). It was hard for three reasons: from a stand she jumped on the spot and went nowhere; from a run she had to leave the ground at one distance (from 200 away it worked, from 130 a little to one side or from 270 it did not); and the table's side stopped her on the way up. Now, when jump is pressed near the table, a bench, a market stall or the car, and she is heading roughly at it (within about 50°, from up to 260 away) or standing right beside it whichever way she looks, she turns to it, leaps at the speed that brings her down on it, is not stopped by its side, and stops on top for 0.6 s so that she does not run off the far side. From a stand further away she takes a few bounds at it first. Any other jump is as it was, and she can still lean in the air. It is an aim, not a magnet: nothing pulls her while she is just running past.
+
+**Checked by script** (headless, keys; the same trials on the version before and on this one):
+
+| Jump at the table | before | now |
+| --- | --- | --- |
+| standing, 112 to 240 away, facing it or up to 45° off (36 trials) | 3 | 33 |
+| trotting at it, jump pressed 130 to 270 away, on line or 50 to one side (24) | 12 | 24 |
+| galloping at it, the same (24) | 12 | 24 |
+
+- The three still missed are one spot 240 away where she had turned to point at pigeons before the jump was pressed, so she was not facing the table: an ordinary jump, as meant.
+- A bench (and the end of it she runs at), a market stall and the car (she gets in): landed on from 135 away at 23° off, and from right beside facing sideways.
+- No aim, and the jump as before: in the open; 200 and 300 away from the table; 70° off it at a distance.
+- The poo job done by keys alone (run at the table, jump, let go). A tap on the table (she runs to its foot) and then the jump button puts her on it. Galloping with the key held, she lands, stays, and runs off after the stop if the key is still down.
+- Looked at four frozen frames of a standing jump from beside the table, facing sideways: she turns to it, leaps and lands in the middle.
+
+**Found on the way**: `node --check` passes a module with a name declared twice; the game did not start and the check said nothing. Check a `.mjs` copy and load the page once (docs/tech.md, test hooks). More than two test browsers at once overload this machine and the game in them does not start.
+
+**Not checked**: touch on a real phone or tablet; a gamepad; whether a five year old now gets up first time, which only a child can tell us.
