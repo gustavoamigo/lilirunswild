@@ -522,3 +522,9 @@ Each iteration: what was built → what to test → feedback received → what t
 
 **Not checked**: the voice (no sound in the test browser; it is the browser's own English voice, which differs by device, and a stand-in); touch on a real phone or tablet; whether a five year old understands the pictures, which only a child can tell us; how it feels over a whole sitting.
 
+**Feedback**: Lili starts looking away from the camera.
+
+**Decision**: she starts facing the camera (south), as if just out of her door, so the first thing a child sees is her face. The same in the studio.
+
+**Checked by script**: screenshots of the start at 1100×700, on a phone and in the studio: her face is to the camera. **Not checked**: nothing else changed.
+

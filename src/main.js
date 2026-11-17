@@ -41,7 +41,7 @@ if (STUDIO) {
   }
 }
 const dog = {
-  x: world.start.x, y: world.start.y, z: 0, vx: 0, vy: 0, vz: 0, heading: -Math.PI / 2,
+  x: world.start.x, y: world.start.y, z: 0, vx: 0, vy: 0, vz: 0, heading: Math.PI / 2,   // out of her door, looking at the camera
   state: 'idle', stT: 0,            // idle (on his feet) | paws (up on someone) | daze | hop (in or out of the car) | drive
   air: false, zoom: false, runT: 0, footfall: false, stepAt: 0, gait: 0, skid: false, sweepT: 9, ptrX: 0, ptrY: 0, push: false, shake: 0, fidget: 0,
   lookYaw: 0, lookPitch: 0, seen: null, thought: 0, point: 0,
