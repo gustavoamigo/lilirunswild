@@ -1057,6 +1057,14 @@ export function makeProp(kind) {
     blob('#B5793F', -1, 14, 4, 2.2), blob('#B5793F', -1, 14, -4, 2.2), blob('#E8C08A', 5, 8, 0, 2.4, 2, 2.6), blob('#2A1C14', 6.8, 8.6, 0, 0.9),
     blob('#2A1C14', 4.6, 10.8, 2.2, 0.7), blob('#2A1C14', 4.6, 10.8, -2.2, 0.7), blob('#B5793F', 1, 0, 6.5, 2.4, 4.5, 2.4), blob('#B5793F', 1, 0, -6.5, 2.4, 4.5, 2.4),
     blob('#B5793F', 2, -9, 3.5, 3, 2.6, 2.8), blob('#B5793F', 2, -9, -3.5, 3, 2.6, 2.8)]; }
+  else if (kind === 'bone') { mid = 7; parts = [   // a bone: a shaft and two knuckles at each end
+    cyl('#FFFFFF', 0, 0, 0, 4, 26, [0, 0, Math.PI / 2]), blob('#FFFFFF', -14, 0, 4, 5.5), blob('#FFFFFF', -14, 0, -4, 5.5), blob('#FFFFFF', 14, 0, 4, 5.5), blob('#FFFFFF', 14, 0, -4, 5.5)]; }
+  else if (kind === 'mound') parts = [   // a heap of dug earth, the end of a bone showing
+    blob('#8A5A3C', 0, 2, 0, 30, 13, 26), blob('#7A4E33', -12, 6, 8, 13, 8, 11), blob('#9A6A46', 12, 5, -7, 12, 7, 11), blob('#7A4E33', 4, 9, 4, 9, 6, 9),
+    cyl('#FFFFFF', 6, 14, -2, 3, 14, [0, 0, 0.5]), blob('#FFFFFF', 0.5, 20, 1, 4.5), blob('#FFFFFF', 3.5, 21.5, -5, 4.5)];
+  else if (kind === 'sausage') { mid = 7; parts = [   // a string of sausages
+    blob('#D9705A', -17, 0, 0, 9, 5.5, 5.5), blob('#D9705A', 0, 0, 0, 9, 5.5, 5.5), blob('#D9705A', 17, 0, 0, 9, 5.5, 5.5),
+    blob('#B5503E', -8.5, 0, 0, 2), blob('#B5503E', 8.5, 0, 0, 2), blob('#B5503E', -26, 0, 0, 2), blob('#B5503E', 26, 0, 0, 2)]; }
   else if (kind === 'apple') { mid = 7; parts = [blob('#D9342B', 0, 0, 0, 8, 7.5, 8), cyl('#6E4630', 0, 8, 0, 1, 4), blob('#4FA653', 3, 9, 0, 3, 1.2, 2)]; }
   else { mid = 13; parts = [blob('#D7E84A', 0, 0, 0, 13), { geo: new THREE.TorusGeometry(12.6, 1.2, 6, 20), color: '#ffffff', at: [0, 0, 0], scale: [1, 1, 1], rot: [0.5, 0.4, 0], flat: true }]; }
   // A bin or cone falls over its base's edge (FOOT: how far that is from the middle), so it ends up lying on its side on

@@ -1,9 +1,9 @@
 ---
 id: drive-to-school
-needs: []
-picture: car-school
+level: 2
+picture: [car, school]
 say: "Drive the car to school!"
 steps:
   - drive: school-door
 ---
-Hop into the red car and drive it to the school, on the north side of the ring road, east.
+The way leads to the car first, then to the school. Teaches getting into the car and driving.

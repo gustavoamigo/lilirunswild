@@ -288,6 +288,7 @@ export function render(G, dt) {
     const o = e.o;
     e.root.visible = !o.gone; if (o.gone) continue;
     e.root.position.set(o.x, o.z, o.y); e.root.rotation.y = -o.dir;
+    if (o.kind === 'bone' && !o.carried) { e.root.position.y = o.z + 12 + Math.sin(t * 3 + o.x) * 5; e.root.rotation.y = t * 1.6 + o.x; }   // a bone to find: it turns and bobs, to be seen
     e.tip.rotation.z = -o.tip + Math.sin(t * 28) * o.wob * 0.12;
     e.spin.rotation.z = -o.roll;
   }
@@ -296,6 +297,7 @@ export function render(G, dt) {
     const d = G.debris[i], m = M.makeShards(d.kind);
     m.position.set(d.x, d.z || 0, d.y); m.rotation.y = d.dir; m.receiveShadow = true; scene.add(m); debris.push(m);
   }
+  for (let i = 0; i < debris.length; i++) debris[i].visible = !G.debris[i].gone;   // tidied away (the game never takes one out of the list)
   for (const e of people) e.m.update(e.o, t);
   for (const e of birds) {
     const { f: fl, b, m } = e, air = fl.state !== 'ground';

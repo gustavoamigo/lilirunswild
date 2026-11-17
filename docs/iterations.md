@@ -500,3 +500,25 @@ Each iteration: what was built → what to test → feedback received → what t
 **Feedback**: can't find the things the missions need.
 
 **Decision**: brought forward from step 4: a trail of white paw prints on the ground towards the place the followed mission needs (the car first for a drive, the boy with the teddy, then home), a bouncing marker when close, a big arrow at the screen edge when it is out of sight; tapping a card picks which mission to follow. **Checked by script**: the trail and arrow from home towards the car and towards the picnic table, tapping a card, no errors. **Not checked**: by eye in play.
+
+## Iteration 10: jobs for children of 5 to 7
+
+**Feedback**: the missions are a little confusing for children; rework them for 5 to 7 year olds, add a bunch of them, give the town lots to do, and have them get harder or trickier as the children learn. "You are the expert, you can do some research first."
+
+**Decision** (design in `docs/open-world-design.md`, *Jobs for five to seven year olds*; the research is under its *References*):
+- **One job at a time** on one card, in two or three big pictures, said out loud, with the way shown in the town; tapping the card says it again and shows the way. Three cards open at once was the confusing part.
+- **A sticker book**: a job done becomes a sticker; the book shows every job, and tapping one starts it (again). The next job starts by itself, so nobody has to choose or read.
+- **Four levels, 26 jobs**: one button or one run; then a skill or a count of three; then two steps with the way no longer shown unless asked for (or after 25 s of nothing); then three steps, long hunts and one rule (make five friends without scaring anybody). A level opens on stickers earned (4, 9, 15), not on every job below it.
+- **More to do**: 26 bones to find with a counter, 7 heaps of earth to dig up, 8 more people (a butcher whose sausages can be stolen), things put back once she is far away. A person out walking now stops when she waits beside them.
+- Stickers, the job in hand and the counters are saved in the browser (`?fresh` starts over).
+- Not built, proposed as the next slices: the dog park, then the farm. More jobs now need more places.
+
+**Checked by script** (headless, waiting on game time):
+- All 26 jobs played to the end in one run, each step logged: by keys for galloping, barking, jumping, swimming and shaking, the jump into the lake, the jump onto the picnic table and the poo there, the tug of war and carrying home; by really driving into lamp posts; by putting her beside things for bones, heaps, people; by the test hooks for birds, pots, cones and apples. No page errors.
+- Standing beside each of the 16 people who are not nervous wins a hello (three who were out walking used to walk away first); every heap digs up; say hello done by keys alone following the paw prints; a run and a jump at a market stall knocks its three apples off.
+- The card (new, at the top, tapped: said again and 14 s of help, and she does not run to the tap), pips filling and emptying on a scare, the celebration, the count on the book button, the "New jobs!" banner at 4 stickers, the book (the town waits, a locked sticker stays locked, an open or done one starts, Escape closes), and the save surviving a reload: looked at in screenshots at 1100×700, 390×844 and 844×390.
+
+**Found and fixed on the way**: the first frame started the first job and saved over the saved game; the poo job passed beside the table, not on it; tests that waited on the clock instead of game time reported jobs as stuck that were not.
+
+**Not checked**: the voice (no sound in the test browser; it is the browser's own English voice, which differs by device, and a stand-in); touch on a real phone or tablet; whether a five year old understands the pictures, which only a child can tell us; how it feels over a whole sitting.
+

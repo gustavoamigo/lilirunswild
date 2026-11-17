@@ -1,10 +1,10 @@
 # Open world and missions: design
 
-Status: approved; steps 1 (tiles), 2 (bigger town, only nearby tiles built) and 3 (missions) done 2026-11-15, see *The town: tiles on a map* and *Missions* in `docs/tech.md`. Choices made in step 3: a poo happens on its own when she stands still where an open mission wants one; she drops what she carries on her own where a mission wants it (or when she barks); grabbing a toy from someone works with or without a mission.
+Status: approved; steps 1 (tiles), 2 (bigger town, only nearby tiles built) and 3 (missions) done 2026-11-15, step 4 (the jobs reworked for children of 5 to 7, see *Jobs for five to seven year olds*) done 2026-11-17; see *The town: tiles on a map* and *Missions* in `docs/tech.md`. Choices made in step 3: a poo happens on its own when she stands still where an open mission wants one; she drops what she carries on her own where a mission wants it (or when she barks); grabbing a toy from someone works with or without a mission.
 
 ## What the game becomes
 
-An open-world game for children of 6 and 7, played as Lili: one big town with no levels or loading screens, where you go anywhere you like, at any time. You roam it, borrow the car, cause harmless mischief and make friends. Missions give ideas of what to do, never a path you must follow. Playing without any mission is always fun on its own, as it is today.
+An open-world game for children of 5 to 7, played as Lili: one big town with no levels or loading screens, where you go anywhere you like, at any time. You roam it, borrow the car, cause harmless mischief and make friends. Missions give ideas of what to do, never a path you must follow. Playing without any mission is always fun on its own, as it is today.
 
 Two things make it scale:
 
@@ -13,14 +13,14 @@ Two things make it scale:
 
 ## Who it is for
 
-Children of 6 and 7, most of whom read little or not at all.
+Children of 5 to 7, most of whom read little or not at all.
 
-- **Nothing to read.** Missions are spoken in a warm recorded voice and shown as a picture, in a thought bubble like the bird she sees now. Footprints or an arrow can show the way. Guidance for pre-readers: audio and pictures, few and large buttons, literal icons.
+- **Nothing to read.** Jobs are spoken (a recorded voice in the end; the browser's own for now) and shown as pictures on a card. Paw prints and an arrow show the way. Guidance for pre-readers: audio and pictures, few and large buttons, literal icons.
 - **No points, no timers, no losing.** Scores and leaderboards push children of this age towards competing, and rewards lift performance for a while but not the wish to play. Toca Boca, very popular at this age, has no score, timer or levels.
-- **Rewards you can see and play with.** A picture to-do list that gets stamped like a sticker book; new things for Lili (a collar, a hat, a ball); new parts of town opening.
+- **Rewards you can see and play with.** A sticker book that fills; later, new things for Lili (a collar, a hat, a ball) and new parts of town opening.
 - **One finger is enough** (already a rule in `CLAUDE.md`).
 
-The model: an open area to play in freely, with a to-do list of bits of mischief that can be done in almost any order; finishing enough of them opens the next area.
+The model: an open area to play in freely, with one bit of mischief suggested at a time and a book of all of them to pick from; earning enough stickers opens harder ones.
 
 ## The town: tiles on a map
 
@@ -62,84 +62,135 @@ The game builds the meshes of the tiles within about two tiles of Lili (or the c
 
 Today the town is one hand-built layout (`buildTown` in `src/world.js`, with the ring road as a formula) and its ground is painted once into a single texture. Both become tile-based. The rest of the game (Lili, the car, people, birds, collisions) already works from lists of things with positions, so it keeps working; the lists are filled from the tiles near her.
 
-## Missions
+## Jobs for five to seven year olds
+
+The first three missions were three cards at the top, open at once, with small pictures. A child of five did not know which to do, what a picture meant or where to go. This section replaces that (2026-11-17). Jobs are what the files in `missions/` describe; the code still calls them missions.
+
+What the research says about this age (links under *References*): they are only starting to read, so say it and show it; pictures must be literal; one thing at a time; big targets; no fail states and no clock. And from playtests of open-ended games: with nothing suggested, children ask "what should I do?", so always have one idea on offer. Open-world games for this age that hand out the same errand again and again are found dull, so jobs must differ in what the hands do, not only in where.
+
+### One job at a time
+
+- **One card**, top middle: the job as two or three big pictures (who or how, then what: `Lili` + `fast`, `car` + `school`, `sausages` + `home`). A job that wants something several times shows pips that fill; a job of several steps shows a pip per step, and the pictures change with the step.
+- **Told three ways.** Said out loud when it starts (and each new step). Shown in pictures on the card. Shown in the town: paw prints lead to the nearest thing it needs, a marker bounces over it, an arrow at the screen's edge points to it, and the button to press (bark, jump) pulses.
+- **New job**: the card comes up big in the middle for two seconds with its words under it, then moves to the top. The game does not stop.
+- **Tap the card**: it is said again, the words show, and the way is shown for a while. This is the one "help" the child needs to know, and the loudspeaker on the card hints at it.
+- **Done**: a fanfare, confetti, praise, and the job turns into a sticker that flies into the sticker book. The next job starts by itself a moment later. A child never has to choose, open a menu or read to keep playing.
+- **Never fails, never timed.** A job stays until it is done, or another is picked from the book. One late job (`five-friends`) has a rule, be gentle: scaring somebody empties its pips with a soft "oops" and it carries on.
+
+### It gets trickier as they learn
+
+Jobs come in four levels. A level opens when enough stickers are earned (4, 9, 15 of 26), not when every job below is done, so nobody is stuck behind one job they cannot manage.
+
+| Level | What it asks | The way |
+|---|---|---|
+| 1 | one thing, one button or one run: gallop, find a bone, say hello, bark, jump, chase birds | shown |
+| 2 | one skill where *how* matters, or a count of three: smash a pot (needs a gallop), drive to school, poo on the table (needs a jump up), swim then shake, three cones, three bones, three hellos | shown |
+| 3 | two steps, or a thing that needs working out: take the teddy and bring it home, sausages from the butcher, lamp posts with the car, dig up a bone, apples off the market stall (needs a jump), a jump into the lake, three pots | not shown: tap the card to ask, or it shows after 25 seconds of getting nowhere |
+| 4 | three steps, long hunts, a rule: a drive round three places, ten bones, five friends without scaring anybody, sausages to the picnic table, a big mess of three kinds, three buried bones | as level 3 |
+
+So the help is taken away as the child learns the town, and comes back by itself when they are lost.
+
+### The sticker book
+
+A star button, top right, with the number of stickers on it. It opens a page with every job as a sticker, a row per level: done in gold with a tick, to do in pale, the one in hand ringed green, a level not yet open dimmed behind a padlock with the number of stickers still needed. Tapping a sticker starts that job, done or not: favourite jobs can be played again, and a job that is too hard can be swapped. The town waits while the book is open.
+
+### More to do in the same town
+
+- **Bones** lie all over town (26). Running or driving over one picks it up; a counter at the top keeps them. They come back after a minute, once she is far away.
+- **Heaps of earth** (7: under the trees, in the sandpit, on the beach) hide a bone: standing still on one, she digs it up.
+- **More people** (19, from 11): a butcher with sausages outside his shop, a market seller, children by the fountain, on the beach and the lawn, walkers across the town square and along the lake.
+- **Things are put back**: what she broke or knocked over is back when a job needs it, and otherwise once she is far away. What she took goes back to its owner.
+
+All of it works with no job in hand: playing freely stays the game.
+
+### What comes next
+
+The town is full enough for these 26. More jobs now need more places, each small and dense with its own things to do, built and shown one at a time:
+
+1. **The dog park**: agility jumps, a tunnel, a see-saw, other dogs to play with. Jobs: once round the course, through the tunnel, play with a dog.
+2. **The farm**, past the edge of town: sheep to round up, chickens, mud to roll in, hay bales, a tractor to drive.
+3. Then the other places in `docs/game-design.md`.
+
+Also open: things for Lili to wear as rewards for whole levels (a collar, a bandana), and a recorded voice.
+
+## Missions: the files and the runner
 
 ### A mission is a file
 
-One file per mission in `missions/`, markdown with a header the game reads and notes for us below it.
+One file per job in `missions/`, listed in `missions/list.txt` (the order they are offered in): markdown with a header the game reads and notes for us below it.
 
 ```markdown
 ---
-id: steal-toy
-needs: [meet-the-kids]      # shown only once these are done
-picture: teddy              # what the child sees in the bubble and on the to-do list
-say: "Can you get the teddy?"
+id: steal-the-teddy
+level: 3
+picture: [teddy, home]          # the sticker, and the card unless a step has its own
+say: "Get the teddy and bring it home!"
 steps:
-  - take: toy
+  - take: teddy
     from: child
-  - bring: toy
+    say: "Get the teddy!"
+    picture: [lili, teddy]
+  - bring: teddy
     to: home
-reward: red-collar
+    say: "Bring the teddy home!"
+    picture: [teddy, home]
 ---
-The child holds on and they pull (her play growl), then the child gets scared, screams and runs.
+A boy outside the school holds a teddy. ...
 ```
 
-- **needs** makes the missions a graph, not a line: several are open at once, and finishing one can open others.
-- **steps** are done in order; each is one action from the vocabulary with its targets, which are tags (`child`, `table`, `school-door`), not places on the map. So a mission works in any part of town that has what it needs, and the nearest is used.
-- **reward** names something from the rewards list (below), or nothing.
+- **level** (1 to 4) decides when it opens. **needs** (a list of ids) can also hold a job back until others are done; none uses it now.
+- **picture** names icons drawn in `src/art.js` (`ICONS`). **say** is spoken and shown as the caption; **praise** replaces the usual "Good girl, Lili!".
+- **steps** are done in order; each is one action from the vocabulary with its target, which is a tag (`child`, `table`, `school-door`, `pot`), not a place on the map: the nearest is used. A step may have `count`, its own `say` and `picture`, and `from`, `to`, `at`.
+- **careful: scare** makes that event empty the job's progress.
 
 ### The action vocabulary
 
-What a step can ask. Each is code, written once; every mission can then use it.
-
 | Action | Done when |
 |---|---|
-| `go: <spot>` | she is at a spot with that tag (or drives there) |
-| `take: <thing> from: <who or spot>` | she picks it up (from a person: a tug, then they let go) |
-| `bring: <thing> to: <spot>` | she drops what she carries there |
-| `poo: <spot>` | she poos on or next to it |
-| `bark: <who or spot>` | she barks near it |
-| `play: <thing> with: <who>` | she brings the ball and they throw it for her |
-| `greet: <who>` | someone loves her (crouches and pets her) |
-| `scare: <who>` | someone runs off frightened |
-| `drive: <spot>` | the car arrives there with her in it |
+| `go: <spot>` | she is at a spot with that tag, on foot |
+| `drive: <spot>` | the car is there with her in it |
+| `poo: <spot>` | she poos there (she squats when she stands still on it) |
+| `take: <thing>` `from: child / adult` | she has pulled it away from somebody |
+| `pick: <thing>` | she picks up a thing lying about |
+| `bring: <thing>` `to: <spot>` | she drops what she carries there (she does when she stands still) |
+| `greet: any / child / adult` | somebody loves her |
+| `scare: any / child / adult` | somebody is frightened |
+| `chase: birds` | a flock flies up |
+| `smash: pot / plate` | it breaks |
+| `knock: cone / bin / box / apple / lamp` | it is knocked over |
+| `hop: bench / table / stall / car` | she lands on it |
+| `zoom`, `jump`, `bark`, `honk` | she gallops, jumps, barks, sounds the horn |
+| `swim`, `splash`, `shake` | she is in the water, jumps into it, shakes dry after it |
+| `collect: bone` | she gets a bone (found or dug up) |
+| `dig: mound` | she digs up a heap of earth |
 
-The first missions use these. A mission that needs something new (dig, swim, fetch the post) means adding one action.
-
-### Rewards
-
-A list in `missions/rewards.md`: things for Lili to wear (collars, hats, a bandana), things to play with (a ball, a frisbee), and places that open (the beach). Getting one is shown big and spoken. The to-do list keeps what has been won.
+Every action is code written once. Counted steps count different things: the same pot, person or bone counts once.
 
 ### How it runs
 
-The game reports what happens as plain events: she arrived at a spot, picked up a thing, pooed, someone loved her, the car arrived. The mission runner checks the current step of each open mission against them. Nothing in Lili's or people's code knows about missions. Progress is saved in the browser (local storage), so the to-do list is still stamped tomorrow.
-
-### What the child sees
-
-- A picture to-do list, opened with one large button: a card per open mission, stamped when done. Pressing a card says it again.
-- When a mission opens, the bubble shows its picture and the voice says it once.
-- A paw-print trail leads to the nearest place of the current step (built in step 3, always on: without it the owner could not find what the missions needed), with an arrow at the edge of the screen when the place is out of sight; tapping a card picks which mission to follow.
-- Nothing ever fails or runs out of time.
+The game reports what happens as plain events (`zoom`, `knock` with what and where, `greet` with who); the runner (`src/missions.js`) checks the step in hand against them, and checks the steps about where she is itself. Nothing in Lili's or people's code knows about jobs. Stickers, the job in hand and the counters are kept in the browser (local storage), so the book is still full tomorrow; `?fresh` starts over.
 
 ## Building it, in steps
 
 Each step is playable and shown to the owner before the next.
 
-1. **Tile format.** Today's park and ring road rebuilt as tiles on a small map: the same town, now made of pieces, painted per tile.
-2. **Bigger town and loading.** A town several times larger from `map.txt`, with Lili's home and the school, only nearby tiles built.
-3. **Missions.** The file format, the runner, the first actions, and three missions: poo on the picnic table, drive to school, take the teddy from a child.
-4. **For the child.** The picture to-do list, the voice, the trail, saving progress, the first rewards.
+1. **Tile format.** Today's park and ring road rebuilt as tiles on a small map. Done.
+2. **Bigger town and loading.** A town several times larger from `map.txt`, only nearby tiles built. Done.
+3. **Missions.** The file format, the runner, the first actions, three missions. Done.
+4. **For the child.** One job at a time, said and pictured, levels, the sticker book, saving, 26 jobs, bones and digging. Done 2026-11-17 (*Jobs for five to seven year olds*).
+5. **The dog park**, with its jobs.
+6. **The farm**, with its jobs.
 
 ## Open questions for the owner
 
-- The voice: whose? (A recorded family voice would suit a game about your dog.)
-- The first missions after the three above.
-- How far the town should grow before it is "big enough" for this age; a dense town is better than a large empty one.
+- The voice: the jobs are said by the browser's own voice, in English, which is a stand-in. Which language do the children speak, and whose voice should it be? (A recorded family voice would suit a game about your dog; the words are all in the job files.)
+- Rewards beyond stickers: things for Lili to wear for finishing a level?
 
 ## References
 
 - Rewards and motivation: [MDPI review](https://www.mdpi.com/2227-7102/13/7/668), [MIT gamification chapter](https://lcl.media.mit.edu/resources/readings/chapter3-gamification.pdf), [Harvard GSE, why children play](https://www.gse.harvard.edu/ideas/usable-knowledge/23/09/why-do-children-play)
-- No scores or levels: [Toca Boca](https://tocaboca.com/?p=16287), [Kidscreen interview](https://kidscreen.com/?p=49360)
+- No scores or levels, open-ended play: [Toca Boca](https://tocaboca.com/?p=16287), [Toca Boca on open-ended play](https://tocaboca.com/magazine/open-ended-play/), [Kidscreen interview](https://kidscreen.com/?p=49360), [Toca Blocks](https://gamesbeat.com/toca-blocks-brings-world-building-to-a-new-younger-audience/)
 - A to-do list of mischief in an open area: [a guide to one such game](https://nintendolife.com/news/2020/05/guide_untitled_goose_game_walkthrough_-_puzzle_solutions_and_to-do_list_objectives)
+- Open-world games for this age, and what reviewers found repetitive: [Paw Patrol World (GameSpew)](https://www.gamespew.com/2023/10/paw-patrol-world-review/), [Paw Patrol World (TheXboxHub)](https://www.thexboxhub.com/paw-patrol-world-review/), [Bluey: The Videogame](https://www.thexboxhub.com/bluey-the-videogame-review/)
 - Tile towns by Wave Function Collapse: [Marian42](https://marian42.github.io/article/wfc/)
-- Interfaces for pre-readers: [Aten Design](https://atendesigngroup.com/articles/designing-young-audiences), [UXmatters](https://www.uxmatters.com/mt/archives/2010/05/designing-user-experiences-for-children.php)
+- Interfaces for children who are starting to read: [Google, building for kids](https://developers.google.com/building-for-kids/designing-engaging-apps), [Apple, designing for kids](https://developer.apple.com/news/?id=3t6o5jec), [Nielsen Norman Group, children's physical development](https://www.nngroup.com/articles/children-ux-physical-development/), [Aten Design](https://atendesigngroup.com/articles/designing-young-audiences), [UXmatters](https://www.uxmatters.com/mt/archives/2010/05/designing-user-experiences-for-children.php)

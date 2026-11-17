@@ -1,4 +1,28 @@
-# The missions, one file each in this folder (docs/open-world-design.md, "Missions"). The game reads this list.
-poo-on-the-table
+# The jobs, one file each in this folder (docs/open-world-design.md, "Jobs for five to seven year olds"). The game
+# reads this list; the order here is the order they are offered in within a level.
+zoomies
+find-a-bone
+say-hello
+big-bark
+jump
+chase-the-birds
+smash-a-pot
 drive-to-school
+poo-on-the-table
+swim-and-shake
+three-cones
+three-bones
+hello-three
 steal-the-teddy
+sausage
+lamp-posts
+dig-a-bone
+apples
+big-splash
+smash-three-pots
+town-tour
+ten-bones
+five-friends
+picnic
+big-mess
+buried-treasure

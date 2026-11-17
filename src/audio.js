@@ -24,6 +24,7 @@ export function initAudio() {
 function unlock() {
   try { if (navigator.audioSession && navigator.audioSession.type !== 'playback') navigator.audioSession.type = 'playback'; } catch {}
   initAudio();
+  touched = true; if (waiting) { const w = waiting; waiting = null; speak(w); }
   if (!ac || ac.state === 'running') return;
   ac.resume();
   const src = ac.createBufferSource(); src.buffer = ac.createBuffer(1, 1, 22050); src.connect(ac.destination); src.start(0);
@@ -32,6 +33,7 @@ for (const ev of ['touchend', 'click', 'keydown']) window.addEventListener(ev, u
 
 export function setMuted(m) {
   muted = m;
+  if (m) { waiting = null; try { window.speechSynthesis?.cancel(); } catch {} }
   if (ac) master.gain.setTargetAtTime(m ? 0 : 1, ac.currentTime, 0.03);
 }
 export const isMuted = () => muted;
@@ -158,3 +160,32 @@ function loopAt(k, vol, rate, soften) {
 export function engine(level, on) { loopAt('car-engine', on ? 0.25 + level * 0.15 : 0, 0.8 + level * 0.7); }
 // Her panting while she runs flat out: level 0..1 is how out of breath she is.
 export function panting(level) { loopAt('panting', level * 0.13, 1.05 + level * 0.2, 1800); }   // softened: raw, it rasped like sandpaper
+
+// ---- jobs: said out loud, and the sounds of getting on with them ----
+// A job is said by the browser's own voice (speechSynthesis): the children this is for are only starting to read. Until
+// the first touch or key nothing may sound, so what was to be said waits for it. Recordings can replace this later:
+// the words are all in the job files.
+let touched = false, waiting = null, talker;
+function pickVoice() {
+  const all = window.speechSynthesis.getVoices().filter((v) => /^en/i.test(v.lang));
+  return all.find((v) => /female|samantha|karen|moira|tessa|serena|zira|libby|sonia|google uk english female/i.test(v.name)) || all.find((v) => v.default) || all[0] || null;
+}
+export function speak(text) {
+  const synth = window.speechSynthesis;
+  if (!synth || !text || muted) return;
+  if (!touched) { waiting = text; return; }
+  try {
+    synth.cancel();
+    const u = new SpeechSynthesisUtterance(text);
+    talker ||= pickVoice(); if (talker) u.voice = talker;
+    u.lang = talker ? talker.lang : 'en-GB'; u.rate = 0.92; u.pitch = 1.25; u.volume = 1;
+    synth.speak(u);
+  } catch {}
+}
+export function fanfare() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.11, i === 3 ? 0.5 : 0.16, { type: 'triangle', vol: 0.16, attack: 0.01 })); tone(1319, 0.44, 0.45, { type: 'sine', vol: 0.08, attack: 0.02 }); }
+export function chime() { tone(880, 0, 0.12, { type: 'sine', vol: 0.14 }); tone(1320, 0.08, 0.22, { type: 'sine', vol: 0.12 }); }
+export function ding() { tone(660, 0, 0.1, { type: 'triangle', vol: 0.13 }); tone(990, 0.07, 0.18, { type: 'triangle', vol: 0.11 }); }
+export function dig() { noise(0, 0.11, { type: 'bandpass', freq: 700, to: 320, q: 0.8, vol: 0.16 }); }
+export function oops() { tone(392, 0, 0.18, { type: 'triangle', to: 330, vol: 0.13 }); tone(294, 0.16, 0.3, { type: 'triangle', to: 247, vol: 0.12 }); }
+export function pageTurn() { noise(0, 0.14, { type: 'highpass', freq: 1800, to: 3200, vol: 0.07 }); }
+

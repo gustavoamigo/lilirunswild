@@ -1,10 +1,9 @@
 ---
 id: poo-on-the-table
-needs: []
-picture: poo-table
-say: "Can you do a poo on the picnic table?"
+level: 2
+picture: [poo, table]
+say: "Do a poo on the picnic table! Jump up and stand still."
 steps:
   - poo: table
 ---
-Lili jumps up onto the picnic table in the park and stays still: she squats and leaves a little poo on it. Up on the
-table or right next to it both count.
+She has to jump onto the table in the park and stand still on it. The joke of the game.

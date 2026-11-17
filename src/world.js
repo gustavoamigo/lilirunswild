@@ -81,7 +81,8 @@ export function platDist(o, x, y) { const [cx, cy] = nearestOn(o, x, y); return 
 export const STEP = 14;      // how far below a top the feet may be and still count as "on it"
 
 // What can be knocked about. `tough`: below this speed he only shoves it; `fly`/`pop`: how far and how
-// high it goes; `mess`: counts on the mess counter the first time.
+// high it goes; `mess`: counts on the mess counter the first time; `carry`: she can pick it up in her mouth; `find`:
+// picked up for good by running over it (a bone); `dig`: something is buried under it (a mound of earth).
 export const KINDS = {
   cone:  { r: 20, h: 46, tough: 120, fly: 1.1, pop: 260, drag: 2.2, tips: true, mess: true },
   bin:   { r: 30, h: 72, tough: 460, fly: 0.6, pop: 130, drag: 3.2, tips: true, spills: true, mess: true },
@@ -89,8 +90,11 @@ export const KINDS = {
   pot:   { r: 23, h: 40, tough: 240, breaks: true, mess: true },
   plate: { r: 18, h: 10, tough: 0, fly: 1.2, pop: 240, drag: 1.2, fragile: true, mess: true },
   ball:  { r: 13, h: 26, tough: 0, fly: 1.5, pop: 300, drag: 0.7, rolls: true },
-  teddy: { r: 18, h: 40, tough: 0, fly: 1.1, pop: 200, drag: 1.6, tumbles: true },
-  apple: { r: 8, h: 14, tough: 0, fly: 1.4, pop: 240, drag: 1.0, rolls: true },
+  teddy: { r: 18, h: 40, tough: 0, fly: 1.1, pop: 200, drag: 1.6, tumbles: true, carry: true },
+  sausage: { r: 16, h: 14, tough: 0, fly: 1.0, pop: 180, drag: 2.2, carry: true },
+  apple: { r: 8, h: 14, tough: 0, fly: 1.4, pop: 240, drag: 1.0, rolls: true, mess: true },
+  bone: { r: 16, h: 12, find: true },
+  mound: { r: 30, h: 12, dig: true },
 };
 
 // how big each kind of fixture is (its radius as an obstacle), and the shops' colours: walls, roof, awning stripes
@@ -168,7 +172,7 @@ export function buildTown(tiles, pop) {
     if (p.walk) { const [a, b] = p.walk.map(place); o.walk = { ax: a[0], ay: a[1], bx: b[0], by: b[1], dir: 1 }; [o.x, o.y] = a; o.state = 'walk'; }
     else [o.x, o.y] = place(p.at);
     // something held: a prop that stays in their arms until it is taken from them (updatePeople keeps it there)
-    if (p.holds) { o.holds = prop(p.holds, o.x, o.y, 40); o.holds.held = o; }
+    if (p.holds) { o.holds = prop(p.holds, o.x, o.y, 40); o.holds.held = o.holds.owner = o; }
     people.push(o);
   }
   // The parked car is a thing he can jump onto (and so into). Its line is moved with the car.

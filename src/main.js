@@ -9,7 +9,7 @@ import { spawn, updateFx, drawFx, burst, confettiColor } from './fx.js';
 import { loadTown, pushOut, floorAt, platDist, KINDS, BOUNDS } from './world.js';
 import { CAR, PERSON_LOOKS, isChild, personVoice } from './models.js';
 import { loadMissions, makeRunner } from './missions.js';
-import { clamp, lerp, dist, easeInOut, TAU } from './util.js';
+import { clamp, lerp, dist, easeInOut, easeOut, TAU } from './util.js';
 
 const DOG_R = 30, GRAV = 1900, JUMP_V = 430, JUMP_UP = 560;
 // a spaniel's trot and flat-out run for her size (84 game units to the metre: 2.5 and 5.5 m/s); flat out is the simulated gallop's own speed
@@ -48,15 +48,18 @@ const dog = {
   barkT: 0, landT: 0, spring: 0, bow: 0, idleT: 0, happy: 0, excited: 0, puff: 0, hop: null, carV: 0, carSteer: 0, dustT: 0,
 };
 const car = { ...world.car, v: 0, steer: 0, bump: 0, on: false, rev: false, skidT: 0 };
-// missions: shown as cards at the top of the screen when they open, stamped when done (step 4 brings the picture list,
-// the voice and saving)
-const cards = [];
+// jobs: one at a time, on a card at the top of the screen (see "jobs" below)
 const missions = makeRunner(STUDIO ? [] : await loadMissions(), world, {
-  open: (m) => cards.push({ m, t: 0, done: 0 }),
-  done: (m) => { const k = cards.find((c) => c.m === m); if (k) k.done = 0.01; A.aww(); G.pop = 1; for (let i = 0; i < 24; i++) spawn({ type: 'confetti', x: dog.x, z: dog.y, y: 120, vx: (Math.random() - 0.5) * 300, vz: (Math.random() - 0.5) * 300, vy: 200 + Math.random() * 200, g: 500, drag: 1, life: 1.4, size: 9, rot: Math.random() * 6, vr: 8, color: confettiColor() }); },
+  start: (m) => jobStarted(m),
+  step: (m, s) => stepStarted(m, s),
+  progress: () => { ui.pip = 1; A.ding(); },
+  oops: () => { ui.oops = 1; A.oops(); A.speak('Oops! Gently. Try again.'); },
+  done: (m, first, levels) => jobDone(m, first, levels),
 });
-const G = { t: 0, mess: 0, birds: 0, pop: 0, missions, dog, car, world, props: world.props, people: world.people, flocks: world.flocks, debris: [], focus: { x: dog.x, y: dog.y, vx: 0, vy: 0, zoom: 1 }, input };
+const ui = { card: null, cele: null, banner: null, nextT: 0, book: false, helpT: 0, sayT: 0, pip: 0, oops: 0, bonePop: 0, fly: [], free: false, saidAll: false, tidyT: 0, saveT: 10, rect: null, boneAt: [0, 0] };
+const G = { t: 0, mess: 0, birds: 0, bones: 0, pop: 0, ui, missions, dog, car, world, props: world.props, people: world.people, flocks: world.flocks, debris: [], focus: { x: dog.x, y: dog.y, vx: 0, vy: 0, zoom: 1 }, input };
 window.__G = G;
+for (const o of world.people) o.who = isChild(o.look) ? 'child' : 'adult';
 
 const angDiff = (a, b) => { let d = (a - b) % TAU; if (d > Math.PI) d -= TAU; if (d < -Math.PI) d += TAU; return d; };
 const ZERO = { x: 0, y: 0, mag: 0 };
@@ -111,10 +114,10 @@ function spray(x, y, n, up) {
 function land(fromHop) {
   dog.air = false; dog.vz = 0; dog.landT = 0.22;
   // a leap into the lake: a big splash, and a ring across the water
-  if (!fromHop && dog.state !== 'drive' && world.surfaceAt(dog.x, dog.y) === 'water') { spray(dog.x, dog.y, 16, 440); dog.crown = 1; A.splash(); dog.splashed = 2.5; dog.swim = true; return; }
+  if (!fromHop && dog.state !== 'drive' && world.surfaceAt(dog.x, dog.y) === 'water') { spray(dog.x, dog.y, 16, 440); dog.crown = 1; A.splash(); dog.splashed = 2.5; dog.swim = true; missions.event('splash', { x: dog.x, y: dog.y }); missions.event('swim', { x: dog.x, y: dog.y }); return; }
   dust(dog.x, dog.y, 6); A.land();
   const [, on] = floorAt(world, dog.x, dog.y, dog.z);
-  if (on) on.wob = Math.max(on.wob, 0.6);
+  if (on) { on.wob = Math.max(on.wob, 0.6); if (!fromHop) missions.event('hop', { kind: on.kind, id: on, x: dog.x, y: dog.y }); }
   // landing on the car is as good as opening the door
   if (!fromHop && on === world.carPlat) enterCar();
 }
@@ -147,7 +150,7 @@ function takeOff() {
   const sp = Math.max(Math.hypot(dog.vx, dog.vy), 240);
   dog.vx = Math.cos(dog.heading) * sp; dog.vy = Math.sin(dog.heading) * sp;
   dog.vz = dog.high ? JUMP_UP : JUMP_V; dog.air = true; dog.flight = 2 * dog.vz / GRAV;
-  A.jump(); dust(dog.x, dog.y, 4);
+  A.jump(); dust(dog.x, dog.y, 4); missions.event('jump', { x: dog.x, y: dog.y });
 }
 
 function bark() {
@@ -156,6 +159,7 @@ function bark() {
   dog.barkT = 0.26; dog.bow = 0; dog.idleT = 0;
   if (dog.carry) drop();                              // she opens her mouth to bark: whatever she carries falls
   if (driving) A.horn(); else A.bark();
+  missions.event(driving ? 'honk' : 'bark', { x: dog.x, y: dog.y });
   const hx = Math.cos(dog.heading), hy = Math.sin(dog.heading);
   for (let i = 0; i < 3; i++) spawn({ type: 'ring', x: dog.x + hx * 70, z: dog.y + hy * 70, y: dog.z + 70, vx: hx * 260, vz: hy * 260, drag: 2, life: 0.45, delay: i * 0.07, size: 10, grow: 90, color: '#ffffff', alpha: 0.9 });
   for (const f of world.flocks) if (f.state === 'ground' && dist(f.x, f.y, dog.x, dog.y) < (driving ? 650 : 520)) flyAway(f);
@@ -202,7 +206,7 @@ function updateDog(dt) {
   // ---- in the lake she swims: slowly, low in the water, splashing; out of it she shakes herself dry when she stops ----
   const wet = !STUDIO && onFoot() && !p.air && world.surfaceAt(p.x, p.y) === 'water';
   // (!!: at the start swim is unset, which once counted as climbing out of the lake, and she shook)
-  if (wet !== !!p.swim) { dust(p.x, p.y, 10, { speed: 120, color: '#E6F6FC', size: 7 }); if (wet) A.splash(); else { p.shake = 1.4; p.shakeWet = 1.4; p.drip = false; } }
+  if (wet !== !!p.swim) { dust(p.x, p.y, 10, { speed: 120, color: '#E6F6FC', size: 7 }); if (wet) { A.splash(); missions.event('swim', { x: p.x, y: p.y }); } else { p.shake = 1.4; p.shakeWet = 1.4; p.drip = false; missions.event('shake', { x: p.x, y: p.y }); } }
   p.swim = wet;
   if (wet) { p.runT = 0; p.dripT = (p.dripT || 0) - dt; if (p.dripT <= 0 && sp0 > 30) { p.dripT = 0.18; dust(p.x + Math.cos(p.heading) * 30, p.y + Math.sin(p.heading) * 30, 2, { speed: 50, color: '#E6F6FC', size: 6 }); } }
   // out of the lake she shakes at once, and water flies off her sideways, more as the shake gets going
@@ -218,7 +222,7 @@ function updateDog(dt) {
     }
   }
   const was = p.zoom; p.zoom = p.runT >= ZOOM_AFTER && p.state === 'idle';
-  if (p.zoom && !was) { A.whoosh(); dust(p.x, p.y, 8, { speed: 110 }); }
+  if (p.zoom && !was) { A.whoosh(); dust(p.x, p.y, 8, { speed: 110 }); missions.event('zoom', { x: p.x, y: p.y }); }
 
   // ---- about-turn at a gallop: she cannot curve round, so she throws out the brakes and slides until she is
   // slow enough to get her feet back, steps round the way she turns at a trot, and pushes off into the gallop ----
@@ -295,15 +299,28 @@ function updateDog(dt) {
 
   // ---- a mission wants a poo here, and she has stopped: she squats and does one ----
   const still = p.state === 'idle' && !st.mag && !p.air && Math.hypot(p.vx, p.vy) < 20;
-  if (still && !(p.poo > 0) && missions.wants('poo').some((w) => missions.near(w, p.x, p.y))) { p.pooT = (p.pooT || 0) + dt; if (p.pooT > 0.8) { p.poo = POO_T; p.pooT = 0; } }
+  if (still && !(p.poo > 0) && missions.wants('poo') && missions.near(p.x, p.y) && onIt(missions.wants('poo').target)) { p.pooT = (p.pooT || 0) + dt; if (p.pooT > 0.8) { p.poo = POO_T; p.pooT = 0; } }
   else p.pooT = 0;
   if (p.poo > 0 && (p.poo -= dt) <= 0) {
     G.debris.push({ kind: 'poo', x: p.x - Math.cos(p.heading) * 30, y: p.y - Math.sin(p.heading) * 30, z: p.z, dir: Math.random() * TAU });
     A.plop(); missions.event('poo', { x: p.x, y: p.y });
   }
   // ---- carrying something to where a mission wants it: she drops it there once she stands still ----
-  if (still && p.carry && missions.wants('bring').some((w) => w.s.target === p.carry.kind && missions.near(w, p.x, p.y))) { p.dropT = (p.dropT || 0) + dt; if (p.dropT > 0.6) drop(); }
+  if (still && p.carry && missions.wants('bring')?.target === p.carry.kind && missions.near(p.x, p.y)) { p.dropT = (p.dropT || 0) + dt; if (p.dropT > 0.6) drop(); }
   else p.dropT = 0;
+  // ---- standing on a heap of earth: she digs, earth flying, and up comes a bone ----
+  const mound = still && !(p.poo > 0) && world.props.find((o) => o.kind === 'mound' && !o.gone && dist(o.x, o.y, p.x, p.y) < 62);
+  if (mound) {
+    p.digT = (p.digT || 0) + dt; p.idleT = 0;
+    if (p.digT > 0.3) {
+      p.bow = Math.max(p.bow, 0.25); p.digN = (p.digN || 0) - dt;
+      if (p.digN <= 0) { p.digN = 0.14; A.dig(); dust(p.x + Math.cos(p.heading) * 34, p.y + Math.sin(p.heading) * 34, 3, { speed: 170, color: '#9A6A46', size: 7 }); }
+    }
+    if (p.digT > 1.7) {
+      p.digT = 0; mound.gone = true; mound.back = G.t + BONE_BACK * 1.5;
+      missions.event('dig', { kind: 'mound', id: mound, x: p.x, y: p.y }); gotBone(mound);
+    }
+  } else p.digT = 0;
 
   // ---- nothing to do? Ask for a game. ----
   if (p.state === 'idle' && !st.mag && !p.air && !p.point && !p.happy && !(p.poo > 0)) {
@@ -359,6 +376,8 @@ function updateHop(dt) {
 }
 // What she carries in her mouth: kept there every frame, and dropped (it falls, then lies there) when she reaches where
 // a mission wants it, or barks.
+// is she up on the thing a job names (a poo on the table is on it, not beside it)? True if it is not a thing to be on.
+const onIt = (kind) => !world.platforms.some((o) => o.kind === kind) || floorAt(world, dog.x, dog.y, dog.z)[1]?.kind === kind;
 const MOUTH = 86, MOUTH_UP = 22, POO_T = 1.6, TUG_T = 1.4;
 function carryAt() {
   const o = dog.carry; if (!o) return;
@@ -366,7 +385,7 @@ function carryAt() {
 }
 function drop() {
   const o = dog.carry; dog.carry = null; o.carried = false; o.rest = false; o.vx = o.vy = o.vz = 0; o.cool = 0.5;
-  missions.event('bring', { thing: o.kind, x: dog.x, y: dog.y });
+  missions.event('bring', { kind: o.kind, x: dog.x, y: dog.y });
 }
 function enterCar() {
   dog.state = 'drive'; dog.air = false; dog.vx = dog.vy = dog.vz = 0; dog.zoom = false; dog.runT = 0; dog.point = 0;
@@ -437,7 +456,7 @@ function updateCar(dt) {
         const o = hit.o; o.fallen = true; o.fallT = 0; o.fallDir = c.heading + (c.v < 0 ? Math.PI : 0);
         world.obstacles.splice(world.obstacles.indexOf(o), 1);
         // a real crash: the car stops dead and rocks back a little, so the pole falls in front of it, not under it
-        A.crash(); c.bump = 1; stars(o.x, o.y, 120, 8); G.mess++; G.pop = 1; c.v = -Math.sign(c.v) * 45;
+        A.crash(); c.bump = 1; stars(o.x, o.y, 120, 8); G.mess++; G.pop = 1; missions.event('knock', { kind: 'lamp', id: o, x: o.x, y: o.y }); c.v = -Math.sign(c.v) * 45;
         continue;
       }
       if (into > 260) { A.crash(); c.bump = 1; stars(x0 - hit.nx * 60, y0 - hit.ny * 60, 60, 8); shake(hit.o); c.v *= -0.3; }
@@ -459,6 +478,7 @@ function messUp(o) {
 }
 function smashProp(o) {
   o.gone = true; messUp(o); if (o.kind === 'plate') A.breakCup(); else A.smash();
+  missions.event('smash', { kind: o.kind, id: o, x: o.x, y: o.y });
   G.debris.push({ kind: o.kind, x: o.x, y: o.y, dir: Math.random() * TAU });
   const cols = o.kind === 'pot' ? ['#C9683F', '#D97B50', '#4FA653', '#FF7FA0'] : ['#ffffff', '#F6A6C1', '#E9EDF2'];
   for (let i = 0; i < 12; i++) {
@@ -474,7 +494,8 @@ function knock(o, nx, ny, speed) {
   o.rest = false; o.cool = 0.25; o.vx = Math.cos(a) * s; o.vy = Math.sin(a) * s; o.vz = K.pop * (0.7 + Math.random() * 0.5);
   if (!K.tips || !o.tip) o.dir = a;
   if (K.spills && !o.messed) G.debris.push({ kind: 'bin', x: o.x + nx * 70, y: o.y + ny * 70, dir: a });
-  messUp(o); SOUND[o.kind](); dust(o.x, o.y, 3);
+  messUp(o); (SOUND[o.kind] || A.box)(); dust(o.x, o.y, 3);
+  missions.event('knock', { kind: o.kind, id: o, x: o.x, y: o.y });
 }
 function updateProps(dt) {
   // whatever is moving about and can hit things: him, and both ends of a rolling car
@@ -487,6 +508,7 @@ function updateProps(dt) {
   for (const o of world.props) {
     if (o.gone || o.held || o.carried) continue;          // in someone's arms or her mouth: they place it
     const K = KINDS[o.kind];
+    if (K.find || K.dig) continue;                     // bones and heaps of earth stay where they are (updateFinds)
     o.wob = Math.max(0, o.wob - dt * 3);
     if (!o.rest) {
       o.cool -= dt; o.vz -= GRAV * dt;
@@ -518,6 +540,11 @@ function updateProps(dt) {
       if (m.z > o.z + K.h || m.z + m.top < o.z) continue;
       const dx = o.x - m.x, dy = o.y - m.y, d = Math.hypot(dx, dy) || 0.01, min = m.r + K.r;
       if (d >= min) continue;
+      // something she can carry: running over it, it is in her mouth
+      if (m.dog && K.carry && !dog.carry && !(o.cool > 0) && dog.state === 'idle' && Math.hypot(dog.vx, dog.vy) > 40) {
+        o.carried = true; o.rest = true; o.vx = o.vy = o.vz = 0; o.tip = 0; dog.carry = o; A.yip(); missions.event('pick', { kind: o.kind, id: o, x: o.x, y: o.y });
+        break;
+      }
       const nx = dx / d, ny = dy / d, rel = (m.vx - o.vx) * nx + (m.vy - o.vy) * ny;
       if (rel > 20 && !(o.cool > 0) && (rel > K.tough || m.air)) {
         knock(o, nx, ny, rel * (m.dog ? 1.2 : 1.35));
@@ -547,7 +574,7 @@ function reaction(o, manner, mayLove = true) {
 function respond(o, r) {
   const toDog = Math.atan2(dog.y - o.y, dog.x - o.x);
   o.t = 0; o.cool = 4;
-  missions.event(r === 'love' ? 'greet' : r === 'scared' ? 'scare' : 'meh', { who: isChild(o.look) ? 'child' : 'adult' });
+  missions.event(r === 'love' ? 'greet' : r === 'scared' ? 'scare' : 'meh', { kind: o.who, id: o, x: o.x, y: o.y });
   if (r === 'love') { o.state = dist(o.x, o.y, dog.x, dog.y) > 75 ? 'approach' : 'love'; o.heading = o.state === 'love' ? toDog : o.heading; if (o.state === 'love') { A.aww(); hearts(o.x, o.y, 120); } }
   else if (r === 'scared') { o.state = 'scared'; o.runDir = toDog + Math.PI; A.scream(personVoice(o.look)); }
   else { o.state = baseState(o); o.glance = 1.4; }
@@ -578,7 +605,8 @@ function updatePeople(dt) {
     if (o.state === 'walk') {
       // to and fro along their walk (from a to b and back); off it, they head back to the end they were making for
       const w = o.walk, tx = w.dir > 0 ? w.bx : w.ax, ty = w.dir > 0 ? w.by : w.ay, d = dist(o.x, o.y, tx, ty) || 1;
-      if (d < 6) w.dir = -w.dir;
+      if (o.calmT > 0) face(toDog, 6);               // she is waiting beside them: they stop for her
+      else if (d < 6) w.dir = -w.dir;
       else { o.x += (tx - o.x) / d * 70 * dt; o.y += (ty - o.y) / d * 70 * dt; face(Math.atan2(ty - o.y, tx - o.x), 6); }
     } else if (o.state === 'stand') { if (dd < 420) face(toDog, 5); }
     else if (o.state === 'wobble') { face(toDog, 8); if (o.t > 1.15) respond(o, o.next || 'meh'); }
@@ -597,7 +625,7 @@ function updatePeople(dt) {
       if (o.t > TUG_T) {
         o.holds = null; toy.held = null; toy.carried = true; dog.carry = toy;
         respond(o, 'scared'); o.cool = 6;
-        missions.event('take', { thing: toy.kind, from: isChild(o.look) ? 'child' : 'adult' });
+        missions.event('take', { kind: toy.kind, id: toy, from: o.who, x: o.x, y: o.y });
       }
     }
     else if (o.state === 'love') {
@@ -633,7 +661,7 @@ function updatePeople(dt) {
     }
 
     // ---- she is near ----
-    if (!onFoot() || dog.state === 'daze' || dog.z > 120) continue;
+    if (!onFoot() || dog.state === 'daze' || dog.z > 120) { o.calmT = 0; continue; }
     const busy = o.cool > 0 || !(o.state === 'walk' || o.state === 'stand');
     // calm: she has stood still near them for a second
     if (!busy && dd < 130 && !dog.air && Math.hypot(dog.vx, dog.vy) < 20) { o.calmT = (o.calmT || 0) + dt; if (o.calmT > 1) { o.calmT = 0; respond(o, reaction(o, 'calm')); } }
@@ -673,7 +701,7 @@ function flyAway(f) {
   const to = world.birdSpot([dog, car]);
   f.from = { x: f.x, y: f.y }; f.to = to; f.t = 0; f.T = 3.2 + dist(f.x, f.y, to.x, to.y) / 600;
   f.state = 'fly'; f.dir = Math.atan2(to.y - f.y, to.x - f.x);
-  A.flutter(); G.birds += f.birds.length; G.pop = 1;
+  A.flutter(); G.birds += f.birds.length; G.pop = 1; missions.event('chase', { kind: 'birds', id: f, x: f.x, y: f.y });
   for (let i = 0; i < 7; i++) spawn({ type: 'leaf', x: f.x + (Math.random() - 0.5) * 80, z: f.y + (Math.random() - 0.5) * 60, y: 20 + Math.random() * 40, vx: (Math.random() - 0.5) * 90, vy: 60, g: 110, drag: 1.5, life: 1.6, size: 6, rot: Math.random() * 6, vr: 5, color: '#DCE2EC' });
 }
 function updateBirds(dt) {
@@ -711,9 +739,8 @@ function update(dt) {
   updateProps(dt);
   updatePeople(dt);
   carryAt();
-  missions.update(dog, car);
-  for (const k of cards) { k.t += dt; if (k.done) k.done += dt; }
-  for (let i = cards.length - 1; i >= 0; i--) if (cards[i].done > 3) cards.splice(i, 1);
+  updateFinds(dt);
+  updateJobs(dt);
   updateBirds(dt);
   for (const o of world.obstacles) o.wob = Math.max(0, o.wob - dt * 2.2);
   for (const o of world.platforms) o.wob = Math.max(0, o.wob - dt * 3);
@@ -749,37 +776,133 @@ function drawOverlay(t) {
   Art.drawPaw(c, x + 18 * u, y, 20 * u * pop); Art.drawNum(c, G.mess, x + 46 * u, y + 2 * u, 34 * u);
   const x2 = x + 46 * u + c.measureText(G.mess).width + 30 * u;
   Art.drawBird(c, x2 + 20 * u, y + 2 * u, 22 * u); Art.drawNum(c, G.birds, x2 + 50 * u, y + 2 * u, 34 * u);
-  // the open missions: a card each along the top, its picture on it; done, a green tick, then it goes
-  const s = 66 * u, gap = 12 * u, x0 = w / 2 - (cards.length * (s + gap) - gap) / 2;
-  cards.forEach((k, i) => {
-    const pop = Math.min(1, k.t * 4), bob = k.done ? 1 + Math.sin(Math.min(1, k.done * 3) * Math.PI) * 0.25 : pop;
-    const cx = x0 + i * (s + gap) + s / 2, cy = 14 * u + s / 2, r = Math.max(2, (s / 2) * bob);
-    c.globalAlpha = k.done > 2.2 ? Math.max(0, 1 - (k.done - 2.2) / 0.8) : 1;
-    Art.drawCard(c, cx, cy, r); Art.drawMissionPicture(c, k.m.picture, cx, cy, r * 0.8);
-    if (k.done) Art.drawTick(c, cx + r * 0.55, cy + r * 0.55, r * 0.45);
-    else if (k === guided()) { c.strokeStyle = '#4FA653'; c.lineWidth = 4 * u; c.beginPath(); c.roundRect(cx - r - 4 * u, cy - r - 4 * u, r * 2 + 8 * u, r * 2 + 8 * u, r * 0.4); c.stroke(); }
-    k.rect = [cx - r, cy - r, r * 2, r * 2];
-    c.globalAlpha = 1;
-  });
+  const x3 = x2 + 50 * u + c.measureText(G.birds).width + 30 * u;
+  Art.drawBone(c, x3 + 18 * u, y + 2 * u, 19 * u * (1 + ui.bonePop * 0.35)); Art.drawNum(c, G.bones, x3 + 46 * u, y + 2 * u, 34 * u);
+  ui.boneAt = [x3 + 18 * u, y + 2 * u]; ui.hudRight = x3 + 46 * u + c.measureText(G.bones).width;
   drawTrail(t);
+  for (const f of ui.fly) {                           // a bone just found, on its way to the counter
+    const k = easeInOut(clamp(f.t / 0.6, 0, 1));
+    Art.drawBone(c, lerp(f.x, ui.boneAt[0], k), lerp(f.y, ui.boneAt[1], k) - Math.sin(k * Math.PI) * 60, lerp(28, 19, k) * u, -0.5 + k * 6.28);
+  }
+  drawJob(t, w, h, u);
+  drawCelebration(t, w, h, u);
 }
-// The mission being followed: the one whose card was tapped, or else the newest open one.
-let chosen = null;
-const guided = () => (chosen && !chosen.done && cards.includes(chosen) ? chosen : [...cards].reverse().find((k) => !k.done) || null);
+
+// ------------------------------------------------------------------- jobs --
+// One job at a time (docs/open-world-design.md, "Jobs for five to seven year olds"). It is told three ways: said out
+// loud, shown as pictures on a card at the top, and pointed to in the town (paw prints, a marker, an arrow at the
+// screen's edge, the button to press pulsing). Done, it becomes a sticker in the sticker book and the next one starts
+// by itself. Nothing is timed and nothing can be failed.
+const PRAISE = ['Good girl, Lili!', 'Well done!', 'Woof! You did it!', 'Clever dog!', 'Hooray!'];
+const picture = (m) => missions.step()?.picture || m.picture;
+const words = (m) => missions.step()?.say || m.say;
+// Is the way shown? Always in the first two levels. After that the child finds it, unless they ask (a tap on the card)
+// or have got nowhere for a while.
+const guided = () => { const m = missions.job(); return !!m && (m.level <= 2 || ui.helpT > 0 || missions.quiet() > 25); };
+
+function jobStarted(m) {
+  ui.card = { m, t: 0 }; ui.cele = null; ui.banner = null; ui.helpT = 0; ui.sayT = 4.2; ui.say = m.say; ui.free = false;
+  for (const s of m.steps) prepare(s);
+  A.speak(m.say); save();
+}
+function stepStarted(m, s) { ui.pip = 1; ui.sayT = 4; ui.say = s.say || m.say; A.ding(); if (s.say) A.speak(s.say); }
+function jobDone(m, first, levels) {
+  ui.card = null; ui.cele = { m, t: 0, first, levels }; ui.nextT = levels.length ? 6.4 : 3.6;
+  A.fanfare(); A.speak(m.praise || PRAISE[missions.done.size % PRAISE.length]); G.pop = 1;
+  for (let i = 0; i < 30; i++) spawn({ type: 'confetti', x: dog.x, z: dog.y, y: 120, vx: (Math.random() - 0.5) * 340, vz: (Math.random() - 0.5) * 340, vy: 200 + Math.random() * 240, g: 500, drag: 1, life: 1.6, size: 9, rot: Math.random() * 6, vr: 8, color: confettiColor() });
+  save();
+}
+function updateJobs(dt) {
+  missions.update(dt, dog, car);
+  ui.helpT = Math.max(0, ui.helpT - dt); ui.sayT = Math.max(0, ui.sayT - dt); ui.pip = Math.max(0, ui.pip - dt * 2.5);
+  ui.oops = Math.max(0, ui.oops - dt * 1.6); ui.bonePop = Math.max(0, ui.bonePop - dt * 3);
+  if (ui.card) ui.card.t += dt;
+  for (const f of ui.fly) f.t += dt;
+  while (ui.fly.length && ui.fly[0].t > 0.6) { ui.fly.shift(); ui.bonePop = 1; }
+  const k = ui.cele;
+  if (k && (k.t += dt) > 2.6) {                       // the sticker has reached the book
+    ui.cele = null; bookN.textContent = missions.done.size; A.chime();
+    btnBook.classList.remove('pop'); void btnBook.offsetWidth; btnBook.classList.add('pop');
+    if (k.levels.length) { ui.banner = { level: k.levels[k.levels.length - 1], t: 0 }; A.fanfare(); A.speak('Wow! New jobs!'); }
+  }
+  if (ui.banner && (ui.banner.t += dt) > 2.6) ui.banner = null;
+  if (!missions.job() && !ui.free && (ui.nextT -= dt) <= 0) {
+    const m = missions.next();
+    if (m) missions.start(m);
+    else { ui.free = true; if (!ui.saidAll) { ui.saidAll = true; A.speak('You did every job! You are the best dog in town!'); } }
+  }
+  // the button the job wants pressed pulses
+  const s = guided() ? missions.step() : null, a = s && s.action, at = s && missions.target(dog, car), close = !!at && dist(at.x, at.y, dog.x, dog.y) < 330;
+  btnBark.classList.toggle('hint', a === 'bark' || a === 'honk');
+  btnJump.classList.toggle('hint', a === 'jump' || (close && (a === 'hop' || a === 'splash' || a === 'poo' || (a === 'knock' && s.target === 'apple'))));
+  if ((ui.tidyT -= dt) <= 0) { ui.tidyT = 2; tidyFar(); }
+  if ((ui.saveT -= dt) <= 0) { ui.saveT = 10; save(); }
+}
 input.onTap = (x, y) => {
-  const k = cards.find((q) => q.rect && !q.done && x >= q.rect[0] && x <= q.rect[0] + q.rect[2] && y >= q.rect[1] && y <= q.rect[1] + q.rect[3]);
-  if (!k) return false;
-  chosen = k; A.yip(); return true;
+  if (ui.book) { tapBook(x, y); return true; }
+  const r = ui.rect;
+  if (!r || !ui.card || x < r[0] || x > r[0] + r[2] || y < r[1] || y > r[1] + r[3]) return false;
+  ui.helpT = 14; ui.sayT = 4; ui.say = words(ui.card.m); A.initAudio(); A.yip(); A.speak(ui.say); return true;   // tapped: said again, and the way shown
 };
-// Paw prints on the ground from her towards where the followed mission needs her, appearing one after another; near it
-// a bouncing marker over the place; out of sight, an arrow at the edge of the screen pointing the way.
+
+// ---- the card ----
+// Where it sits: top middle; under the counters and the round buttons when there is no room between them.
+function cardBox(w, u, m) {
+  const n = Math.max(1, picture(m).length), cw = Math.max(170, n * 96 + 52) * u, ch = 120 * u;
+  const narrow = w / 2 - cw / 2 < (ui.hudRight || 0) + 12 || w / 2 + cw / 2 > w - 136;
+  return { x: w / 2, y: (narrow ? 70 : 12 * u) + ch / 2, w: cw, h: ch };
+}
+function drawJob(t, w, h, u) {
+  const k = ui.card; if (!k) { ui.rect = null; return; }
+  const m = k.m, b = cardBox(w, u, m), pr = missions.progress(), steps = m.steps.length;
+  // new: big in the middle of the screen, then up to its place
+  const e = easeInOut(clamp((k.t - 2.4) / 0.6, 0, 1)), big = Math.max(1, Math.min(1.9, (w - 30) / b.w, (h * 0.4) / b.h));
+  const sc = lerp(big, 1, e) * easeOut(Math.min(1, k.t * 4)) * (1 + ui.pip * 0.07);
+  const cx = b.x + Math.sin(ui.oops * 28) * 7 * ui.oops, cy = lerp(Math.max(h * 0.34, b.y + b.h * 0.6), b.y, e);
+  if (sc < 0.02) return;
+  c.save(); c.translate(cx, cy); c.scale(sc, sc);
+  Art.drawCard(c, 0, 0, b.w, b.h);
+  const pips = pr.count > 1 ? [pr.n, pr.count] : steps > 1 ? [pr.i, steps] : null;
+  Art.drawPictures(c, picture(m), 0, pips ? -11 * u : 0, b.w - 40 * u, (pips ? 70 : 90) * u);
+  if (pips) Art.drawPips(c, 0, b.h / 2 - 16 * u, Math.min(7 * u, (b.w - 30 * u) / (pips[1] * 2.7)), pips[0], pips[1], ui.pip);
+  Art.drawSpeaker(c, b.w / 2 - 16 * u, -b.h / 2 + 16 * u, 9 * u, guided() ? 0 : 0.5 + 0.5 * Math.sin(t * 5));
+  c.restore();
+  ui.rect = [cx - b.w * sc / 2, cy - b.h * sc / 2, b.w * sc, b.h * sc];
+  const a = Math.min(1, k.t * 3, ui.sayT * 2);         // the words under it, while it is new or just tapped
+  if (a > 0) { c.globalAlpha = a; Art.drawCaption(c, ui.say, w / 2, cy + b.h * sc / 2 + 26 * u, lerp(26, 21, e) * u, w - 24); c.globalAlpha = 1; }
+}
+function drawCelebration(t, w, h, u) {
+  const k = ui.cele;
+  if (k) {
+    const R = Math.min(100 * u, w * 0.28), a = clamp(k.t / 0.4, 0, 1), fly = easeInOut(clamp((k.t - 1.9) / 0.7, 0, 1));
+    const br = btnBook.getBoundingClientRect(), x = lerp(w / 2, br.left + br.width / 2, fly), y = lerp(h * 0.38, br.top + br.height / 2, fly);
+    const r = R * (easeOut(a) + Math.sin(a * Math.PI) * 0.2) * lerp(1, 0.24, fly);
+    if (fly < 0.01) {                                 // rays turning behind it
+      c.save(); c.translate(x, y); c.rotate(t * 0.8); c.fillStyle = `rgba(255,226,122,${0.5 * a})`;
+      for (let i = 0; i < 10; i++) { c.rotate(TAU / 10); c.beginPath(); c.moveTo(0, 0); c.lineTo(r * 1.9, -r * 0.3); c.lineTo(r * 1.9, r * 0.3); c.closePath(); c.fill(); }
+      c.restore();
+    }
+    Art.drawSticker(c, k.m.picture, x, y, r, 'done');
+  }
+  const bn = ui.banner;
+  if (bn) {                                           // a level has opened
+    const a = clamp(Math.min(bn.t * 4, (2.6 - bn.t) * 4), 0, 1), bw = Math.min(w - 30, 330 * u), y = h * 0.36;
+    c.globalAlpha = a; Art.drawCard(c, w / 2, y, bw, 124 * u, { edge: '#4FA653' });
+    for (let i = 0; i < bn.level; i++) Art.drawIcon(c, 'star', w / 2 + (i - (bn.level - 1) / 2) * 52 * u, y - 18 * u, 23 * u * (1 + 0.1 * Math.sin(t * 6 + i)));
+    Art.drawWords(c, 'New jobs!', w / 2, y + 36 * u, 28 * u, bw - 30 * u, '#3B8A40'); c.globalAlpha = 1;
+  }
+}
+
+// ---- the way ----
+// Paw prints on the ground from her towards what the job needs, appearing one after another; near it a bouncing marker
+// over the place; out of sight, an arrow at the edge of the screen pointing the way.
 function drawTrail(t) {
-  const k = guided(); if (!k || dog.state === 'hop') return;
-  const at = missions.target(k.m, dog, car); if (!at) return;
+  if (!guided() || dog.state === 'hop') return;
+  const at = missions.target(dog, car); if (!at) return;
   const from = dog.state === 'drive' ? car : dog, dx = at.x - from.x, dy = at.y - from.y, d = Math.hypot(dx, dy), ux = dx / (d || 1), uy = dy / (d || 1);
   const { w, h } = S.view;
   if (d < 180) {
-    const [sx, sy, kk, ok] = S.project(at.x, 130 + Math.sin(t * 5) * 12, at.y);
+    const [sx, sy, kk, ok] = S.project(at.x, (at.look === undefined ? 130 : 190) + Math.sin(t * 5) * 12, at.y);
     if (ok) Art.drawMarker(c, sx, sy, Math.max(16, 26 * kk));
     return;
   }
@@ -794,21 +917,135 @@ function drawTrail(t) {
   // the place itself out of sight: an arrow at the edge of the screen
   const [px, py, , pok] = S.project(at.x, 40, at.y), [qx, qy] = S.project(from.x, 40, from.y);
   if (!pok || px < 0 || px > w || py < 0 || py > h) {
-    // inside a frame clear of the cards along the top and the buttons along the bottom
-    const a = Math.atan2(pok ? py - qy : dy, pok ? px - qx : dx), top = 130, bottom = h - 150, side = 60, cx = w / 2, cy = (top + bottom) / 2;
+    // inside a frame clear of the card along the top and the buttons along the bottom
+    const a = Math.atan2(pok ? py - qy : dy, pok ? px - qx : dx), top = 190, bottom = h - 150, side = 60, cx = w / 2, cy = (top + bottom) / 2;
     const s = Math.min((w / 2 - side) / Math.abs(Math.cos(a) || 1e-6), ((bottom - top) / 2) / Math.abs(Math.sin(a) || 1e-6));
     Art.drawArrow(c, cx + Math.cos(a) * s, cy + Math.sin(a) * s, a, 34 + Math.sin(t * 6) * 4);
   }
 }
 
+// ---- bones ----
+// Bones lie about town to be found: run over one (or drive over it) and it is hers. A heap of earth has one buried:
+// standing on it she digs it up (updateDog). Both come back after a while, once she is far away, so there is always one
+// to find; the count is kept.
+const BONE_BACK = 60, FAR = 1200;
+function gotBone(o) {
+  G.bones++; A.chime(); stars(o.x, o.y, 40, 8);
+  const [sx, sy, , ok] = S.project(o.x, 40, o.y); if (ok) ui.fly.push({ x: sx, y: sy, t: 0 });
+  missions.event('collect', { kind: 'bone', id: o, x: o.x, y: o.y }); save();
+}
+function updateFinds() {
+  const me = dog.state === 'drive' ? car : dog, reach = dog.state === 'drive' ? 95 : 54;
+  for (const o of world.props) {
+    const K = KINDS[o.kind]; if (!K.find && !K.dig) continue;
+    if (o.gone) { if (G.t > o.back && dist(o.x, o.y, dog.x, dog.y) > FAR) o.gone = false; continue; }
+    if (K.find && dog.state !== 'hop' && dist(o.x, o.y, me.x, me.y) < reach && dog.z < 60) { o.gone = true; o.back = G.t + BONE_BACK; gotBone(o); }
+  }
+}
+
+// ---- putting things back ----
+// What she broke or knocked over is put back when a job needs it, and otherwise once she is far away: there is always
+// something to knock over. What she took goes back to whoever had it.
+const TIDY = ['cone', 'bin', 'box', 'pot', 'plate', 'apple', 'lamp'], lampPosts = world.tiles.flatMap((t) => t.things.lamps);
+function giveBack(o) {
+  const p = o.owner; if (!p || o.held) return;
+  if (dog.carry === o) dog.carry = null;
+  Object.assign(o, { carried: false, held: p, rest: true, vx: 0, vy: 0, vz: 0, tip: 0, roll: 0 }); p.holds = o;
+}
+function tidy(kind, far = 0) {
+  const away = (o) => !far || (dist(o.x, o.y, dog.x, dog.y) > far && (!o.home || dist(o.home.x, o.home.y, dog.x, dog.y) > far));
+  if (kind === 'lamp') { for (const o of lampPosts) if (o.fallen && away(o)) { o.fallen = false; world.obstacles.push(o); } return; }
+  for (const o of world.props) if (o.kind === kind && !o.owner && !o.carried && (o.gone || o.messed) && away(o)) Object.assign(o, { x: o.home.x, y: o.home.y, z: o.home.z, vx: 0, vy: 0, vz: 0, tip: 0, roll: 0, rest: true, gone: false, messed: false, cool: 0 });
+  for (const d of G.debris) if (d.kind === kind && !d.gone && away(d)) d.gone = true;
+}
+function tidyFar() {
+  for (const kind of TIDY) tidy(kind, 1500);
+  for (const o of world.props) if (o.owner && !o.held && !o.carried && dist(o.x, o.y, dog.x, dog.y) > 1500 && dist(o.owner.x, o.owner.y, dog.x, dog.y) > 1500) giveBack(o);
+}
+// a job is starting: what this step of it needs is there
+function prepare(s) {
+  const need = s.count || 1;
+  if (s.action === 'take') { for (const o of world.props) if (o.kind === s.target) giveBack(o); }
+  else if (s.action === 'knock' && s.target === 'lamp') { if (lampPosts.filter((o) => !o.fallen).length < need + 4) tidy('lamp'); }
+  else if (s.action === 'smash' || s.action === 'knock') { if (world.props.filter((o) => o.kind === s.target && !o.gone && !o.messed).length < need) tidy(s.target); }
+}
+
+// ---- kept between visits (in the browser): stickers, the job in hand, the counters. ?fresh starts over. ----
+const SAVE = 'lili-save-1';
+function save() {
+  if (STUDIO) return;
+  try { localStorage.setItem(SAVE, JSON.stringify({ v: 1, ...missions.state(), bones: G.bones, mess: G.mess, birds: G.birds })); } catch {}
+}
+function load() {
+  try {
+    if (params.has('fresh')) localStorage.removeItem(SAVE);
+    const st = JSON.parse(localStorage.getItem(SAVE) || 'null');
+    if (st && st.v === 1) { missions.restore(st); G.bones = st.bones || 0; G.mess = st.mess || 0; G.birds = st.birds || 0; }
+  } catch {}
+}
+
+// ---- the sticker book ----
+// Every job as a sticker, a row for each level: done ones in gold with a tick, the one in hand ringed in green, a level
+// not yet open behind a padlock with the stickers still needed. A tap on a sticker starts that job (again, if it is
+// done). The town waits while the book is open.
+function openBook() { ui.book = true; A.pageTurn(); actions.classList.add('hidden'); keysHelp.classList.add('hidden'); btnBook.classList.add('open'); input.target = null; }
+function closeBook() { ui.book = false; A.pageTurn(); actions.classList.remove('hidden'); keysHelp.classList.remove('hidden'); btnBook.classList.remove('open'); }
+function bookLayout(w, h, u) {
+  const levels = missions.levels(), by = levels.map((l) => missions.missions.filter((m) => m.level === l));
+  const pad = 12 * u, top = 72, headW = 56 * u;
+  let best = null;
+  for (let cols = 3; cols <= 8; cols++) {
+    const rows = by.reduce((n, list) => n + Math.ceil(list.length / cols), 0), cell = Math.min((w - pad * 2 - headW) / cols, (h - top - pad) / rows);
+    if (!best || cell > best.cell) best = { cols, rows, cell };
+  }
+  const { cols, rows, cell } = best, r = cell / 2.3, x0 = (w - (headW + cols * cell)) / 2 + headW, items = [], heads = [];
+  let y = top + Math.max(0, (h - top - pad - rows * cell) / 2);
+  by.forEach((list, i) => {
+    const n = Math.ceil(list.length / cols);
+    heads.push({ level: levels[i], x: x0 - headW / 2, y: y + (n * cell) / 2, top: y, h: n * cell, x0: x0 - headW, w: headW + cols * cell, open: missions.unlocked(levels[i]), missing: missions.missing(levels[i]) });
+    list.forEach((m, j) => items.push({ m, x: x0 + ((j % cols) + 0.5) * cell, y: y + (Math.floor(j / cols) + 0.5) * cell, r }));
+    y += n * cell;
+  });
+  return { items, heads };
+}
+function drawBook(now) {
+  const { w, h, dpr } = S.view, u = clamp(Math.min(w, h) / 620, 0.75, 1.3);
+  c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
+  c.fillStyle = 'rgba(255,248,226,.96)'; c.fillRect(0, 0, w, h);
+  Art.drawIcon(c, 'star', 34 * u, 36, 20 * u); Art.drawNum(c, `${missions.done.size} / ${missions.missions.length}`, 62 * u, 38, 30 * u, '#8A5A3C', 'rgba(255,255,255,.9)');
+  const L = ui.layout = bookLayout(w, h, u), job = missions.job();
+  for (const hd of L.heads) {
+    c.fillStyle = hd.level % 2 ? 'rgba(242,182,58,.16)' : 'rgba(79,163,224,.13)'; c.beginPath(); c.roundRect(hd.x0 - 4, hd.top + 3, hd.w + 8, hd.h - 6, 18 * u); c.fill();
+    if (hd.open) for (let i = 0; i < hd.level; i++) Art.drawIcon(c, 'star', hd.x + ((i % 2) - (hd.level > 1 ? 0.5 : 0)) * 21 * u, hd.y + (Math.floor(i / 2) - (hd.level > 2 ? 0.5 : 0)) * 21 * u, 10 * u);
+    else {
+      Art.drawPadlock(c, hd.x, hd.y - 14 * u, 16 * u); Art.drawIcon(c, 'star', hd.x - 11 * u, hd.y + 22 * u, 9 * u);
+      Art.drawNum(c, hd.missing, hd.x + 1 * u, hd.y + 23 * u, 20 * u, '#8A5A3C', 'rgba(255,255,255,.9)');
+    }
+  }
+  for (const it of L.items) {
+    const done = missions.done.has(it.m.id), mine = it.m === job;
+    c.globalAlpha = missions.available(it.m) ? 1 : 0.4;
+    Art.drawSticker(c, it.m.picture, it.x, it.y, it.r * (mine ? 1 + 0.05 * Math.sin(now * 5) : 1), done ? 'done' : mine ? 'now' : 'open');
+    if (mine && done) { c.strokeStyle = '#4FA653'; c.lineWidth = it.r * 0.1; Art.circ(c, it.x, it.y, it.r * 1.12); c.stroke(); }
+    c.globalAlpha = 1;
+  }
+}
+function tapBook(x, y) {
+  const it = ui.layout?.items.find((q) => Math.hypot(q.x - x, q.y - y) < q.r * 1.15);
+  if (!it) return;
+  A.initAudio();
+  if (!missions.available(it.m)) { const n = missions.missing(it.m.level); A.oops(); A.speak(n > 0 ? `Get ${n} more sticker${n > 1 ? 's' : ''} first!` : 'Not yet!'); return; }
+  closeBook(); missions.start(it.m);
+}
+
 function resize() { S.resize(); hud.width = Math.round(S.view.w * S.view.dpr); hud.height = Math.round(S.view.h * S.view.dpr); }
 
 // ---- wiring ----
-function act(a) { A.initAudio(); if (a === 'jump') jump(); else if (a === 'bark') bark(); else carAction(); }
-G.api = { jump, bark, car: carAction, knock, enterCar, leaveCar, flyAway };
-missions.start();
+function act(a) { A.initAudio(); if (ui.book) return; if (a === 'jump') jump(); else if (a === 'bark') bark(); else carAction(); }
+G.api = { jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save };
 input.onAction = act;
-const btnCar = document.getElementById('btn-car'), btnMute = document.getElementById('btn-mute');
+const btnCar = document.getElementById('btn-car'), btnMute = document.getElementById('btn-mute'), btnBook = document.getElementById('btn-book'), bookN = document.getElementById('book-n');
+const btnBark = document.getElementById('btn-bark'), btnJump = document.getElementById('btn-jump'), actions = document.getElementById('actions'), keysHelp = document.getElementById('keys');
 for (const [id, a] of [['btn-jump', 'jump'], ['btn-bark', 'bark'], ['btn-car', 'car']]) {
   document.getElementById(id).addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); act(a); });
 }
@@ -817,6 +1054,10 @@ btnMute.addEventListener('click', () => {
   document.getElementById('mute-waves').style.display = A.isMuted() ? 'none' : '';
   document.getElementById('mute-cross').style.display = A.isMuted() ? '' : 'none';
 });
+
+btnBook.addEventListener('click', () => { A.initAudio(); if (ui.book) closeBook(); else openBook(); });
+window.addEventListener('keydown', (e) => { if (e.code === 'Escape' && ui.book) closeBook(); });
+if (STUDIO) btnBook.classList.add('hidden');
 
 const canvas = document.getElementById('game');
 S.initScene(canvas, world);
@@ -827,6 +1068,9 @@ const at = (params.get('at') || '').split(',').map(Number);
 if (at.length === 2 && at.every(Number.isFinite)) { dog.x = at[0]; dog.y = at[1]; }
 updateCar(0);
 if (params.has('car')) enterCar();
+// the saved stickers first (the first update would otherwise start the first job and save over them); no jobs in the studio
+if (STUDIO) ui.free = ui.saidAll = true;
+else { load(); const m = missions.job() || missions.next(); if (m) missions.start(m); else ui.free = ui.saidAll = true; bookN.textContent = missions.done.size; }
 update(0); S.snapCamera(G.focus);
 
 // ------------------------------------------------------------------ studio --
@@ -917,6 +1161,7 @@ function frame(now) {
     requestAnimationFrame(frame);
     return;
   }
+  if (ui.book) { S.render(G, 0); drawBook(now / 1000); requestAnimationFrame(frame); return; }   // the sticker book is open: the town waits
   update(dt);
   S.render(G, dt);
   drawOverlay(G.t);

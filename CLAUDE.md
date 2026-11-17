@@ -2,7 +2,7 @@
 
 A 3D browser game: a small open town, and the player is a very active liver and white spaniel (Lili). Like GTA in shape (roam, cause chaos, take a car), but nobody gets hurt: he jumps up at people, knocks things over, chases birds and drives. Built on the architecture of [wheek](https://github.com/gustavoamigo/wheek).
 
-Status: **movement prototype**. No missions, no title screen, no saved progress yet.
+Status: **a town to play in, with 26 jobs for children of 5 to 7** (one at a time, spoken and pictured, a sticker book, four levels; progress saved in the browser). No title screen. Next: the dog park, then the farm (`docs/open-world-design.md`).
 
 ## How we work
 

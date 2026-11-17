@@ -26,3 +26,13 @@ button.small { position: fixed; top: max(12px, env(safe-area-inset-top)); right:
   background: rgba(40, 70, 50, .6); color: #fff; cursor: pointer; touch-action: none; }
 #studio button.on { background: #2E8B57; box-shadow: 0 0 0 2px #fff inset; }
 #studio span { width: 8px; }
+/* the sticker book: a star with the number of stickers on it, beside the sound button */
+#btn-book { position: fixed; top: max(8px, env(safe-area-inset-top)); right: calc(max(12px, env(safe-area-inset-right)) + 58px); width: 58px; height: 58px; background: #F2B63A; z-index: 3; }
+#btn-book.open { background: #4FA653; }
+#btn-book span { position: absolute; right: -4px; bottom: -4px; min-width: 24px; height: 24px; padding: 0 5px; box-sizing: border-box; border-radius: 12px; background: #fff; color: #8A5A3C;
+  font: 900 15px/24px "Baloo 2", "Fredoka", ui-rounded, "Arial Rounded MT Bold", system-ui, sans-serif; text-align: center; box-shadow: 0 2px 0 rgba(0, 0, 0, .18); }
+#btn-book.pop { animation: book-pop .5s ease-out; }
+@keyframes book-pop { 0% { transform: scale(1); } 40% { transform: scale(1.35); } 100% { transform: scale(1); } }
+/* the button a job wants pressed */
+button.hint { animation: hint 0.9s ease-in-out infinite; }
+@keyframes hint { 0%, 100% { box-shadow: 0 6px 0 rgba(0, 0, 0, .18), 0 0 0 0 rgba(255, 255, 255, .9); } 50% { box-shadow: 0 6px 0 rgba(0, 0, 0, .18), 0 0 0 14px rgba(255, 255, 255, 0); transform: scale(1.08); } }

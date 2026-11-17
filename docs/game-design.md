@@ -43,14 +43,17 @@ See *Design rules* in `CLAUDE.md`: not violent, he is a dog, the camera never tu
 
 ## Missions
 
-Ideas of things to do, shown as picture cards at the top of the screen; never required, nothing fails. The first three: do a poo on the picnic table; drive the car to the school; once that is done, take the teddy from the boy outside the school (a tug of war, her growl, he screams and runs) and bring it home. More come as files in `missions/`.
+Jobs for children of 5 to 7 (`docs/open-world-design.md`, *Jobs for five to seven year olds*): one at a time, said out loud, shown as big pictures on one card and pointed to in the town; done, it becomes a sticker in a sticker book and the next starts by itself. Nothing is timed and nothing fails. 26 jobs in four levels that get trickier: first one button or one run, then a skill or a count of three, then two steps with the way no longer shown, then three steps, long hunts and one rule (be gentle). Any job can be picked or played again from the book.
+
+Things to do without a job: bones to find all over town and a counter for them, heaps of earth to dig up, more people to meet (a butcher with sausages to steal). What she breaks is put back once she is far away.
 
 ## Where it is going
 
-An open-world game for children of 6 and 7: one big town built from reusable tiles, and missions as files with dependencies, no points or timers. Proposed in `docs/open-world-design.md`, not built yet.
+An open-world game for children of 5 to 7: one big town built from reusable tiles, jobs as files, no points or timers (`docs/open-world-design.md`). The town grows by places, each small and full of its own things to do, with its own jobs: next the dog park, then the farm.
 
 ## Not decided yet
 
-- Missions, and what the counters are for.
+- The voice that says the jobs: which language, whose voice (the browser's own for now).
+- Rewards beyond stickers (things for Lili to wear).
 - Camera: fixed and looking north, as in wheek. A camera that follows behind the car, turning with it, would break "up means away"; to decide when driving matters more.
 - How big the town gets, more cars, traffic, people who react for longer (chasing him, calling him).
