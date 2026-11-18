@@ -20,9 +20,7 @@ const RIPPLE_CELL = 6, STEP = 1 / 30, DAMP = 0.94, PUSHES = 4;
 
 // The water tiles' bounding box, and for each cell of a grid over it, how far it is from the nearest point that is not water
 // (0 out of the water). A two-pass chamfer distance, good to a few per cent.
-function shoreMap(world) {
-  const wet = world.tiles.filter((t) => (t.def.ground || []).some((g) => g.water));
-  if (!wet.length) return null;
+function shoreMap(world, wet) {
   const x0 = Math.min(...wet.map((t) => t.col)) * TILE - TILE, y0 = Math.min(...wet.map((t) => t.row)) * TILE - TILE;
   const x1 = (Math.max(...wet.map((t) => t.col)) + 2) * TILE, y1 = (Math.max(...wet.map((t) => t.row)) + 2) * TILE;
   const w = Math.ceil((x1 - x0) / CELL), h = Math.ceil((y1 - y0) / CELL), d = new Float32Array(w * h);
@@ -155,9 +153,27 @@ function makeRipples(renderer, map) {
   };
 }
 
+// Each body of water (water tiles touching each other, the town's lake, the park's pond) has its own surface, distance
+// map and ripples: one surface over the box round both would have been drawn over the whole town between them.
 export function makeWater(world, renderer) {
-  const map = shoreMap(world);
-  if (!map) return null;
+  const wet = world.tiles.filter((t) => (t.def.ground || []).some((g) => g.water)), bodies = [];
+  for (const t of wet) {
+    const near = bodies.filter((b) => b.some((q) => Math.abs(q.col - t.col) <= 1 && Math.abs(q.row - t.row) <= 1));
+    const into = near[0] || []; if (!near.length) bodies.push(into);
+    into.push(t); for (const b of near.slice(1)) { into.push(...b); bodies.splice(bodies.indexOf(b), 1); }
+  }
+  if (!bodies.length) return null;
+  const all = bodies.map((b) => makeBody(world, renderer, b));
+  const at = (x, y) => all.find((b) => x >= b.box[0] && x <= b.box[2] && y >= b.box[1] && y <= b.box[3]);
+  return {
+    meshes: all.map((b) => b.mesh),
+    push(x, y, r, s) { at(x, y)?.push(x, y, r, s); },
+    // the ripples are worked out only on the water near (x, y): where she is
+    update(t, dt, x, y) { for (const b of all) b.update(t, dt, x >= b.box[0] - 600 && x <= b.box[2] + 600 && y >= b.box[1] - 600 && y <= b.box[3] + 600); },
+  };
+}
+function makeBody(world, renderer, wet) {
+  const map = shoreMap(world, wet);
   const ripples = makeRipples(renderer, map);
   const uniforms = THREE.UniformsUtils.merge([THREE.UniformsLib.fog, { shore: { value: null }, box: { value: new THREE.Vector4() }, time: { value: 0 },
     ripple: { value: null }, rippleTexel: { value: new THREE.Vector2() }, hasRipple: { value: ripples ? 1 : 0 } }]);
@@ -170,12 +186,12 @@ export function makeWater(world, renderer) {
   const mesh = new THREE.Mesh(geo, mat);
   mesh.rotation.x = Math.PI / 2; mesh.position.y = WATER_Y; mesh.renderOrder = 1;
   return {
-    mesh,
+    mesh, box: [map.x0, map.y0, map.x1, map.y1],
     // something in the water pushes it at (x, y): r how wide, s how hard (a swimming dog about 0.5 a step, a splash 4)
     push(x, y, r, s) { if (ripples) ripples.push(x, y, r, s); },
-    update(t, dt) {
+    update(t, dt, near) {
       uniforms.time.value = t;
-      if (ripples) { ripples.step(dt); uniforms.ripple.value = ripples.tex; }
+      if (ripples && near) { ripples.step(dt); uniforms.ripple.value = ripples.tex; }
     },
   };
 }

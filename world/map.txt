@@ -6,6 +6,10 @@
 # top), the playground (east, top), the town centre (middle, below the park: shops round a square with a fountain and
 # market stalls), and the lake (west, below: a sandy beach all round it). Houses line the ring outside; Lili's home and the school are among them on the north
 # side, facing the road (the camera looks north, so buildings north of a road show their fronts).
+#
+# East of the town, through a gate in the houses opposite the middle road, the big park: woods all round, a path north
+# to south through them, a wide meadow in the middle, a round pond with ducks (north), and the ice cream van at the end of
+# the main path from the gate.
 
 h = house
 . = grass
@@ -37,19 +41,26 @@ w = lake
 V = shore
 v = shore-corner
 A = beach
+g = gate
+m = meadow
+n = meadow-birds
+f = woods
+d = woods-path
+o = pond
+i = icecream
 
-bounds 400 400 6400 4800
+bounds 400 400 9600 4800
 
-.  .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
-.  h   h   L   h   h   h   h   h   h   h   h   S   h   h   h   .
-.  h<  C   R   Q   R   Y   R   Z   R   Y   R   R   X   C>  h>  .
-.  h<  R<  h>> h>> h>> R<  T   p>  T   R>  P   P   P   R>  h>  .
-.  h<  R<  P   T   P   Z<  F   +   B   Z>  T   G   P   R>  h>  .
-.  h<  R<  h   h   h   R<  K   p>  P   R>  h   h   h   R>  h>  .
-.  h<  Y<  R   R   R   J   R   Z>> R   J   R   W   R   Y>  h>  .
-.  h<  R<  v   A   v>  R<  U   N   E   R>  h>> h>> h>> R>  h>  .
-.  h<  R<  V<  w   V>  R<  q   O   q   R>  P   T   P   R>  h>  .
-.  h<  R<  v<  V>> v>> R<  M   q   M   R>  h   h   h   R>  h>  .
-.  h<  C<  R>> R>> R>> Y>> R>> R>> R>> Y>> R>> R>> R>> C>> h>  .
-.  h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> .
-.  .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
+.   h   h   L   h   h   h   h   h   h   h   h   S   h   h   h   f   d   f<  f   f>  f   f<  f   .
+.   h<  C   R   Q   R   Y   R   Z   R   Y   R   R   X   C>  h>  f>  d   f   m   o   o>  f   f<  .
+.   h<  R<  h>> h>> h>> R<  T   p>  T   R>  P   P   P   R>  h>  f   d   f>  m   o<  o>> f>  f   .
+.   h<  R<  P   T   P   Z<  F   +   B   Z>  T   G   P   R>  h>  m   d   m   n   m   m   m   f   .
+.   h<  R<  h   h   h   R<  K   p>  P   R>  h   h   h   R>  h>  m   d   m   m   m   n   m   f<  .
+.   h<  Y<  R   R   R   J   R   Z>> R   J   R   W   R   Y>  g   p   +   p   p   p   i   m   f   .
+.   h<  R<  v   A   v>  R<  U   N   E   R>  h>> h>> h>> R>  h>  m   p>  m   m   n   m   m   f>  .
+.   h<  R<  V<  w   V>  R<  q   O   q   R>  P   T   P   R>  h>  m   p>  m   m   m   m   m   f   .
+.   h<  R<  v<  V>> v>> R<  M   q   M   R>  h   h   h   R>  h>  f<  p>  m   n   m   m   f   f>  .
+.   h<  C<  R>> R>> R>> Y>> R>> R>> R>> Y>> R>> R>> R>> C>> h>  f   d   f   m   m   f>  f   f<  .
+.   h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> f>  d   f   f<  f   f>  f   f   .
+.   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .

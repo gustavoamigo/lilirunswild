@@ -29,5 +29,17 @@ export default {
     { look: 8, nature: 'lover', at: [4, 7, 150, 70], facing: 'south', id: 'beach-boy', voice: 'kid:af_sky:1.25' },   // a child on the beach
     { look: 1, nature: 'meh', walk: [[3, 7, 60, 30], [5, 7, 340, 30]] },            // along the lake's north shore
     { look: 3, nature: 'lover', at: [3, 4, 200, 180], facing: 'south', id: 'lawn-girl', voice: 'kid:af_sky:1.25' },   // a child on the lawn between the houses
+    // the park, east of town
+    { look: 7, nature: 'lover', at: [19, 7, 200, 210], facing: 'south', holds: 'frisbee', id: 'frisbee-girl', voice: 'kid:af_sky:1.25' },   // in the meadow with her frisbee
+    { look: 0, nature: 'lover', at: [19, 7, 330, 250], facing: 'west' },            // her dad
+    { look: 9, nature: 'lover', at: [21, 6, 300, 175], facing: 'south', id: 'icecream', voice: 'af_kore' },   // selling ice cream from her van
+    { look: 2, nature: 'meh', at: [17, 9, 120, 210], facing: 'east', id: 'keeper', voice: 'am_adam' },   // the park keeper, by the path in the woods
+    { look: 5, nature: 'meh', walk: [[16, 6, 60, 260], [20, 6, 340, 260]] },        // walking the main path
+    { look: 4, nature: 'lover', walk: [[18, 4, 60, 200], [22, 4, 340, 200]] },      // running about the meadow
+    { look: 8, nature: 'lover', at: [20, 4, 120, 60], facing: 'north' },            // watching the ducks
+  ],
+  // animals who ask for jobs: kind (a model in src/models.js), id and voice as for people
+  animals: [
+    { kind: 'duck', id: 'duck', voice: 'kid:af_sky:1.5', at: [21, 3, 0, 378], facing: 'south' },   // on the pond's south bank
   ],
 };

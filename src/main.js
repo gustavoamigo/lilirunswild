@@ -585,7 +585,7 @@ function updateProps(dt) {
     o.wob = Math.max(0, o.wob - dt * 3);
     o.cool -= dt;                                      // (counted down at rest too: it used to stop when a thing settled, and she could never pick up again what she had put down)
     if (!o.rest) {
-      o.vz -= GRAV * dt;
+      o.vz -= GRAV * dt * (K.glide && o.vz < 0 ? 0.22 : 1);   // a frisbee floats down
       o.x += o.vx * dt; o.y += o.vy * dt; o.z += o.vz * dt;
       const [fl] = floorAt(world, o.x, o.y, o.z);
       const sp = Math.hypot(o.vx, o.vy);
@@ -617,6 +617,7 @@ function updateProps(dt) {
       // something she can carry: running over it, it is in her mouth
       if (m.dog && K.carry && !dog.carry && !(o.cool > 0) && dog.state === 'idle' && Math.hypot(dog.vx, dog.vy) > 40) {
         o.carried = true; o.kept = false; o.rest = true; o.vx = o.vy = o.vz = 0; o.tip = 0; dog.carry = o; A.yip(); missions.event('pick', { kind: o.kind, id: o, x: o.x, y: o.y });
+        if (o.thrown) { o.thrown = false; missions.event('fetch', { kind: o.kind, x: o.x, y: o.y }); }   // (no id: the same frisbee counts each time)
         break;
       }
       const nx = dx / d, ny = dy / d, rel = (m.vx - o.vx) * nx + (m.vy - o.vy) * ny;
@@ -662,7 +663,8 @@ function startle(o, x, y) {
 // With a toy in her mouth she stops beside a child or a dog lover, and they take it: then they throw it for her to fetch
 // (she runs after it and picks it up), or hold it out and wiggle it for a tug of war. Not someone frightened of dogs, and
 // not while a job wants the toy taken somewhere. That is how you play with a dog: she brings it, you throw it or pull.
-const TOY = { teddy: true }, PLAY_R = 100, GIVE_T = 0.5, THROW_ODDS = 0.6, OFFER_T = 8;
+// how each toy is played with: 'either' thrown or held out for a tug, 'throw' always thrown (a frisbee)
+const TOY = { teddy: 'either', frisbee: 'throw' }, PLAY_R = 100, GIVE_T = 0.5, THROW_ODDS = 0.6, OFFER_T = 8;
 function updatePlay(dt) {
   const toy = dog.carry, still = Math.hypot(dog.vx, dog.vy) < 50;
   if (!toy || !TOY[toy.kind] || dog.state !== 'idle' || dog.air || !still || missions.wants('bring')?.target === toy.kind) { dog.giveT = 0; return; }
@@ -670,7 +672,7 @@ function updatePlay(dt) {
   if (!o) { dog.giveT = 0; return; }
   if ((dog.giveT = (dog.giveT || 0) + dt) < GIVE_T) return;
   dog.giveT = 0; dog.carry = null; Object.assign(toy, { carried: false, px: undefined, held: o, rest: true, kept: false }); o.holds = toy;
-  o.state = 'play'; o.t = 0; o.play = Math.random() < THROW_ODDS ? 'throw' : 'offer'; dog.happy = Math.max(dog.happy, 1);
+  o.state = 'play'; o.t = 0; o.play = TOY[toy.kind] === 'throw' || Math.random() < THROW_ODDS ? 'throw' : 'offer'; dog.happy = Math.max(dog.happy, 1);
 }
 function updatePeople(dt) {
   const hx = Math.cos(car.heading), hy = Math.sin(car.heading);
@@ -737,8 +739,9 @@ function updatePeople(dt) {
       const toy = o.holds;
       if (!toy) o.state = baseState(o);
       else if (o.play === 'throw' && o.t > 0.9) {
-        const a = toDog + (Math.random() - 0.5) * 1.8, s = 300 + Math.random() * 120;   // over her head, more or less
-        o.holds = null; toy.held = null; Object.assign(toy, { rest: false, cool: 0.6, vx: Math.cos(a) * s, vy: Math.sin(a) * s, vz: 560, z: isChild(o.look) ? 60 : 85 });
+        // over her head, more or less; a frisbee further and flatter (it glides)
+        const disc = toy.kind === 'frisbee', a = toDog + (Math.random() - 0.5) * 1.8, s = disc ? 300 + Math.random() * 90 : 300 + Math.random() * 120;
+        o.holds = null; toy.held = null; Object.assign(toy, { rest: false, cool: 0.6, thrown: true, vx: Math.cos(a) * s, vy: Math.sin(a) * s, vz: disc ? 330 : 560, z: isChild(o.look) ? 60 : 85 });
         o.state = baseState(o); o.wave = 1.4; o.cool = 2; dog.excited = 0.8; A.yip();
       } else if (o.play === 'offer' && o.t > OFFER_T) o.state = baseState(o);       // they keep it; she can still come and tug
     }
@@ -788,6 +791,9 @@ function updatePeople(dt) {
         o.state = 'sit'; o.t = 0; o.cool = 4.5; o.heading = toDog; o.next = reaction(o, 'crash');
         A.oof(); stars(o.x, o.y, 150, 7); G.mess++; G.pop = 1;
         dog.vx = nx * 150; dog.vy = ny * 150;
+      } else if (o.holds && TOY[o.holds.kind] === 'throw' && o.state !== 'play') {
+        // a frisbee is not pulled from them: running up to them, she gets it thrown
+        o.state = 'play'; o.t = 0.4; o.play = 'throw';
       } else if (o.holds && dog.state === 'idle' && sp > 40 && !dog.carry) {
         // they have a toy: she grabs it, and it is a tug of war (her play growl)
         o.state = 'tug'; o.t = 0; o.cool = 4; o.heading = toDog;
@@ -821,8 +827,28 @@ function flyAway(f) {
   A.flutter(); G.birds += f.birds.length; G.pop = 1; missions.event('chase', { kind: 'birds', id: f, x: f.x, y: f.y });
   for (let i = 0; i < 7; i++) spawn({ type: 'leaf', x: f.x + (Math.random() - 0.5) * 80, z: f.y + (Math.random() - 0.5) * 60, y: 20 + Math.random() * 40, vx: (Math.random() - 0.5) * 90, vy: 60, g: 110, drag: 1.5, life: 1.6, size: 6, rot: Math.random() * 6, vr: 5, color: '#DCE2EC' });
 }
+// Ducks paddle about on the pond and never fly off: when she comes near (swimming, or on the bank) they paddle away
+// across the water, quacking, and settle again; now and then they drift a little by themselves.
+const wetAround = (x, y, r) => [[0, 0], [r, 0], [-r, 0], [0, r], [0, -r]].every(([a, b]) => world.surfaceAt(x + a, y + b) === 'water');
+function updateDucks(f, dt) {
+  const dd = dist(f.x, f.y, dog.x, dog.y), near = dd < 240;
+  if (!f.to && (near || Math.random() < dt * 0.06)) {
+    for (let i = 0; i < 12 && !f.to; i++) {
+      const a = near ? Math.atan2(f.y - dog.y, f.x - dog.x) + (Math.random() - 0.5) * 2.2 : Math.random() * TAU, r = near ? 220 : 70;
+      if (wetAround(f.x + Math.cos(a) * r, f.y + Math.sin(a) * r, 55)) f.to = { x: f.x + Math.cos(a) * r, y: f.y + Math.sin(a) * r, fast: near };
+    }
+    if (f.to && near) A.quack();
+  }
+  if (f.to) {
+    const dx = f.to.x - f.x, dy = f.to.y - f.y, d = Math.hypot(dx, dy), step = (f.to.fast ? 120 : 30) * dt;
+    f.dir = Math.atan2(dy, dx);
+    if (d <= step) f.to = null; else { f.x += (dx / d) * step; f.y += (dy / d) * step; }
+  }
+  if (dd < 700 && Math.random() < dt * 0.08) A.quack();
+}
 function updateBirds(dt) {
   for (const f of world.flocks) {
+    if (f.kind === 'duck') { updateDucks(f, dt); continue; }
     if (f.state === 'ground') {
       const dd = dist(f.x, f.y, dog.x, dog.y);
       if ((onFoot() && dd < 250) || (Math.abs(car.v) > 80 && dist(f.x, f.y, car.x, car.y) < 340)) flyAway(f);
@@ -1006,7 +1032,8 @@ function drawTug(t) {
 // nobody asks for a moment. A child with no job who finds no one for a while (LOST, shorter before the first sticker)
 // is shown the way to the nearest asker, as to a job.
 const ASK_R = 120, SWAP_T = 0.8, LOST = 40, LOST_FIRST = 12;
-const askers = world.people.filter((o) => o.id && missions.missions.some((m) => m.from === o.id));
+const askers = [...world.people, ...world.animals].filter((o) => o.id && missions.missions.some((m) => m.from === o.id));
+const askerTop = (o) => (o.kind === 'duck' ? 95 : isChild(o.look) ? 150 : 200);   // where their bubble goes
 const offer = (o) => missions.missions.find((m) => m.from === o.id && !missions.done.has(m.id) && missions.available(m)) || null;
 const open = () => !ui.cele && !ui.title && ui.askT <= 0;
 const asking = () => !missions.job() && open();
@@ -1020,7 +1047,7 @@ function updateAskers(dt) {
   if (dog.state !== 'idle' || dog.air || (job && (dog.carry || ui.stillT < SWAP_T))) return;
   for (const o of askers) {
     const m = offer(o); if (!m || m === job || dist(o.x, o.y, dog.x, dog.y) > ASK_R) continue;
-    o.heading = Math.atan2(dog.y - o.y, dog.x - o.x); missions.start(m); if (job) ui.askT = 3; return;
+    o.heading = Math.atan2(dog.y - o.y, dog.x - o.x); if (o.kind === 'duck') A.quack(); missions.start(m); if (job) ui.askT = 3; return;
   }
 }
 // the asker to show the way to, if she has been looking for one long enough
@@ -1035,7 +1062,7 @@ function drawAskers(t) {
   const job = missions.job();
   for (const o of askers) {
     const m = offer(o); if (!m || m === job) continue;     // (whoever asked for the job in hand has nothing more to show)
-    const [sx, sy, k, ok] = S.project(o.x, isChild(o.look) ? 150 : 200, o.y); if (!ok) continue;
+    const [sx, sy, k, ok] = S.project(o.x, askerTop(o), o.y); if (!ok) continue;
     const s = clamp(34 * k, 20, 46), pics = m.picture.slice(0, 2), bw = s * (pics.length * 1.9 + 0.6), bh = s * 2.3;
     const x = sx, y = sy - bh / 2 + Math.sin(t * 3 + o.seed) * s * 0.12;
     c.save(); c.fillStyle = 'rgba(40,40,30,.18)'; c.beginPath(); c.roundRect(x - bw / 2 + 2, y - bh / 2 + 4, bw, bh, s * 0.7); c.fill();
@@ -1171,6 +1198,10 @@ function tidyFar() {
 function prepare(s) {
   const need = s.count || 1;
   if (s.action === 'take') { for (const o of world.props) if (o.kind === s.target) giveBack(o); }
+  else if (s.action === 'fetch') {                   // whoever has the frisbee throws it straight away
+    for (const o of world.props) if (o.kind === s.target) giveBack(o);
+    for (const p of world.people) if (p.holds && p.holds.kind === s.target) { p.state = 'play'; p.play = 'throw'; p.t = 0.3; }
+  }
   else if (s.action === 'knock' && s.target === 'lamp') { if (lampPosts.filter((o) => !o.fallen).length < need + 4) tidy('lamp'); }
   else if (s.action === 'smash' || s.action === 'knock') { if (world.props.filter((o) => o.kind === s.target && !o.gone && !o.messed).length < need) tidy(s.target); }
 }
@@ -1247,7 +1278,7 @@ function resize() { S.resize(); hud.width = Math.round(S.view.w * S.view.dpr); h
 
 // ---- wiring ----
 function act(a) { A.initAudio(); if (ui.title) { play(); return; } if (ui.book) return; if (dog.tug) { yank(); return; } if (a === 'jump') jump(); else if (a === 'bark') bark(); else if (a === 'drop') { if (dog.carry) drop(); } else carAction(); }
-G.api = { play, stats: S.stats, heaviest: S.heaviest, quality: (l) => setLevel(l), perf: () => perf, renderMusic: A.renderMusic, jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save, spoken: A.spoken };
+G.api = { play, stats: S.stats, heaviest: S.heaviest, byKind: S.byKind, quality: (l) => setLevel(l), perf: () => perf, renderMusic: A.renderMusic, jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save, spoken: A.spoken };
 input.onAction = act;
 input.onKey = () => { if (dog.tug) yank(); };   // and so is every arrow key
 const btnDrop = document.getElementById('btn-drop'), btnCar = document.getElementById('btn-car'), btnMute = document.getElementById('btn-mute'), btnBook = document.getElementById('btn-book'), bookN = document.getElementById('book-n');

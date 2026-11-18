@@ -119,7 +119,8 @@ export function makeRunner(missions, world, hooks = {}) {
       const s = step(); if (!s) return null;
       const me = dog.state === 'drive' ? car : dog;
       const from = (list) => list.reduce((b, p) => (!b || Math.hypot(p.x - me.x, p.y - me.y) < Math.hypot(b.x - me.x, b.y - me.y) ? p : b), null);
-      const things = (kind) => world.props.filter((o) => o.kind === kind && !o.gone && !seen.has(o));
+      // (a step with `at` only wants the things there: bones in the woods, not the nearest bone in town)
+      const things = (kind) => world.props.filter((o) => o.kind === kind && !o.gone && !seen.has(o) && (!s.at || nearSpot(s.at, o.x, o.y, NEAR.at)));
       const thing = (kind) => { const o = from(things(kind)); return o && o.held ? o.held : o; };
       const spot = (tag) => from(spots(tag));
       switch (s.action) {
@@ -136,9 +137,10 @@ export function makeRunner(missions, world, hooks = {}) {
         case 'smash': return thing(s.target);
         case 'knock': return s.target === 'lamp' ? from(lamps.filter((o) => !o.fallen)) : thing(s.target);
         case 'hop': return from(world.platforms.filter((o) => o.kind === s.target && !o.off && !seen.has(o)).map((o) => ({ x: (o.ax + o.bx) / 2, y: (o.ay + o.by) / 2 })));
+        case 'fetch': return dog.carry && dog.carry.kind === s.target ? dog.carry.owner || null : thing(s.target);   // the thrown thing, then back to whoever throws it
         case 'collect': return thing('bone') || thing('mound');
         case 'dig': return thing('mound');
-        case 'swim': case 'splash': return spot('lake');
+        case 'swim': case 'splash': return spot(s.at || 'lake');
         case 'shake': return dog.swim ? spot('shore') : dog.shakeWet > 0 ? null : spot('lake');
         default: { const tag = place(s); return tag ? spot(tag) : null; }
       }

@@ -116,15 +116,23 @@ A star button, top right, with the number of stickers on it. It opens a page wit
 
 All of it works with no job in hand: playing freely stays the game.
 
+### The big park (2026-11-18)
+
+The owner wanted more open space: a big park east of the town, through a gate in the houses opposite the middle road, half the size of the town again. Agreed plan, in two pieces:
+
+1. **The park** (built): woods all round with a path through them, a wide meadow in the middle, a round pond with ducks, the ice cream van at the end of the main path. New askers: the duck on the pond's bank (an animal, quacking), a girl with a frisbee in the meadow, the park keeper in the woods, the ice cream seller. Seven jobs: swim in the pond and a big splash into it (the duck), fetch the frisbee three and five times (the girl: she throws it, Lili brings it back, she throws it again), three bones in the woods and the treasure buried there (the keeper), and a run round the whole park: the pond, the woods, back to the van (the ice cream seller). The ducks paddle away from her across the water and never fly off.
+2. **The dog park** (next): a fenced corner with jumps, a tunnel and a see-saw, and other dogs to play with.
+
+Not yet: the wooden bridge over the pond, kites, the hill, squirrels to chase up trees.
+
 ### What comes next
 
-The town is full enough for these 23. More jobs now need more places, each small and dense with its own things to do, built and shown one at a time:
+1. **The dog park**, in the big park (above).
+2. **Prizes**: one for every job, things to wear, toys she can play with, a new dog house (agreed 2026-11-18).
+3. **The farm**, past the edge of town: sheep to round up, chickens, mud to roll in, hay bales, a tractor to drive.
+4. Then the other places in `docs/game-design.md`.
 
-1. **The dog park**: agility jumps, a tunnel, a see-saw, other dogs to play with. Jobs: once round the course, through the tunnel, play with a dog.
-2. **The farm**, past the edge of town: sheep to round up, chickens, mud to roll in, hay bales, a tractor to drive.
-3. Then the other places in `docs/game-design.md`.
-
-Next in this round: a prize for every job (things to wear, toys she can play with, a new dog house), a cat and a duck who ask too, and a note in a bottle on the beach. Also open: a recorded voice.
+Also open: a cat who asks, a note in a bottle on the beach, a recorded voice.
 
 ## Missions: the files and the runner
 

@@ -5,7 +5,7 @@ import * as THREE from '../vendor/three.module.min.js';
 import { STYLE } from './style.js';
 import { W, H, BOUNDS, TILE } from './world.js';
 import { paintTile } from './ground.js';
-import { makeWater } from './water.js';
+import { makeWater, WATER_Y } from './water.js';
 let water = null;
 import * as M from './models.js';
 import { clamp, lerp, rng } from './util.js';
@@ -24,7 +24,7 @@ const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3
 const _mx = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
 // how something she carries hangs from her mouth: its middle `y` below her teeth, turned `rz` (the teddy by its head,
 // the string of sausages by one end)
-const HANG = { teddy: { y: -19.6, rz: 0 }, sausage: { y: -29, rz: Math.PI / 2 } };
+const HANG = { teddy: { y: -19.6, rz: 0 }, sausage: { y: -29, rz: Math.PI / 2 }, frisbee: { y: -14, rz: Math.PI / 2 } };
 // and how it lies in a tug of war, stretched along `axis`: the teddy on its side with its head towards her
 const TUG = { teddy: { rz: -Math.PI / 2, axis: 'y' }, sausage: { rz: 0, axis: 'x' } };
 
@@ -70,7 +70,7 @@ function updateSwim(p, t) {
   if (p.splashed) { water.push(p.x + hx * 30, p.y + hy * 30, 18, p.splashed); p.splashed = 0; }   // how hard: set by what splashed
   if (p.crown) { crown(p.x, p.y); p.crown = 0; }
 }
-const trees = [], lamps = [], plats = [], props = [], people = [], birds = [], debris = [];
+const trees = [], lamps = [], plats = [], props = [], people = [], birds = [], debris = [], animals = [];
 
 export function initScene(canvas, w) {
   world = w;
@@ -100,30 +100,38 @@ export function initScene(canvas, w) {
   streamTiles(world.start.x, world.start.y, true);
 
   // ---- the hedge round the edge of town, and the flowers in the park ----
+  // Each is drawn as instances of one shape, a batch for each CHUNK square of town: one batch for all of town is always
+  // drawn whole, wherever the camera looks (with the park, that was 440 000 triangles a frame, most of them far away).
+  const CHUNK = 1600, chunked = (items, make) => {
+    const by = new Map();
+    for (const it of items) { const k = `${Math.floor(it[0] / CHUNK)},${Math.floor(it[1] / CHUNK)}`; if (!by.has(k)) by.set(k, []); by.get(k).push(it); }
+    for (const list of by.values()) { const im = make(list); im.computeBoundingSphere(); scene.add(im); }
+  };
   const R = rng(7), spots = [];
   for (let x = BOUNDS.x0; x <= BOUNDS.x1; x += 62) spots.push([x, BOUNDS.y0 - 34], [x, BOUNDS.y1 + 34]);
   for (let y = BOUNDS.y0; y <= BOUNDS.y1; y += 62) spots.push([BOUNDS.x0 - 34, y], [BOUNDS.x1 + 34, y]);
-  const hedge = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 10, 7), M.surf({ color: '#ffffff' }), spots.length);
-  const col = new THREE.Color();
-  spots.forEach(([x, y], i) => {
-    const r = 40 + R() * 14;
-    _mx.compose(_v.set(x + (R() - 0.5) * 14, 18, y + (R() - 0.5) * 14), _q.identity(), _s.set(r, 34 + R() * 16, r));
-    hedge.setMatrixAt(i, _mx); hedge.setColorAt(i, col.set(['#3F9A55', '#4FA653', '#5CB563'][(R() * 3) | 0]));
+  const bush = new THREE.SphereGeometry(1, 10, 7), hedgeMat = M.surf({ color: '#ffffff' }), col = new THREE.Color();
+  chunked(spots.map(([x, y]) => [x + (R() - 0.5) * 14, y + (R() - 0.5) * 14, 40 + R() * 14, 34 + R() * 16, ['#3F9A55', '#4FA653', '#5CB563'][(R() * 3) | 0]]), (list) => {
+    const hedge = new THREE.InstancedMesh(bush, hedgeMat, list.length);
+    list.forEach(([x, y, r, h, c], i) => { _mx.compose(_v.set(x, 18, y), _q.identity(), _s.set(r, h, r)); hedge.setMatrixAt(i, _mx); hedge.setColorAt(i, col.set(c)); });
+    hedge.castShadow = true; hedge.receiveShadow = true; hedge.userData.kind = 'hedge'; return hedge;
   });
-  hedge.castShadow = true; hedge.receiveShadow = true; scene.add(hedge);
   ['#FF7FA0', '#FFD23F', '#ffffff', '#B48BE0'].forEach((c, k) => {
-    const list = world.flowers.filter((f) => f.c === k);
-    const im = new THREE.InstancedMesh(M.flowerGeometry(c), vc, list.length);
-    list.forEach((f, i) => { _mx.compose(_v.set(f.x, 0, f.y), _q.identity(), _s.setScalar(f.s)); im.setMatrixAt(i, _mx); });
-    scene.add(im);
+    const geo = M.flowerGeometry(c);
+    chunked(world.flowers.filter((f) => f.c === k).map((f) => [f.x, f.y, f.s]), (list) => {
+      const im = new THREE.InstancedMesh(geo, vc, list.length);
+      list.forEach(([x, y, s], i) => { _mx.compose(_v.set(x, 0, y), _q.identity(), _s.setScalar(s)); im.setMatrixAt(i, _mx); });
+      im.userData.kind = 'flowers'; return im;
+    });
   });
 
-  for (const o of world.props) { const m = M.makeProp(o.kind); scene.add(m.root); props.push({ o, ...m }); }
+  for (const o of world.props) { const m = M.makeProp(o.kind); m.root.userData.kind = o.kind; scene.add(m.root); props.push({ o, ...m }); }
   for (const o of world.people) { const m = M.makePerson(o.look); scene.add(m.root); people.push({ o, m }); }
-  for (const f of world.flocks) for (const b of f.birds) { const m = M.makeBird(b.color); scene.add(m.root); birds.push({ f, b, m }); }
+  for (const f of world.flocks) for (const b of f.birds) { const m = f.kind === 'duck' ? M.makeDuck(b.color) : M.makeBird(b.color); m.root.userData.kind = f.kind || 'bird'; scene.add(m.root); birds.push({ f, b, m }); }
+  for (const a of world.animals) { const m = M.makeDuck(2, true); scene.add(m.root); animals.push({ a, m }); }   // (a duck is the only one yet)
   car = M.makeCar(); scene.add(car.root);
   dog = M.makeDog(); scene.add(dog.root);
-  water = makeWater(world, renderer); if (water) scene.add(water.mesh);
+  water = makeWater(world, renderer); if (water) scene.add(...water.meshes);
   resize();
 }
 
@@ -141,7 +149,7 @@ function buildTile(t) {
   ground.rotation.x = -Math.PI / 2; ground.position.set((t.col + 0.5) * TILE, 0, (t.row + 0.5) * TILE); ground.receiveShadow = true;
   // trees: the leaves fade when they would hide whoever the camera follows
   for (const tr of t.things.trees) {
-    const g = add(new THREE.Group()); g.position.set(tr.x, 0, tr.y); g.scale.setScalar(tr.s); g.rotation.y = tr.seed;
+    const g = add(new THREE.Group()); g.userData.kind = 'tree'; g.position.set(tr.x, 0, tr.y); g.scale.setScalar(tr.s); g.rotation.y = tr.seed;
     const trunk = new THREE.Mesh(M.trunkGeometry, M.mat('#B98248')); trunk.castShadow = true;
     const leafMat = M.surf({ color: '#ffffff', vertexColors: true, transparent: true }); mats.push(leafMat);
     const leaves = new THREE.Mesh(M.canopyGeometry(tr.hue), leafMat); leaves.castShadow = true;
@@ -263,6 +271,16 @@ export function heaviest(n = 12, parts = false) {
   const rows = scene.children.map((o) => { let t = 0, m = 0; o.traverse((q) => { if (q.isMesh && q.visible) { t += tri(q.geometry); m++; } }); return { t: Math.round(t), m, at: [Math.round(o.position.x), Math.round(o.position.z)], kind: o.userData.kind || o.type }; });
   return rows.sort((a, b) => b.t - a.t).slice(0, n);
 }
+// triangles in the scene by kind of thing (labelled where made), the visible ones; within: only those within r of (x, y)
+export function byKind(x, y, r = 1e9) {
+  const tri = (g) => (g.index ? g.index.count : g.attributes.position.count) / 3, out = {};
+  for (const o of scene.children) {
+    if (Math.hypot(o.position.x - x, o.position.z - y) > r) continue;
+    let t = 0; o.traverse((q) => { if (q.isMesh && q.visible) t += tri(q.geometry) * (q.isInstancedMesh ? q.count : 1); });
+    const k = o.userData.kind || (o.isMesh ? 'mesh' : o.type); out[k] = (out[k] || 0) + Math.round(t);
+  }
+  return out;
+}
 export const stats = () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, dpr: renderer.getPixelRatio(), objects: scene.children.length });
 export function render(G, dt) {
   const t = G.t, f = G.focus;
@@ -279,7 +297,7 @@ export function render(G, dt) {
   zoom = lerp(zoom, f.zoom || 1, 1 - Math.exp(-dt * 2));
   placeCamera();
 
-  dog.update(G.dog, t); updateSwim(G.dog, t); updateCrowns(dt); if (water) water.update(t, dt);
+  dog.update(G.dog, t); updateSwim(G.dog, t); updateCrowns(dt); if (water) water.update(t, dt, G.dog.x, G.dog.y);
   car.update(G.car, t, dt);
   streamTiles(camAim.x, camAim.z);
 
@@ -343,11 +361,17 @@ export function render(G, dt) {
   for (let i = 0; i < debris.length; i++) debris[i].visible = !G.debris[i].gone;   // tidied away (the game never takes one out of the list)
   for (const e of people) e.m.update(e.o, t);
   for (const e of birds) {
-    const { f: fl, b, m } = e, air = fl.state !== 'ground';
+    const { f: fl, b, m } = e;
+    if (fl.kind === 'duck') {                      // sitting on the water, all facing the way the flock paddles
+      m.root.position.set(fl.x + b.ox, WATER_Y - 5, fl.y + b.oy); m.root.rotation.y = -(fl.dir + Math.sin(t * 0.5 + b.ph) * 0.35); m.update(b, t, !!fl.to);
+      continue;
+    }
+    const air = fl.state !== 'ground';
     const spread = air ? 1 + Math.min(1, fl.t) * 0.8 : 1;
     m.root.position.set(fl.x + b.ox * spread, fl.h + (air ? Math.sin(t * 6 + b.ph) * 14 + b.ph * 6 : 0), fl.y + b.oy * spread);
     m.root.rotation.y = -(air ? fl.dir + Math.sin(t * 2 + b.ph) * 0.25 : b.face + Math.floor(t * 0.4 + b.ph) * 1.7);
     m.update(b, t, air);
   }
+  for (const { a, m } of animals) { m.root.position.set(a.x, 0, a.y); m.root.rotation.y = -a.heading; m.update({ ph: a.seed }, t, false); }
   renderer.render(scene, camera);
 }

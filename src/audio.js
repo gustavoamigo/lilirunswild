@@ -125,6 +125,7 @@ export function boing() { tone(260, 0, 0.16, { to: 520, sweep: 0.1, vol: 0.14 })
 // ---- birds and people ----
 export function flutter() { for (let i = 0; i < 9; i++) noise(i * 0.055, 0.05, { freq: 1500 + (i % 2) * 700, q: 1.4, vol: 0.13 }); }
 export function coo() { tone(520, 0, 0.22, { to: 610, sweep: 0.1, vol: 0.05, attack: 0.05 }); tone(560, 0.26, 0.3, { to: 470, vol: 0.05, attack: 0.05 }); }
+export function quack() { tone(520, 0, 0.11, { type: 'sawtooth', to: 360, vol: 0.05, attack: 0.008 }); tone(500, 0.13, 0.13, { type: 'sawtooth', to: 330, vol: 0.05, attack: 0.008 }); }
 export function aww() { tone(440, 0, 0.5, { type: 'triangle', to: 660, sweep: 0.25, vol: 0.13, attack: 0.06 }); tone(660, 0.3, 0.4, { type: 'triangle', to: 520, vol: 0.1, attack: 0.06 }); }
 export function oof() { tone(300, 0, 0.25, { type: 'triangle', to: 130, vol: 0.2 }); noise(0.05, 0.12, { freq: 400, q: 0.8, vol: 0.18 }); }
 // a fright: a man yells, a woman screams (one of two takes), a child screams (all generated)

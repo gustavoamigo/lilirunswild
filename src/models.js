@@ -1033,6 +1033,29 @@ function hairParts(c, style, r) {
 
 // ---------------------------------------------------------------- birds --
 const BIRD = [['#8E9AAF', '#6F7B91'], ['#B9BDC6', '#8A8F9C'], ['#A08872', '#7C6654']];
+// A duck: on the water (the pond), or standing on the bank on orange feet (feet: the duck who asks for jobs). Colours: 0
+// a drake (green head, white ring, brown chest), 1 a brown duck, 2 a white farmyard duck, bigger.
+const DUCK = [['#C9B48E', '#2F7A4A', '#8A5A3C'], ['#A9825A', '#A9825A', '#8A6A4A'], ['#F6F3EA', '#F6F3EA', '#E8E2D2']];
+export function makeDuck(color, feet = false) {
+  const [c1, c2, c3] = DUCK[color % DUCK.length];
+  const root = new THREE.Group(), bodyG = new THREE.Group(), headG = new THREE.Group(); root.add(bodyG);
+  const lift = feet ? 12 : 0;
+  bodyG.add(mesh([blob(c1, 0, 8 + lift, 0, 16, 9, 11), blob(c1, -15, 12 + lift, 0, 6, 4, 6, [0, 0, 0.5]), blob(c3, 4, 9 + lift, 0, 11, 7, 10),
+    blob(c3, -3, 12 + lift, 9.5, 10, 4, 2.5), blob(c3, -3, 12 + lift, -9.5, 10, 4, 2.5)]));
+  if (color === 0) bodyG.add(mesh([blob('#FFFFFF', 10.5, 16.5 + lift, 0, 5.4, 1.3, 5.4)], false));
+  headG.position.set(11, 15 + lift, 0); bodyG.add(headG);
+  headG.add(mesh([blob(c2, -1, 1, 0, 5, 7, 5), blob(c2, 2, 8, 0, 7.5), blob('#F2A33A', 10, 7, 0, 5, 1.8, 3.4), blob('#22252B', 5, 10, 4.6, 1.2), blob('#22252B', 5, 10, -4.6, 1.2)]));
+  if (feet) bodyG.add(mesh([cyl('#F2A33A', 0, 6, 4, 1.4, 12), cyl('#F2A33A', 0, 6, -4, 1.4, 12), blob('#F2A33A', 3, 0.8, 4, 4.5, 0.8, 3), blob('#F2A33A', 3, 0.8, -4, 4.5, 0.8, 3)]));
+  if (color === 2) root.scale.setScalar(feet ? 1.9 : 1.35);   // (the duck who asks is big, to be seen from afar)
+  function update(b, t, moving) {
+    // bobbing on the water, now and then a dip of the head; on land a little shuffle, looking about
+    bodyG.position.y = Math.sin(t * 2.4 + b.ph) * (feet ? 0.6 : 1.4);
+    bodyG.rotation.z = Math.sin(t * 1.7 + b.ph) * 0.05 - (moving ? 0.08 : 0);
+    const dip = feet ? 0 : Math.max(0, Math.sin(t * 0.7 + b.ph * 2)) ** 12;
+    headG.rotation.z = -dip * 1.1; headG.rotation.y = feet ? Math.sin(t * 0.9 + b.ph) * 0.6 : 0;
+  }
+  return { root, update };
+}
 export function makeBird(color) {
   const [c1, c2] = BIRD[color % BIRD.length];
   const root = new THREE.Group(), bodyG = new THREE.Group(); root.add(bodyG);
@@ -1075,6 +1098,7 @@ export function makeProp(kind) {
   else if (kind === 'sausage') { mid = 7; parts = [   // a string of sausages
     blob('#D9705A', -17, 0, 0, 9, 5.5, 5.5), blob('#D9705A', 0, 0, 0, 9, 5.5, 5.5), blob('#D9705A', 17, 0, 0, 9, 5.5, 5.5),
     blob('#B5503E', -8.5, 0, 0, 2), blob('#B5503E', 8.5, 0, 0, 2), blob('#B5503E', -26, 0, 0, 2), blob('#B5503E', 26, 0, 0, 2)]; }
+  else if (kind === 'frisbee') { mid = 2; parts = [cyl('#E2453C', 0, 0, 0, 16, 3), cyl('#F2675D', 0, 1.7, 0, 11, 0.6), cyl('#ffffff', 0, 1.9, 0, 6, 0.4)]; }   // a red flying disc
   else if (kind === 'apple') { mid = 7; parts = [blob('#D9342B', 0, 0, 0, 8, 7.5, 8), cyl('#6E4630', 0, 8, 0, 1, 4), blob('#4FA653', 3, 9, 0, 3, 1.2, 2)]; }
   else { mid = 13; parts = [blob('#D7E84A', 0, 0, 0, 13), { geo: new THREE.TorusGeometry(12.6, 1.2, 6, 20), color: '#ffffff', at: [0, 0, 0], scale: [1, 1, 1], rot: [0.5, 0.4, 0], flat: true }]; }
   // A bin or cone falls over its base's edge (FOOT: how far that is from the middle), so it ends up lying on its side on
@@ -1130,7 +1154,10 @@ export function platformGeometry(o) {
   return null;
 }
 export const lampGeometry = merged([cyl('#4A5560', 0, 100, 0, 4.5, 200), cyl('#4A5560', 0, 5, 0, 10, 10), box('#4A5560', 0, 200, 14, 5, 5, 34), blob('#FFF2B8', 0, 193, 28, 12, 9, 12)]);
-export const flowerGeometry = (color) => merged([cyl('#4FA653', 0, 6, 0, 1.2, 12), blob(color, 0, 13, 0, 5, 3, 5), blob('#FFD23F', 0, 14.5, 0, 2)]);
+// A flower: a stem, a bloom and its yellow middle, in few triangles (about 90, not 350): they are tiny, and there are
+// over a thousand of them, the park's meadow full.
+const FLOWER_BALL = new THREE.SphereGeometry(1, 7, 5), FLOWER_STEM = new THREE.CylinderGeometry(1, 1, 1, 5, 1, true);
+export const flowerGeometry = (color) => merged([{ ...cyl('#4FA653', 0, 6, 0, 1.2, 12), geo: FLOWER_STEM }, { ...blob(color, 0, 13, 0, 5, 3, 5), geo: FLOWER_BALL }, { ...blob('#FFD23F', 0, 14.5, 0, 2), geo: FLOWER_BALL }]);
 
 // A house faces south (its front door at +z) and is turned with its tile (h.dir quarter turns clockwise). Lili's home and
 // the school are houses with something of their own: a round window and a red door; a clock, a double door and a flag.
@@ -1184,6 +1211,17 @@ function makeShop(h) {
 // square's fountain; a café table with two chairs.
 export function fixtureGeometry(kind) {
   if (kind === 'kennel') return kennelGeometry;
+  if (kind === 'gatepost') return merged([   // a stone gatepost with a ball on top
+    box('#C9C2B4', 0, 44, 0, 30, 88, 30), box('#B9B4A8', 0, 90, 0, 36, 6, 36), blob('#D9D3C6', 0, 104, 0, 12),
+  ]);
+  if (kind === 'van') return merged([   // the ice cream van: pink, its hatch and striped awning to the south, a big cone on its roof
+    box('#FBD3DF', -12, 56, 0, 150, 80, 84), box('#FFF4E2', -12, 99, 0, 154, 8, 88), box('#FBD3DF', 80, 40, 0, 36, 52, 80),
+    box('#BFE6F5', 99, 54, 0, 2, 22, 66), box('#BFE6F5', 80, 56, 40.6, 26, 20, 2), box('#4A2E22', -20, 64, 42.4, 72, 34, 2), box('#F7E8C8', -20, 46, 44, 80, 4, 8),
+    box('#F2675D', -20, 86, 52, 80, 3, 20), box('#ffffff', -38, 86.5, 52, 12, 3, 20), box('#ffffff', -2, 86.5, 52, 12, 3, 20),
+    ...[-58, 60].flatMap((x) => [-1, 1].map((s) => cyl('#2A2A2A', x, 14, s * 40, 14, 10, [Math.PI / 2, 0, 0]))),
+    { geo: CONE, color: '#D9A15A', at: [-12, 124, 0], scale: [14, 36, 14], rot: [Math.PI, 0, 0], flat: true },
+    blob('#F7A8C4', -12, 146, 0, 15), blob('#FFF4D6', -12, 163, 0, 12), blob('#E2453C', -12, 176, 0, 4),
+  ]);
   if (kind === 'basket') return merged([   // a round wicker basket, open at the top, the dark inside showing
     cyl('#C98F4E', 0, 9, 0, 26, 18), cyl('#A8723A', 0, 5, 0, 26.4, 2), cyl('#A8723A', 0, 11, 0, 26.4, 2), cyl('#6E4428', 0, 17.6, 0, 23, 1),
     { geo: new THREE.TorusGeometry(25, 2.8, 6, 28), color: '#E0A866', at: [0, 18, 0], scale: [1, 1, 1], rot: [Math.PI / 2, 0, 0], flat: true },

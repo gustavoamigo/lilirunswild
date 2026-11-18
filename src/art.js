@@ -184,6 +184,31 @@ const ICONS = {
     c.fillStyle = '#fff'; for (let i = -3; i <= 3; i += 2) c.fillRect(x + i * s * 0.22 - s * 0.1, y - s * 0.1, s * 0.2, s * 0.28);
   },
   lake: water,
+  duck: (c, x, y, s) => {                            // a yellow duck, side on, facing right
+    c.fillStyle = '#F6C93C'; ell(c, x - s * 0.08, y + s * 0.25, s * 0.62, s * 0.4); c.fill();
+    c.beginPath(); c.moveTo(x - s * 0.62, y + s * 0.1); c.lineTo(x - s * 0.82, y - s * 0.12); c.lineTo(x - s * 0.5, y + s * 0.05); c.fill();
+    circ(c, x + s * 0.32, y - s * 0.3, s * 0.32); c.fill();
+    c.fillStyle = '#F2862E'; ell(c, x + s * 0.72, y - s * 0.24, s * 0.22, s * 0.1); c.fill();
+    c.fillStyle = '#E3A92A'; ell(c, x - s * 0.12, y + s * 0.2, s * 0.32, s * 0.16, -0.25); c.fill();
+    c.fillStyle = '#2A1C14'; circ(c, x + s * 0.4, y - s * 0.38, s * 0.07); c.fill();
+  },
+  frisbee: (c, x, y, s) => {                         // a red flying disc, tilted, with its rim
+    c.fillStyle = '#E2453C'; ell(c, x, y + s * 0.08, s * 0.82, s * 0.36, -0.2); c.fill();
+    c.fillStyle = '#F2675D'; ell(c, x - s * 0.02, y - s * 0.02, s * 0.62, s * 0.24, -0.2); c.fill();
+    c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = s * 0.07; c.beginPath(); c.ellipse(x, y - s * 0.02, s * 0.36, s * 0.13, -0.2, 0, TAU); c.stroke();
+  },
+  icecream: (c, x, y, s) => {                        // an ice cream: a cone with two scoops
+    c.fillStyle = '#D9A15A'; c.beginPath(); c.moveTo(x - s * 0.36, y - s * 0.05); c.lineTo(x + s * 0.36, y - s * 0.05); c.lineTo(x, y + s * 0.9); c.closePath(); c.fill();
+    c.fillStyle = '#C48A48'; c.beginPath(); c.moveTo(x - s * 0.1, y - s * 0.05); c.lineTo(x + s * 0.06, y - s * 0.05); c.lineTo(x, y + s * 0.9); c.closePath(); c.fill();
+    c.fillStyle = '#F7A8C4'; circ(c, x, y - s * 0.18, s * 0.38); c.fill();
+    c.fillStyle = '#FFF4D6'; circ(c, x + s * 0.06, y - s * 0.58, s * 0.3); c.fill();
+    c.fillStyle = '#E2453C'; circ(c, x + s * 0.12, y - s * 0.9, s * 0.1); c.fill();
+  },
+  tree: (c, x, y, s) => {                            // a round tree on its trunk
+    c.fillStyle = '#8A5A3C'; c.beginPath(); c.roundRect(x - s * 0.1, y + s * 0.1, s * 0.2, s * 0.72, s * 0.05); c.fill();
+    c.fillStyle = '#4FA653'; circ(c, x, y - s * 0.18, s * 0.55); c.fill(); circ(c, x - s * 0.42, y + s * 0.05, s * 0.34); c.fill(); circ(c, x + s * 0.42, y + s * 0.05, s * 0.34); c.fill();
+    c.fillStyle = '#6CC06A'; circ(c, x - s * 0.14, y - s * 0.34, s * 0.26); c.fill();
+  },
   splash: (c, x, y, s) => { water(c, x, y + s * 0.3, s * 0.8); drops(c, x, y + s * 0.25, s * 0.95, 7); },
   shake: (c, x, y, s) => { lili(c, x, y + s * 0.2, s * 0.62); drops(c, x, y + s * 0.2, s * 1.0, 6); },
   cone: (c, x, y, s) => {

@@ -10,6 +10,9 @@ swim-and-shake
 three-cones
 three-bones
 hello-three
+pond-swim
+frisbee
+woods-bones
 steal-the-teddy
 sausage
 lamp-posts
@@ -17,6 +20,10 @@ dig-a-bone
 apples
 big-splash
 smash-three-pots
+pond-splash
+frisbee-five
+woods-treasure
+park-tour
 town-tour
 ten-bones
 five-friends

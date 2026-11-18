@@ -92,13 +92,14 @@ export const KINDS = {
   ball:  { r: 13, h: 26, tough: 0, fly: 1.5, pop: 300, drag: 0.7, rolls: true },
   teddy: { r: 18, h: 40, tough: 0, fly: 1.1, pop: 200, drag: 1.6, tumbles: true, carry: true },
   sausage: { r: 16, h: 14, tough: 0, fly: 1.0, pop: 180, drag: 2.2, carry: true },
+  frisbee: { r: 16, h: 5, tough: 0, fly: 1.3, pop: 200, drag: 4, carry: true, glide: true },   // glide: comes down slowly
   apple: { r: 8, h: 14, tough: 0, fly: 1.4, pop: 240, drag: 1.0, rolls: true, mess: true },
   bone: { r: 16, h: 12, find: true },
   mound: { r: 30, h: 12, dig: true },
 };
 
 // how big each kind of fixture is (its radius as an obstacle), and the shops' colours: walls, roof, awning stripes
-const FIXTURE_R = { kennel: 34, basket: 26, fountain: 78, 'cafe-table': 30 };
+const FIXTURE_R = { kennel: 34, basket: 26, fountain: 78, 'cafe-table': 30, gatepost: 16, van: 66 };
 const SHOP = {
   butcher: { color: '#F4F1EA', roof: '#8A5A44', awning: ['#D9483B', '#ffffff'] },
   bakery: { color: '#F7E1B5', roof: '#B5483A', awning: ['#9A6A3A', '#F6EBC8'] },
@@ -119,8 +120,8 @@ export function buildTown(tiles, pop) {
     const at = (x, y) => { const [u, v] = turn(t.rot, x, y); return [x0 + u, y0 + v]; };
     for (const [x, y] of d.lamps || []) { const [X, Y] = at(x, y), o = { kind: 'lamp', x: X, y: Y, r: 9, wob: 0 }; lamps.push({ x: X, y: Y }); own.lamps.push(o); obstacles.push(o); }
     for (const [kind, x, y, z] of d.props || []) { const [X, Y] = at(x, y); prop(kind, X, Y, z || 0); }
-    for (const [x, y] of d.trees || []) {
-      const [X, Y] = at(x, y), tr = { x: X, y: Y, s: 0.9 + R() * 0.35, hue: (R() * 4) | 0, seed: R() * 6, wob: 0 };
+    for (const [x, y, big = 1] of d.trees || []) {               // big: how much bigger than a usual tree (the woods' are)
+      const [X, Y] = at(x, y), tr = { x: X, y: Y, s: (0.9 + R() * 0.35) * big, hue: (R() * 4) | 0, seed: R() * 6, wob: 0 };
       trees.push(tr); own.trees.push(tr); obstacles.push({ kind: 'tree', x: X, y: Y, r: 22 * tr.s, tree: tr });
     }
     for (const [x, y] of d.benches || []) {
@@ -155,6 +156,12 @@ export function buildTown(tiles, pop) {
       flocks.push({ x: X, y: Y, h: 0, state: 'ground', t: 0, seed: i * 2.3,
         birds: Array.from({ length: 5 }, (_, k) => ({ ox: Math.cos(k * 1.3 + i) * (28 + k * 9), oy: Math.sin(k * 1.3 + i) * (22 + k * 7), ph: R() * 6, face: R() * 6, color: k % 3 })) });
     }
+    // ducks: paddling about on the water, three to a flock; they never fly off (updateDucks in main.js)
+    for (const [x, y] of d.ducks || []) {
+      const [X, Y] = at(x, y), i = flocks.length;
+      flocks.push({ kind: 'duck', x: X, y: Y, h: 0, state: 'swim', t: 0, seed: i * 2.3, dir: R() * 6.3,
+        birds: Array.from({ length: 3 }, (_, k) => ({ ox: Math.cos(k * 2.1 + i) * (22 + k * 12), oy: Math.sin(k * 2.1 + i) * (18 + k * 10), ph: R() * 6, face: 0, color: k % 2 })) });
+    }
     for (const [tag, x, y] of d.spots || []) { const [X, Y] = at(x, y); spots.push({ tag, x: X, y: Y }); }
     // flowers: on the tile's grass, clear of trees and furniture
     for (let i = 0, n = 0; i < 200 && n < (d.flowers || 0); i++) {
@@ -175,6 +182,8 @@ export function buildTown(tiles, pop) {
     if (p.holds) { o.holds = prop(p.holds, o.x, o.y, 40); o.holds.held = o.holds.owner = o; }
     people.push(o);
   }
+  // Animals who ask for jobs, like people do (world/people.js `animals`): the duck on the pond's bank.
+  const animals = (pop.animals || []).map((p) => { const [x, y] = place(p.at); return { kind: p.kind, id: p.id, voice: p.voice, x, y, heading: FACING[p.facing] || 0, t: 0, seed: 7 }; });
   // The parked car is a thing he can jump onto (and so into). Its line is moved with the car.
   const carPlat = { kind: 'car', ax: 0, ay: 0, bx: 0, by: 0, r: 66, h: 64, wob: 0 };
   platforms.push(carPlat);
@@ -196,7 +205,7 @@ export function buildTown(tiles, pop) {
     return { x: start.x, y: start.y };
   };
 
-  return { start: { x: start.x, y: start.y }, tiles, spots, obstacles, platforms, props, trees, lamps, houses, flowers, flocks, people, car, carPlat, table, freeSpot, birdSpot, surfaceAt };
+  return { start: { x: start.x, y: start.y }, tiles, spots, obstacles, platforms, props, trees, lamps, houses, flowers, flocks, people, animals, car, carPlat, table, freeSpot, birdSpot, surfaceAt };
 }
 
 // Slide something round out of anything solid. Returns what it hit hardest into, as
