@@ -92,7 +92,7 @@ export const KINDS = {
   ball:  { r: 13, h: 26, tough: 0, fly: 1.5, pop: 300, drag: 0.7, rolls: true },
   teddy: { r: 18, h: 40, tough: 0, fly: 1.1, pop: 200, drag: 1.6, tumbles: true, carry: true },
   sausage: { r: 16, h: 14, tough: 0, fly: 1.0, pop: 180, drag: 2.2, carry: true },
-  frisbee: { r: 16, h: 5, tough: 0, fly: 1.3, pop: 200, drag: 4, carry: true, glide: true },   // glide: comes down slowly
+  frisbee: { r: 16, h: 5, tough: 0, fly: 1.3, pop: 200, drag: 2.6, carry: true, glide: true },   // glide: comes down slowly
   apple: { r: 8, h: 14, tough: 0, fly: 1.4, pop: 240, drag: 1.0, rolls: true, mess: true },
   bone: { r: 16, h: 12, find: true },
   mound: { r: 30, h: 12, dig: true },

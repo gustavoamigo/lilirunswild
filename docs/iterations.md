@@ -669,3 +669,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Checked by script**: five places in the park looked at (gate, meadow, pond, van, woods); the ducks paddled 216 away and stayed on the water; the duck asked for the swim and a swim in the pond did it; the frisbee girl asked and threw, three fetches (291 to 361 away) and returns did the job; the park tour advanced pond bank → woods → van; the way from home leads to the pond, the woods and the park; frames measured at six places in town and four in the park; the flowers looked at up close; the recognizer heard every new line.
 
 **Not checked**: how it runs on the iPad; whether the park's size feels right to a child; the duck's voice.
+
+**Feedback**: the frisbee could be thrown further.
+
+**Decision**: thrown faster (420 to 510 a second) and sliding a little more when it lands: about 500 away, not 300.
+
+**Checked by script**: three throws landed 499 to 517 from the girl, all fetched; the job done.

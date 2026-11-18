@@ -740,7 +740,7 @@ function updatePeople(dt) {
       if (!toy) o.state = baseState(o);
       else if (o.play === 'throw' && o.t > 0.9) {
         // over her head, more or less; a frisbee further and flatter (it glides)
-        const disc = toy.kind === 'frisbee', a = toDog + (Math.random() - 0.5) * 1.8, s = disc ? 300 + Math.random() * 90 : 300 + Math.random() * 120;
+        const disc = toy.kind === 'frisbee', a = toDog + (Math.random() - 0.5) * 1.8, s = disc ? 420 + Math.random() * 90 : 300 + Math.random() * 120;
         o.holds = null; toy.held = null; Object.assign(toy, { rest: false, cool: 0.6, thrown: true, vx: Math.cos(a) * s, vy: Math.sin(a) * s, vz: disc ? 330 : 560, z: isChild(o.look) ? 60 : 85 });
         o.state = baseState(o); o.wave = 1.4; o.cool = 2; dog.excited = 0.8; A.yip();
       } else if (o.play === 'offer' && o.t > OFFER_T) o.state = baseState(o);       // they keep it; she can still come and tug
