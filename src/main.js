@@ -996,24 +996,30 @@ function drawTug(t) {
 }
 
 // ---- who asks ----
-// Someone with a job for her shows it in a bubble over their head (the pictures of the job); she comes within ASK_R of
-// them on foot and they turn to her and ask: the job starts, in their voice. Each asks for their jobs in list order, a
-// job once its level is open; one done is not asked for again (the sticker book has it). While a job is in hand, or
-// just after one, nobody asks. A child who finds no one for a while (LOST, shorter before the first sticker) is shown
-// the way to the nearest asker, as to a job.
-const ASK_R = 120, LOST = 40, LOST_FIRST = 12;
+// Someone with a job for her shows it in a bubble over their head (the pictures of the job), all of them at once, so
+// the child sees who needs help and chooses. She comes within ASK_R of one on foot and they turn to her and ask: the
+// job starts, in their voice. Each asks for their jobs in list order, a job once its level is open; one done is not
+// asked for again (the sticker book has it). One job is in hand at a time, but the other bubbles stay up: standing
+// still beside another asker for SWAP_T (not just running past, and not while carrying something) swaps to their job,
+// and the one left goes back to whoever asked for it, to be asked for again. Just after a job is done or swapped,
+// nobody asks for a moment. A child with no job who finds no one for a while (LOST, shorter before the first sticker)
+// is shown the way to the nearest asker, as to a job.
+const ASK_R = 120, SWAP_T = 0.8, LOST = 40, LOST_FIRST = 12;
 const askers = world.people.filter((o) => o.id && missions.missions.some((m) => m.from === o.id));
 const offer = (o) => missions.missions.find((m) => m.from === o.id && !missions.done.has(m.id) && missions.available(m)) || null;
-const asking = () => !missions.job() && !ui.cele && !ui.title && ui.askT <= 0;
+const open = () => !ui.cele && !ui.title && ui.askT <= 0;
+const asking = () => !missions.job() && open();
 function updateAskers(dt) {
   ui.askT = Math.max(0, ui.askT - dt);
-  if (!asking()) { ui.lostT = 0; return; }
-  ui.lostT += dt;
-  if (!ui.saidAll && missions.done.size === missions.missions.length) { ui.saidAll = true; A.speak(SAY.all); }
-  if (dog.state === 'drive' || dog.air) return;
+  const job = missions.job(), still = Math.hypot(dog.vx, dog.vy) < 40;
+  ui.stillT = still ? (ui.stillT || 0) + dt : 0;
+  ui.lostT = asking() ? ui.lostT + dt : 0;
+  if (!open()) return;
+  if (!job && !ui.saidAll && missions.done.size === missions.missions.length) { ui.saidAll = true; A.speak(SAY.all); }
+  if (dog.state !== 'idle' || dog.air || (job && (dog.carry || ui.stillT < SWAP_T))) return;
   for (const o of askers) {
-    const m = offer(o); if (!m || dist(o.x, o.y, dog.x, dog.y) > ASK_R) continue;
-    o.heading = Math.atan2(dog.y - o.y, dog.x - o.x); missions.start(m); return;
+    const m = offer(o); if (!m || m === job || dist(o.x, o.y, dog.x, dog.y) > ASK_R) continue;
+    o.heading = Math.atan2(dog.y - o.y, dog.x - o.x); missions.start(m); if (job) ui.askT = 3; return;
   }
 }
 // the asker to show the way to, if she has been looking for one long enough
@@ -1024,9 +1030,10 @@ function lostWay() {
   return best;
 }
 function drawAskers(t) {
-  if (!asking()) return;
+  if (!open()) return;
+  const job = missions.job();
   for (const o of askers) {
-    const m = offer(o); if (!m) continue;
+    const m = offer(o); if (!m || m === job) continue;     // (whoever asked for the job in hand has nothing more to show)
     const [sx, sy, k, ok] = S.project(o.x, isChild(o.look) ? 150 : 200, o.y); if (!ok) continue;
     const s = clamp(34 * k, 20, 46), pics = m.picture.slice(0, 2), bw = s * (pics.length * 1.9 + 0.6), bh = s * 2.3;
     const x = sx, y = sy - bh / 2 + Math.sin(t * 3 + o.seed) * s * 0.12;

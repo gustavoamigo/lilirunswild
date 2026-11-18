@@ -645,3 +645,9 @@ The recognizer heard all 46 clips word for word with the new children's voice (b
 **Decision**: the icon is Lili's face from the job cards on the grass green, drawn in code (`tools/icon.html`) and saved at each size by `tools/make_icons.py`: the iPhone home screen icon (180), 192 and 512 for Android, a maskable one, and a 32 favicon. A web app manifest and Apple's tags: added to the home screen it is called "Lili" and opens full screen.
 
 **Checked by script**: the icons saved and the 512 looked at; the manifest, icons and page served, and the page loads. **Not checked**: adding it to a real iPhone's home screen.
+
+**Feedback**: maybe not just one job: three at the same time, all of a level's, as she explores. What do you think? (Answer: everyone with a job open already shows a bubble at once; keep one job in hand, since three cards confused a five year old, but keep the bubbles up during a job and let the child swap. Owner: yes.)
+
+**Decision**: the bubbles stay up while a job is in hand (not the one whose job it is). Standing still for 0.8 s beside another asker swaps to their job; running past does not, nor does it while she carries something. The job left goes back to its asker. Nobody asks for 3 s after a swap.
+
+**Checked by script**: during the neighbour's bone job the café man's bubble is up (looked at); running past him keeps the bone job; standing by him swaps to his; the neighbour offers the bone job again. Carrying a toy beside a dog lover, she gives it to him first (playing) and then he asks: a toy is not a job's thing, so that is meant; a job's own thing (the teddy or the sausages on their way somewhere) is never given away, and carrying it keeps the job.
