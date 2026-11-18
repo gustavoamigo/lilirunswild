@@ -22,6 +22,9 @@ let fit = 1, zoom = 1;
 const camAim = new THREE.Vector3();
 const _v = new THREE.Vector3(), _a = new THREE.Vector3(), _b = new THREE.Vector3();
 const _mx = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vector3();
+// how something she carries hangs from her mouth: its middle `y` below her teeth, turned `rz` (the teddy by its head,
+// the string of sausages by one end)
+const HANG = { teddy: { y: -19.6, rz: 0 }, sausage: { y: -29, rz: Math.PI / 2 } };
 
 let dog, car;
 // Swimming: her waterline is the lake's surface, and she pushes the water as she goes (src/water.js), which makes her
@@ -291,6 +294,12 @@ export function render(G, dt) {
     if (o.kind === 'bone' && !o.carried) { e.root.position.y = o.z + 12 + Math.sin(t * 3 + o.x) * 5; e.root.rotation.y = t * 1.6 + o.x; }   // a bone to find: it turns and bobs, to be seen
     e.tip.rotation.z = -o.tip + Math.sin(t * 28) * o.wob * 0.12;
     e.spin.rotation.z = -o.roll;
+    const hang = o.carried && HANG[o.kind];
+    if (hang) {                                      // in her mouth: hung from between her teeth, swinging (carryAt in main.js)
+      dog.bite.getWorldPosition(e.root.position);
+      e.root.rotation.set(o.swingS || 0, -o.dir, o.swingF || 0, 'YXZ');
+      e.spin.position.y = hang.y; e.spin.rotation.z = hang.rz;
+    } else if (e.root.rotation.order === 'YXZ') { e.root.rotation.set(0, -o.dir, 0, 'XYZ'); e.spin.position.y = e.spin.userData.mid; }
   }
   // what is left behind: broken pots and plates, spilt rubbish
   for (let i = debris.length; i < G.debris.length; i++) {

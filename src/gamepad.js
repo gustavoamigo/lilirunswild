@@ -1,9 +1,9 @@
 // Game controller (any pad with the standard layout). Stick or D-pad steers,
-// A / X / Y are jump / bark / car. Read once a frame; nothing happens if no pad is there.
+// A / B / X / Y are jump / put down / bark / car. Read once a frame; nothing happens if no pad is there.
 import { input } from './input.js';
 
 const DEAD = 0.28;                                   // a resting stick is never quite at zero
-const BUTTONS = { 0: 'jump', 2: 'bark', 3: 'car' };
+const BUTTONS = { 0: 'jump', 1: 'drop', 2: 'bark', 3: 'car' };
 let prev = {};
 
 export function pollPad() {

@@ -15,7 +15,7 @@ const MOVE_KEYS = {
   ArrowLeft: [-1, 0], ArrowRight: [1, 0], ArrowUp: [0, -1], ArrowDown: [0, 1],
   KeyA: [-1, 0], KeyD: [1, 0], KeyW: [0, -1], KeyS: [0, 1],
 };
-const ACTION_KEYS = { Space: 'jump', KeyQ: 'bark', KeyX: 'bark', KeyB: 'bark', KeyE: 'car', KeyF: 'car', Enter: 'car' };
+const ACTION_KEYS = { Space: 'jump', KeyQ: 'bark', KeyX: 'bark', KeyB: 'bark', KeyE: 'car', KeyF: 'car', Enter: 'car', KeyG: 'drop', KeyC: 'drop' };
 
 export function keyVector() {
   let x = 0, y = 0;

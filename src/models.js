@@ -378,6 +378,7 @@ export function makeDog() {
   });
   const jawMesh = new THREE.Mesh(JAW_GEO, vc()); jawMesh.castShadow = true;
   const jaw = group(12, -6, 0, jawMesh);
+  const bite = new THREE.Object3D(); bite.position.set(15, 2.5, 0); jaw.add(bite);   // where what she carries is held: between her front teeth
   // the tongue: one flat, soft shape with a rounded tip and a groove down its middle, rooted at the back of the jaw; out,
   // it slides forward and hangs down over her lower lip
   const tongueMesh = new THREE.Mesh(TONGUE_GEO, vc()); tongueMesh.castShadow = true;
@@ -554,7 +555,8 @@ export function makeDog() {
     } else if (p.poo > 0) {                              // a poo: haunches right down, tail up, still
       T.pitch = 0.42; T.hl = T.hr = 1.0; T.rh = 22; T.wh = 1; T.y = -8; T.tailUp = 1.0; T.wag = 0; T.hp = 0.2;
     } else if (p.state === 'tug') {                      // pulling a toy: braced back on her haunches, head shaking it
-      T.pitch = 0.22; T.y = -6; T.yaw = Math.sin(t * 16) * 0.35; T.hp = 0.1; T.wag = 0.7; T.wagHz = 16; T.tailUp = 0.8;
+      const pull = p.tug && p.tug.pulling;                // pulling hard: further back, head going faster
+      T.pitch = pull ? 0.3 : 0.22; T.y = pull ? -9 : -6; T.yaw = Math.sin(t * (pull ? 20 : 16)) * 0.35; T.hp = 0.1; T.wag = 0.7; T.wagHz = 16; T.tailUp = 0.8;
     } else if (p.swim) {                                 // swimming: low in the water (what is under it is hidden by the ground), head up
       T.y = -30 + Math.sin(t * 5) * 1.5; T.pitch = 0.22; T.hp = 0.25; T.tailUp = -0.1; T.wag = 0.18; T.wagHz = 5;   // rump low, chest and head up
       // the legs keep stepping under her, out of sight below the water
@@ -748,7 +750,7 @@ export function makeDog() {
     const jz = fresh0 || jumped ? 0 : (p.z - pz) * lerp(0.35, 0.7, earCalm); pz = p.z;   // in the air only a third of her rise and fall carries them: they lag and float
     swingEars(dt, jumped ? jx : 0, jumped ? jy : 0, jz, earCalm, clamp(Math.sin(Math.PI * clamp(shakeT / 0.95, 0, 1)) * 1.6, 0, 1));
   }
-  return { root, update };
+  return { root, update, bite };
 }
 
 // ------------------------------------------------------------------ car --
@@ -1071,7 +1073,7 @@ export function makeProp(kind) {
   // the ground; tipped about the middle, half of it went into the ground
   const foot = FOOT[kind] || 0;
   if (kind === 'teddy') { mid *= 1.7; for (const p of parts) { p.at = p.at.map((v) => v * 1.7); p.scale = p.scale.map((v) => v * 1.7); } }   // a big, huggable teddy
-  tip.position.x = foot; spin.position.set(-foot, mid, 0); spin.add(mesh(parts));
+  tip.position.x = foot; spin.position.set(-foot, mid, 0); spin.userData.mid = mid; spin.add(mesh(parts));
   return { root, tip, spin };
 }
 // What is left of something that broke.
@@ -1174,6 +1176,10 @@ function makeShop(h) {
 // square's fountain; a café table with two chairs.
 export function fixtureGeometry(kind) {
   if (kind === 'kennel') return kennelGeometry;
+  if (kind === 'basket') return merged([   // a round wicker basket, open at the top, the dark inside showing
+    cyl('#C98F4E', 0, 9, 0, 26, 18), cyl('#A8723A', 0, 5, 0, 26.4, 2), cyl('#A8723A', 0, 11, 0, 26.4, 2), cyl('#6E4428', 0, 17.6, 0, 23, 1),
+    { geo: new THREE.TorusGeometry(25, 2.8, 6, 28), color: '#E0A866', at: [0, 18, 0], scale: [1, 1, 1], rot: [Math.PI / 2, 0, 0], flat: true },
+  ]);
   if (kind === 'fountain') return merged([
     cyl('#C9C2B4', 0, 14, 0, 78, 28), cyl('#7EC8E8', 0, 27, 0, 68, 3), cyl('#B9B4A8', 0, 46, 0, 12, 64),
     cyl('#C9C2B4', 0, 78, 0, 30, 8), cyl('#7EC8E8', 0, 83, 0, 25, 2), blob('#BFE6F5', 0, 100, 0, 6, 16, 6), blob('#E6F6FC', 0, 90, 0, 22, 4, 22),

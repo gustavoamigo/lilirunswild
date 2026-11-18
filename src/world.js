@@ -98,7 +98,7 @@ export const KINDS = {
 };
 
 // how big each kind of fixture is (its radius as an obstacle), and the shops' colours: walls, roof, awning stripes
-const FIXTURE_R = { kennel: 34, fountain: 78, 'cafe-table': 30 };
+const FIXTURE_R = { kennel: 34, basket: 26, fountain: 78, 'cafe-table': 30 };
 const SHOP = {
   butcher: { color: '#F4F1EA', roof: '#8A5A44', awning: ['#D9483B', '#ffffff'] },
   bakery: { color: '#F7E1B5', roof: '#B5483A', awning: ['#9A6A3A', '#F6EBC8'] },

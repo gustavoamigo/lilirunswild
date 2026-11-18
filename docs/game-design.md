@@ -26,7 +26,9 @@ Lili, liver and white: a white body, brown sides to her head with a white blaze 
 | Break stuff | Run into pots, bins, cones, boxes and a ball. Pots smash, bins spill. Jump on the picnic table and the plates go flying. Each thing counts once on the paw counter. |
 | Birds | He notices any flock nearby: his head turns, he yips, a bird appears in a thought bubble. Standing still he freezes and points for a few seconds, then relaxes (wags, bows, shakes) and points again a while later, or at once at another flock. Run at them and he goes straight into zoomies; they fly off to another spot and the bird counter goes up. Barking scares them too. |
 | Bark | Startles people and birds near him. Its button is a picture of a dog's head barking: mouth open, shout lines. A loudspeaker read as the sound switch, and a bubble saying WOOF! was text: the children (Danish, 5 to 7) mostly cannot read. |
-| Play bow | Left alone for a few seconds, he asks for a game. |
+| Tug of war | Trot into someone holding a toy and she grabs it. Pull her away from them and she pulls, growling; stop and they pull it back. Pull long enough and they let go and sit down with a bump. An arrow on the ground shows which way to pull. |
+| Carry | What she carries hangs from her mouth and swings as she runs, turns and stops. The purple button (an arrow down) puts it down; by the basket next to her kennel it goes in the basket and is kept there. |
+| Play bow | Left standing a while (12 to 22 s), she asks for a game; once in a while (about one time in seven) she has a shake instead. Every 4.5 s, as it was, she seemed to do nothing else. |
 | Drive | Near the car a wheel bubble and a yellow button appear. E (or jump onto the car) and he hops into the seat, paws on the wheel. |
 
 ## The car

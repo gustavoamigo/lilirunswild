@@ -54,3 +54,4 @@ button.hint { animation: hint 0.9s ease-in-out infinite; }
 #btn-play svg { margin-left: 8%; }
 @keyframes play { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
 body.title #ui, body.title #hud { display: none; }
+button.drop { background: #9B7FE6; }

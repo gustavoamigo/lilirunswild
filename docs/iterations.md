@@ -600,3 +600,15 @@ The recognizer heard all 46 clips word for word with the new children's voice (b
 **Decision**: the bark button is a picture of a dog's head barking, in profile: round head, floppy ear, mouth open, three shout lines. Not arcs (they made the old loudspeaker read as the sound switch). From now on every button and prompt has to work as a picture alone; the spoken lines carry the words.
 
 **Checked by script**: drawn large and at both button sizes beside the jump button (looked at), then in the game at 1100×700 and 390×844.
+
+**Feedback**: the teddy: she should play with it more: pull, and the child keeps pulling until they let go. Carried, it is fixed in the air; it should be in her mouth and move, like her ears. She bows and shakes far too often; the bow should be now and then, the shake rare. And a button to leave a toy where she is, and a place at her house where she leaves her things.
+
+**Decision**:
+- **Tug of war**: grabbing a toy from someone is now a pull the child has to win: steering her away from them pulls (growl, dust, braced), and stopping lets them pull it back slowly. 1.6 s of pulling in all and they let go and sit down with a bump. If the child does nothing, an arrow on the ground shows which way to pull. A bark lets go.
+- **In her mouth**: what she carries hangs from between her teeth on the model and swings like a pendulum as she speeds up, stops and turns, jiggled by her stride (the teddy hangs by its head, the sausages by one end).
+- **Bow and shake**: standing about, she bows after 12 to 22 s, and about one time in seven shakes instead (it was one or the other every 4.5 s).
+- **Putting down**: a purple button with an arrow down (the jump button's points up), shown only while she carries something; G or C, pad B. A wicker basket by her kennel: whatever she puts down near it goes in and is kept there, and she can take it out again by running at it. Bringing something home means to the basket.
+
+**Checked by script**: with no pulling for 3 s the tug stays at 0 and the arrow shows (looked at); pulling away wins the teddy after 1.65 s of game time and the boy sits; a bark during a tug leaves him the teddy. The teddy looked at in four frozen frames while she starts, runs and turns: it hangs from her mouth and swings. The button hidden with nothing carried and shown while carrying; the teddy put down in the street lies there; put down by the basket it is in it, 6 up, kept (looked at).
+
+**Not checked**: how the tug feels by touch (pulling means holding a finger behind her); the bow and shake rates over a real play session.
