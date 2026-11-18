@@ -367,7 +367,12 @@ export function makeDog() {
   const head = group(HEAD[0], HEAD[1], 0);
   head.scale.setScalar(1.1);
   // the head: one smooth surface from the back of the skull to the tip of the nose, its markings painted on (headGeo)
-  const headMesh = new THREE.Mesh(HEAD_GEO, vc()); headMesh.castShadow = true; head.add(headMesh);
+  const headMesh = new THREE.Mesh(HEAD_GEO, vc()); head.add(headMesh);
+  // Her head is 42 000 triangles, more than the rest of her: drawn again for her shadow, it was most of her cost. Its
+  // shadow is cast by a plain egg the size of it instead, seen by nothing else (no colour, no depth).
+  const headBox = HEAD_GEO.boundingBox || (HEAD_GEO.computeBoundingBox(), HEAD_GEO.boundingBox), hs = headBox.getSize(new THREE.Vector3()).multiplyScalar(0.5);
+  const headShadow = new THREE.Mesh(SPH_LO, new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false }));
+  headShadow.scale.copy(hs); headBox.getCenter(headShadow.position); headShadow.castShadow = true; head.add(headShadow);
   const eyes = [1, -1].map((s) => {
     // one eyeball, its iris, pupil, shine and the dark line along its top painted on it (eyeTexture), looking forward
     const { at, look } = eyeSocket(s);
@@ -828,6 +833,9 @@ export const PERSON_LOOKS = LOOKS.length;
 export const isChild = (look) => LOOKS[look % LOOKS.length].kid;
 export const personVoice = (look) => (LOOKS[look % LOOKS.length].kid ? 'child' : LOOKS[look % LOOKS.length].voice);
 const EYE = '#2A1C14', MOUTH = '#8A3B36';
+// People are small on screen and there are many (each drawn in the shadows too): their smooth shapes have a quarter of
+// the detail of Lili's (12 round, 22 along: 480 triangles each, not 1600)
+const lowProfile = (pts) => profileGeo(pts, 12, 22), lowLimb = (len, r0, r1) => limbGeo(len, r0, r1, 12, 22);
 export function makePerson(look) {
   const L = LOOKS[look % LOOKS.length], B = L.kid ? CHILD : ADULT, k = B.limb;
   const [top, sleeve] = L.top, [bottom, cut] = L.bottom, [hairC, hairS] = L.hair;
@@ -835,28 +843,28 @@ export function makePerson(look) {
   const root = new THREE.Group(), body = group(0, hipH, 0); root.add(body);
   const hips = new THREE.Group(); body.add(hips);
   const shape = (geo, color, y = 0) => ({ geo, color, at: [0, y, 0], scale: [1, 1, 1] });
-  hips.add(mesh([shape(profileGeo([[-13 * k, 2, 3], [-8 * k, 10 * k, B.hipW + 6 * k], [2 * k, 12 * k, B.hipW + 8 * k], [12 * k, 11 * k, B.hipW + 6.5 * k], [16 * k, 4, 6]]), bottom)]));
+  hips.add(mesh([shape(lowProfile([[-13 * k, 2, 3], [-8 * k, 10 * k, B.hipW + 6 * k], [2 * k, 12 * k, B.hipW + 8 * k], [12 * k, 11 * k, B.hipW + 6.5 * k], [16 * k, 4, 6]]), bottom)]));
   if (cut === 'skirt') hips.add(mesh([{ ...cyl(bottom, 0, -13 * k, 0, B.hipW + 11 * k, 32 * k, undefined, B.hipW + 11 * k), geo: SKIRT }]));   // wider than her hips, and flared
   // legs: hip > knee > ankle. A leg hangs down -y; turning it about z swings it forward.
   const legs = [1, -1].map((s) => {
     const shinC = cut === 'trousers' ? bottom : L.skin, thighC = cut === 'trousers' ? bottom : L.skin;
-    const thigh = [shape(limbGeo(B.thigh, 10.2 * k, 7.6 * k), thighC)];
-    if (cut === 'shorts') thigh.push(shape(limbGeo(B.thigh * 0.55, 11 * k, 9.8 * k), bottom));
+    const thigh = [shape(lowLimb(B.thigh, 10.2 * k, 7.6 * k), thighC)];
+    if (cut === 'shorts') thigh.push(shape(lowLimb(B.thigh * 0.55, 11 * k, 9.8 * k), bottom));
     const foot = group(0, -B.shin, 0, mesh([blob(L.shoes, 4.5 * k, -3 * k, 0, B.foot / 2 + 3, 4.6 * k, 6.5 * k)]));
-    const knee = group(0, -B.thigh, 0, mesh([shape(limbGeo(B.shin, 7.4 * k, 5.3 * k), shinC)]), foot);
+    const knee = group(0, -B.thigh, 0, mesh([shape(lowLimb(B.shin, 7.4 * k, 5.3 * k), shinC)]), foot);
     const hip = group(0, 0, s * B.hipW, mesh(thigh), knee);
     hips.add(hip); return { hip, knee, foot, s };
   });
   // the chest turns and leans about the waist
   const chest = group(0, 4, 0); hips.add(chest);
-  chest.add(mesh([shape(profileGeo(B.torso), top)]));
+  chest.add(mesh([shape(lowProfile(B.torso), top)]));
   // arms: shoulder > elbow > hand. Swing about z (forward), then out about x.
   const arms = [1, -1].map((s) => {
     const long = sleeve === 'long';
     const hand = group(0, -B.foreArm, 0, mesh([blob(L.skin, 0.5, -B.hand * 0.6, 0, B.hand * 0.8, B.hand, B.hand * 0.65)]));
-    const elbow = group(0, -B.upArm, 0, mesh([shape(limbGeo(B.foreArm, 5.5 * k + 0.6, 4.3 * k + 0.6), long ? top : L.skin)]), hand);
-    const upper = [shape(limbGeo(B.upArm, 7.2 * k + 0.6, 5.7 * k + 0.6), long ? top : L.skin)];
-    if (!long) upper.push(shape(limbGeo(B.upArm * 0.45, 8 * k + 0.6, 7.5 * k + 0.6), top));
+    const elbow = group(0, -B.upArm, 0, mesh([shape(lowLimb(B.foreArm, 5.5 * k + 0.6, 4.3 * k + 0.6), long ? top : L.skin)]), hand);
+    const upper = [shape(lowLimb(B.upArm, 7.2 * k + 0.6, 5.7 * k + 0.6), long ? top : L.skin)];
+    if (!long) upper.push(shape(lowLimb(B.upArm * 0.45, 8 * k + 0.6, 7.5 * k + 0.6), top));
     const sh = group(0, B.shY - 2, s * B.shW, mesh(upper), elbow);
     chest.add(sh); return { sh, elbow, hand, s };
   });
@@ -991,8 +999,8 @@ export function makePerson(look) {
 const STEP_TURN = 0.45, STEP_T = 0.45;
 // A smooth shape from a profile: [y, half depth (x), half width (z)] from the bottom up, eased between the points. The
 // torso and the limbs are each one such shape, so no joint shows as a ball and no seam as a band.
-function profileGeo(pts) {
-  const g = new THREE.SphereGeometry(1, 20, 40), P = g.attributes.position, y0 = pts[0][0], y1 = pts[pts.length - 1][0];
+function profileGeo(pts, around = 20, along = 40) {
+  const g = new THREE.SphereGeometry(1, around, along), P = g.attributes.position, y0 = pts[0][0], y1 = pts[pts.length - 1][0];
   const at = (y) => {
     let i = 0; while (i < pts.length - 2 && pts[i + 1][0] < y) i++;
     // through the points on a smooth curve (Catmull-Rom); easing in and out of each point made a ridge at every one
@@ -1009,7 +1017,7 @@ function profileGeo(pts) {
   return g;
 }
 // a limb from its joint (y = 0) down: rounded over the joint, r0 there, r1 at the far end, len long
-const limbGeo = (len, r0, r1) => profileGeo([[-len - r1 * 0.9, 0.2, 0.2], [-len - r1 * 0.55, r1 * 0.85, r1 * 0.85], [-len, r1, r1], [-len * 0.5, (r0 + r1) / 2 * 1.04, (r0 + r1) / 2 * 1.04], [0, r0, r0], [r0 * 0.6, r0 * 0.8, r0 * 0.8], [r0 * 0.95, 0.2, 0.2]]);
+const limbGeo = (len, r0, r1, around, along) => profileGeo([[-len - r1 * 0.9, 0.2, 0.2], [-len - r1 * 0.55, r1 * 0.85, r1 * 0.85], [-len, r1, r1], [-len * 0.5, (r0 + r1) / 2 * 1.04, (r0 + r1) / 2 * 1.04], [0, r0, r0], [r0 * 0.6, r0 * 0.8, r0 * 0.8], [r0 * 0.95, 0.2, 0.2]], around, along);
 // a cone for skirts, wider at the hem
 const SKIRT = new THREE.CylinderGeometry(1, 1.4, 1, 18);
 // a smile: the lower half of a thin ring

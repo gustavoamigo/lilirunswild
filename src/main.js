@@ -907,6 +907,7 @@ function drawOverlay(t) {
   }
   drawJob(t, w, h, u);
   drawCelebration(t, w, h, u);
+  if (SHOW_FPS) drawFps();
 }
 
 // ------------------------------------------------------------------- jobs --
@@ -1246,7 +1247,7 @@ function resize() { S.resize(); hud.width = Math.round(S.view.w * S.view.dpr); h
 
 // ---- wiring ----
 function act(a) { A.initAudio(); if (ui.title) { play(); return; } if (ui.book) return; if (dog.tug) { yank(); return; } if (a === 'jump') jump(); else if (a === 'bark') bark(); else if (a === 'drop') { if (dog.carry) drop(); } else carAction(); }
-G.api = { play, renderMusic: A.renderMusic, jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save, spoken: A.spoken };
+G.api = { play, stats: S.stats, heaviest: S.heaviest, quality: (l) => setLevel(l), perf: () => perf, renderMusic: A.renderMusic, jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save, spoken: A.spoken };
 input.onAction = act;
 input.onKey = () => { if (dog.tug) yank(); };   // and so is every arrow key
 const btnDrop = document.getElementById('btn-drop'), btnCar = document.getElementById('btn-car'), btnMute = document.getElementById('btn-mute'), btnBook = document.getElementById('btn-book'), bookN = document.getElementById('book-n');
@@ -1371,9 +1372,40 @@ function initStudio() {
 }
 if (STUDIO) initStudio();
 
+// ---- keeping it smooth on a slow tablet ----
+// The frame time is watched while playing (not on the title, in the book or the studio): averaged over 3 s, slower than
+// SLOW (45 frames a second), the next level of QUALITY is taken: fewer 3D pixels first, then plainer shadows, and last
+// no shadows. It never goes back up in a visit, and the level is kept for the next one (QKEY). ?quality=N sets the
+// level and stops the watching; ?fps shows the frame rate, the level and what a frame draws.
+const QUALITY = [{ dpr: 2, shadow: 'soft' }, { dpr: 1.5, shadow: 'soft' }, { dpr: 1.25, shadow: 'hard' }, { dpr: 1, shadow: 'hard' }, { dpr: 1, shadow: 'off' }];
+const SLOW = 1 / 45, QKEY = 'lili-quality-1', SHOW_FPS = params.has('fps');
+const perf = { level: 0, sum: 0, n: 0, settle: 3, fps: 60 };
+function setLevel(l) {
+  perf.level = clamp(l, 0, QUALITY.length - 1); S.setQuality(QUALITY[perf.level]); perf.settle = 2; perf.sum = perf.n = 0;
+  if (!params.has('quality')) try { localStorage.setItem(QKEY, String(perf.level)); } catch {}
+}
+{
+  let l = Number(params.get('quality') ?? (() => { try { return localStorage.getItem(QKEY); } catch { return null; } })() ?? 0);
+  if (Number.isFinite(l) && l > 0) setLevel(l);
+}
+function watchFrames(raw) {
+  perf.fps = lerp(perf.fps, 1 / Math.max(raw, 1e-3), 0.05);
+  if (ui.title || ui.book || STUDIO || params.has('quality') || raw > 1) return;   // (a gap of a second or more is a hidden tab, not slowness)
+  if ((perf.settle -= raw) > 0) return;
+  perf.sum += raw; perf.n++;
+  if (perf.sum < 3) return;
+  const avg = perf.sum / perf.n; perf.sum = perf.n = 0;
+  if (avg > SLOW && perf.level < QUALITY.length - 1) setLevel(perf.level + 1);
+}
+function drawFps() {
+  const st = S.stats(), { w, h } = S.view;
+  c.font = '700 14px ui-monospace, Menlo, monospace'; c.textAlign = 'left'; c.fillStyle = 'rgba(0,0,0,.55)'; c.fillRect(8, h - 92, 300, 24);
+  c.fillStyle = '#fff'; c.fillText(`${Math.round(perf.fps)} fps · level ${perf.level} · ${st.calls} calls · ${Math.round(st.triangles / 1000)}k tri`, 14, h - 75);
+}
+
 let last = performance.now();
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  const raw = (now - last) / 1000, dt = Math.min(0.05, raw); last = now; watchFrames(raw);
   pollPad(); if (ui.title) input.stick = null;           // on the title a pad's buttons play, its stick does nothing
   if (STUDIO) {
     const sdt = studio.step ? 1 / 60 : studio.paused ? 0 : dt * studio.speed; studio.step = false;

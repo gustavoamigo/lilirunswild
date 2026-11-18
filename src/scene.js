@@ -177,9 +177,24 @@ function streamTiles(x, y, now) {
   for (const t of now ? want : want.slice(0, 2)) buildTile(t);
 }
 
+// How much is drawn, lowered on a slow device (main.js watches how long frames take): dpr is the most 3D pixels drawn per
+// screen pixel (a tablet's screen has 2, four times the pixels of 1), shadow 'soft' (2048, soft edges), 'hard' (1024)
+// or 'off'. The overlay keeps the screen's own sharpness: it is cheap.
+let dprMax = 2, shadowAt = 'soft';
+export function setQuality({ dpr, shadow }) {
+  if (dpr && dpr !== dprMax) { dprMax = dpr; resize(); }
+  if (shadow && shadow !== shadowAt) {
+    shadowAt = shadow;
+    renderer.shadowMap.enabled = sun.castShadow = shadow !== 'off';
+    renderer.shadowMap.type = shadow === 'soft' ? THREE.PCFSoftShadowMap : THREE.PCFShadowMap;
+    const n = shadow === 'soft' ? 2048 : 1024;
+    if (sun.shadow.mapSize.x !== n) { sun.shadow.mapSize.set(n, n); sun.shadow.map?.dispose(); sun.shadow.map = null; }
+    scene.traverse((o) => { if (o.material) for (const m of [].concat(o.material)) m.needsUpdate = true; });   // the shaders are built for the shadow kind
+  }
+}
 export function resize() {
   view.w = window.innerWidth; view.h = window.innerHeight; view.dpr = Math.min(window.devicePixelRatio || 1, 2);
-  renderer.setPixelRatio(view.dpr); renderer.setSize(view.w, view.h, false);
+  renderer.setPixelRatio(Math.min(view.dpr, dprMax)); renderer.setSize(view.w, view.h, false);
   camera.aspect = view.w / view.h;
   // on a tall, narrow screen the camera backs off so there is still room to see where he is going
   fit = clamp(1.3 / camera.aspect, 1, 2.1);
@@ -237,6 +252,18 @@ function placeCamera() {
 }
 export function snapCamera(f) { camAim.set(f.x, 0, f.y); zoom = f.zoom || 1; placeCamera(); }
 
+// what the last frame drew (the ?fps overlay and tests): draw calls, triangles, and the pixels drawn per screen pixel
+// the heaviest things in the scene by triangles (for finding what to make lighter); parts: Lili's meshes instead
+export function heaviest(n = 12, parts = false) {
+  if (parts) {
+    const out = []; dog.root.traverse((q) => { if (q.isMesh) out.push({ t: Math.round((q.geometry.index ? q.geometry.index.count : q.geometry.attributes.position.count) / 3), shadow: q.castShadow, y: Math.round(q.getWorldPosition(_v).y - dog.root.position.y) }); });
+    return out.sort((a, b) => b.t - a.t).slice(0, n);
+  }
+  const tri = (g) => (g.index ? g.index.count : g.attributes.position.count) / 3;
+  const rows = scene.children.map((o) => { let t = 0, m = 0; o.traverse((q) => { if (q.isMesh && q.visible) { t += tri(q.geometry); m++; } }); return { t: Math.round(t), m, at: [Math.round(o.position.x), Math.round(o.position.z)], kind: o.userData.kind || o.type }; });
+  return rows.sort((a, b) => b.t - a.t).slice(0, n);
+}
+export const stats = () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, dpr: renderer.getPixelRatio(), objects: scene.children.length });
 export function render(G, dt) {
   const t = G.t, f = G.focus;
   // ---- camera: a little ahead of where he is going, further back the faster he goes ----
