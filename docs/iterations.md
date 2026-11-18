@@ -675,3 +675,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: thrown faster (420 to 510 a second) and sliding a little more when it lands: about 500 away, not 300.
 
 **Checked by script**: three throws landed 499 to 517 from the girl, all fetched; the job done.
+
+**Feedback**: the scratching sound when she brakes to turn and run the other way is too quiet, or gone.
+
+**Decision**: it was never changed, but the music came in this round, and its shaker is the same kind of hiss: the skid, a narrow band of noise, measured 17 dB under the music. Now a wider scrape with a gritty low layer under it, about 9 dB over the music (the bark is about 15 over), peak 0.59.
+
+**Checked by script**: the old and new skid rendered offline against the tune, and three loudnesses compared; the page runs. **Not checked**: how it sounds: I cannot hear it.

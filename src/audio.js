@@ -105,7 +105,13 @@ export function jump() { tone(280, 0, 0.2, { to: 720, sweep: 0.16, vol: 0.18 });
 export function land() { tone(170, 0, 0.1, { to: 90, vol: 0.22 }); noise(0, 0.06, { freq: 500, q: 1.2, vol: 0.1 }); }
 export function step() { noise(0, 0.035, { freq: 420, q: 1.5, vol: 0.05 }); }
 export function whoosh() { noise(0, 0.35, { freq: 500, to: 2200, q: 1.2, vol: 0.14, attack: 0.1 }); }
-export function skid() { noise(0, 0.22, { freq: 1700, to: 900, q: 2.5, vol: 0.09, attack: 0.03 }); }
+// her claws scraping as she brakes at a gallop: a scratchy sweep down and a gritty low scuff under it. It was a narrow
+// band of noise at 0.09, which came out 17 dB under the music (its shaker is the same kind of hiss) and was lost; this
+// is about 9 dB over it, measured offline against the tune (the bark is about 15 over).
+export function skid() {
+  noise(0, 0.32, { freq: 2600, to: 1100, q: 1.0, vol: 1.3, attack: 0.02 });
+  noise(0.02, 0.26, { freq: 520, to: 300, q: 1.2, vol: 0.5, attack: 0.02 });
+}
 // running flat out into something solid
 export function bonk() { tone(220, 0, 0.22, { to: 70, vol: 0.4 }); noise(0, 0.1, { freq: 300, q: 0.8, vol: 0.3 }); tone(1300, 0.1, 0.3, { to: 900, vol: 0.06 }); }
 
