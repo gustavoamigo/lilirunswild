@@ -633,3 +633,9 @@ The recognizer heard all 46 clips word for word with the new children's voice (b
 - **Playing with people**: stopping beside a child or a dog lover with a toy, they take it, then throw it over her head to fetch or hold it out for a tug.
 
 **Checked by script**: no taps for 5.5 s: the boy wins and keeps the teddy. Tapping every 0.2 s: won after 11 taps, 3.9 s; the boy sits. Put down, she picks it up again running over it. Brought to the girl at the plaza: thrown and fetched; offered and tugged. The tug looked at from both sides, at rest and on a yank: the teddy stretched between her mouth and his hands, the bar the right way round.
+
+**Feedback**: when the game starts, the first thing she does is bark: a bug.
+
+**Decision**: the bark on play is gone (it was meant as a hello). Play starts the music and nothing else.
+
+**Checked by script**: pressing play, no bark in the 2 s after it.

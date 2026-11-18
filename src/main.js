@@ -1279,8 +1279,7 @@ function play() {
   if (!ui.title) return;
   ui.title = false; document.body.classList.remove('title'); title.classList.add('gone');
   setTimeout(() => title.classList.add('hidden'), 500);
-  // she barks hello once the bark has loaded: loading starts with this very tap, and before, she barked without a sound
-  A.initAudio(); A.music(); A.ready('bark').then(() => { if (dog.state === 'idle' && !dog.air) bark(); });
+  A.initAudio(); A.music();
 }
 if (!STUDIO && !params.has('play')) {
   ui.title = true; document.body.classList.add('title'); title.classList.remove('hidden');

@@ -6,7 +6,7 @@ What exists now is the dog and a small town to try him in.
 
 ## The title
 
-The game opens on a title over the live town: "Lili Runs Wild" in big wobbling letters at the top, Lili at her door in the middle, a big green play button at the bottom. Any tap, click, key or pad button plays (a five year old taps wherever); she barks, and the first job comes a moment later. The tap is also what lets the browser make sound.
+The game opens on a title over the live town: "Lili Runs Wild" in big wobbling letters at the top, Lili at her door in the middle, a big green play button at the bottom. Any tap, click, key or pad button plays (a five year old taps wherever), and the music starts. The tap is also what lets the browser make sound.
 
 ## Music
 
