@@ -1,6 +1,6 @@
 # Tech
 
-Three.js r170 (vendored), plain ES modules, no build step, and no asset files but sounds (`sounds/`): `lili-growl-*.wav` are Lili's own play growl, the sound she makes pulling on something, recorded by the owner and kept for pulling a toy from someone; the rest (bark, panting, car engine, horn and crash, a man's yell, a woman's and a child's scream) are generated (*Generated sounds* below), the lines said out loud (`sounds/voice/*.mp3`) are made by a speech model (*The voice* below), and everything else is synthesised in `src/audio.js`. Same architecture as wheek.
+Three.js r170 (vendored), plain ES modules, no build step, and no asset files but the icon (`icons/`, drawn in code: *Icons* below) and sounds (`sounds/`): `lili-growl-*.wav` are Lili's own play growl, the sound she makes pulling on something, recorded by the owner and kept for pulling a toy from someone; the rest (bark, panting, car engine, horn and crash, a man's yell, a woman's and a child's scream) are generated (*Generated sounds* below), the lines said out loud (`sounds/voice/*.mp3`) are made by a speech model (*The voice* below), and everything else is synthesised in `src/audio.js`. Same architecture as wheek.
 
 ## Files
 
@@ -21,6 +21,7 @@ Three.js r170 (vendored), plain ES modules, no build step, and no asset files bu
 | `src/style.js` | `?style=real` (default) or `toon` |
 | `tools/serve.py` | Local server with caching off |
 | `src/music.js` | The background music: its score and its synthesised instruments (see *Music* below) |
+| `tools/icon.html`, `tools/make_icons.py` | The game's icon, drawn in code, and the script that saves it at each size into `icons/` (see *Icons* below) |
 | `tools/voice.py` | Makes the clip of every line the game says (see *The voice* below) |
 | `tools/sim/` | Lili's skeleton in a physics engine, to capture movement from instead of posing it (see below) |
 
@@ -161,6 +162,10 @@ Sound effects can be generated on this machine with Stability AI's Stable Audio 
 - **Into the game**: `~/stable-audio/.venv/bin/python tools/sound_prep.py <seed> <name> [--loop]` writes `sounds/<name>.wav` from the file with that seed: mono, silence trimmed, faded, peak −1 dB; a loop is crossfaded end into start instead; `--span=A,B` keeps only seconds A to B, to loop a stretch with no gap in it (check a loop's loudness over time: a silent stretch is a gap every time round). Then load it in `loadVoice` and play it from `src/audio.js`.
 - **In the game now** (seed: file): 1995100440 bark, 336555405 man-yell (a frightened man), 43737709 woman-scream-1 and 559133282 woman-scream-2 (one or the other, at random), 1216753226 cup-break-1 ("plate shattering on the floor") and 1741754685 cup-break-2 ("ceramic cup breaking on the floor"), 1 s each ( the table's plates breaking, one or the other; the pots keep the synthesised smash), 887578184 bin-1 and 1314752365 bin-2 ("plastic trash bin falling over"), 1342402161 bin-3 and 1223742836 bin-4 ("metal trash can knocked over"), 1 s each (a bin knocked over, one of the four at random), 1997700765 child-scream ("5 year old child screaming", 2.4 s), 593775792 car-engine (`--span=0.15,2.15`: the clip goes silent near its end, which looped as a gap; a loop: faster with speed, 0.8 to 1.5 times, and a little louder), 1649600267 car-crash, 1167704597 car-horn, 2013129909 panting ("cocker spaniel panting while running, steady rhythmic breathing", played through a low-pass filter at 1800 Hz: raw it sounded like sandpaper, `--span=0.25,2.15`: the clip fades in and goes silent at the end; a loop at gain 0.18 at most: `dog.puff` builds over about 3 s of zoomies; she pants only while she is flat out, from half to full as `puff` builds, and stops when she stops running; tongue out while standing still out of breath). Still synthesised: the paw steps (a generated step sounded horrible).
 - Each sound has a row in `~/stable-audio/out/generation_log.csv` (date, prompt, seed, duration, steps, model revision). The outputs are ours; the owner decided no credits file is kept in the game.
+
+## Icons (`icons/`, `manifest.webmanifest`)
+
+The icon is Lili's face from the job cards (`lili` in `src/art.js`) on the grass green, in a pale circle, drawn by `tools/icon.html`; `python3 tools/make_icons.py [port]` (the game served on that port) opens it at each size in headless Chromium and saves `icons/apple-touch-icon.png` (180, the iPhone and iPad home screen), `icon-192.png`, `icon-512.png`, `icon-maskable-512.png` (with a tenth of each side clear, for Android's round cut) and `favicon-32.png`. Run it again after changing the drawing, and commit the files. `index.html` links them, with `manifest.webmanifest` and Apple's meta tags so that, added to the home screen, the game opens full screen as "Lili" (status bar `default`: with `black-translucent` the game would run under the clock, and the counters at the top left do not keep clear of it).
 
 ## Music (`src/music.js`)
 

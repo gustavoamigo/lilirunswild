@@ -639,3 +639,9 @@ The recognizer heard all 46 clips word for word with the new children's voice (b
 **Decision**: the bark on play is gone (it was meant as a hello). Play starts the music and nothing else.
 
 **Checked by script**: pressing play, no bark in the 2 s after it.
+
+**Feedback**: a favicon and an icon, so the game looks right added to the home screen on iOS (it already works like an app).
+
+**Decision**: the icon is Lili's face from the job cards on the grass green, drawn in code (`tools/icon.html`) and saved at each size by `tools/make_icons.py`: the iPhone home screen icon (180), 192 and 512 for Android, a maskable one, and a 32 favicon. A web app manifest and Apple's tags: added to the home screen it is called "Lili" and opens full screen.
+
+**Checked by script**: the icons saved and the 512 looked at; the manifest, icons and page served, and the page loads. **Not checked**: adding it to a real iPhone's home screen.

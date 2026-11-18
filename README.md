@@ -22,4 +22,4 @@ python3 tools/serve.py 8765     # then open http://localhost:8765/
 
 Keep running and she gets the zoomies. `?play` skips the title; `http://localhost:8765/?studio` shows the dog alone, close up, with slow motion and pose buttons. See `docs/game-design.md` for what she does and `docs/tech.md` for the code.
 
-Three.js (vendored), plain ES modules, no build step. The only asset files are sounds (`sounds/`): recordings of Lili's play growl, generated effects, and the spoken lines of the jobs (`sounds/voice/`, made by `tools/voice.py`).
+Three.js (vendored), plain ES modules, no build step. The only asset files are the icon (drawn in code, `tools/make_icons.py`) and sounds (`sounds/`): recordings of Lili's play growl, generated effects, and the spoken lines of the jobs (`sounds/voice/`, made by `tools/voice.py`).

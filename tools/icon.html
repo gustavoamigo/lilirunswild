@@ -1,0 +1,18 @@
+<!doctype html>
+<!-- The game's icon, drawn in code like everything else: Lili's face (src/art.js, as on the job cards) on the grass green.
+     tools/make_icons.py opens this page at each size and saves icons/*.png. ?size=N; ?pad=K leaves K of each side clear
+     (for "maskable" icons, which Android may cut to a circle). -->
+<meta charset="utf-8">
+<canvas id="c"></canvas>
+<script type="module">
+import * as Art from '../src/art.js';
+const q = new URLSearchParams(location.search), n = Number(q.get('size') || 512), pad = Number(q.get('pad') || 0);
+const cv = document.getElementById('c'); cv.width = cv.height = n;
+const c = cv.getContext('2d');
+const g = c.createLinearGradient(0, 0, 0, n); g.addColorStop(0, '#B6E58A'); g.addColorStop(1, '#7FC75A');
+c.fillStyle = g; c.fillRect(0, 0, n, n);
+const k = 1 - pad * 2;
+c.fillStyle = 'rgba(255,255,255,.35)'; c.beginPath(); c.arc(n / 2, n / 2, n * 0.4 * k, 0, Math.PI * 2); c.fill();
+Art.drawIcon(c, 'lili', n / 2, n * 0.52, n * 0.42 * k);
+document.title = 'ready';
+</script>
