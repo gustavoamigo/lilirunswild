@@ -681,3 +681,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: it was never changed, but the music came in this round, and its shaker is the same kind of hiss: the skid, a narrow band of noise, measured 17 dB under the music. Now a wider scrape with a gritty low layer under it, about 9 dB over the music (the bark is about 15 over), peak 0.59.
 
 **Checked by script**: the old and new skid rendered offline against the tune, and three loudnesses compared; the page runs. **Not checked**: how it sounds: I cannot hear it.
+
+**Feedback**: the older skid sound was better; it was only too quiet.
+
+**Decision**: the old sound back (a hiss sweeping from 1700 to 900 Hz, 0.22 s), only louder: 2.4 where it was 0.09, about 9 dB over the music, peak 0.53.
+
+**Checked by script**: the old sound rendered offline at 0.09 (18 dB under the music) and louder; the chosen level about 9 dB over.
