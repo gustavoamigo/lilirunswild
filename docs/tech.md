@@ -20,6 +20,7 @@ Three.js r170 (vendored), plain ES modules, no build step, and no asset files bu
 | `src/input.js`, `src/gamepad.js` | Keys, pointer, pad |
 | `src/style.js` | `?style=real` (default) or `toon` |
 | `tools/serve.py` | Local server with caching off |
+| `src/music.js` | The background music: its score and its synthesised instruments (see *Music* below) |
 | `tools/voice.py` | Makes the clip of every line the game says (see *The voice* below) |
 | `tools/sim/` | Lili's skeleton in a physics engine, to capture movement from instead of posing it (see below) |
 
@@ -157,6 +158,14 @@ Sound effects can be generated on this machine with Stability AI's Stable Audio 
 - **Into the game**: `~/stable-audio/.venv/bin/python tools/sound_prep.py <seed> <name> [--loop]` writes `sounds/<name>.wav` from the file with that seed: mono, silence trimmed, faded, peak −1 dB; a loop is crossfaded end into start instead; `--span=A,B` keeps only seconds A to B, to loop a stretch with no gap in it (check a loop's loudness over time: a silent stretch is a gap every time round). Then load it in `loadVoice` and play it from `src/audio.js`.
 - **In the game now** (seed: file): 1995100440 bark, 336555405 man-yell (a frightened man), 43737709 woman-scream-1 and 559133282 woman-scream-2 (one or the other, at random), 1216753226 cup-break-1 ("plate shattering on the floor") and 1741754685 cup-break-2 ("ceramic cup breaking on the floor"), 1 s each ( the table's plates breaking, one or the other; the pots keep the synthesised smash), 887578184 bin-1 and 1314752365 bin-2 ("plastic trash bin falling over"), 1342402161 bin-3 and 1223742836 bin-4 ("metal trash can knocked over"), 1 s each (a bin knocked over, one of the four at random), 1997700765 child-scream ("5 year old child screaming", 2.4 s), 593775792 car-engine (`--span=0.15,2.15`: the clip goes silent near its end, which looped as a gap; a loop: faster with speed, 0.8 to 1.5 times, and a little louder), 1649600267 car-crash, 1167704597 car-horn, 2013129909 panting ("cocker spaniel panting while running, steady rhythmic breathing", played through a low-pass filter at 1800 Hz: raw it sounded like sandpaper, `--span=0.25,2.15`: the clip fades in and goes silent at the end; a loop at gain 0.18 at most: `dog.puff` builds over about 3 s of zoomies; she pants only while she is flat out, from half to full as `puff` builds, and stops when she stops running; tongue out while standing still out of breath). Still synthesised: the paw steps (a generated step sounded horrible).
 - Each sound has a row in `~/stable-audio/out/generation_log.csv` (date, prompt, seed, duration, steps, model revision). The outputs are ours; the owner decided no credits file is kept in the game.
+
+## Music (`src/music.js`)
+
+A bouncy tune for walking round town, written as a score in the file and played by synthesised instruments, so there is no music file: 32 bars in C at 108 beats a minute (about 70 s, A A' B A) round and round. A toy marimba (sine with a little of its octave and double octave) carries the tune, a soft triangle pluck plays the chord on each off-beat, a round bass plays the root on the first beat and the fifth below on the third, and a high-passed noise shaker ticks the eighths. Notes are scheduled a quarter of a second ahead from a 50 ms timer, from the audio clock, so a slow frame does not make it stumble; a hidden tab suspends the audio and it picks up from where the clock is.
+
+- It starts on the title's play (the first touch is what allows sound), fades in over a couple of seconds, and goes under the mute button with everything else.
+- Level: `LOUD` 0.2 on the music's own gain, which renders at about −33 dB RMS against about −17 dB for a spoken line and −18 dB for the bark (measured with `__G.api.renderMusic()`, which renders the whole tune offline). While a line is said it dips to 35% of that (`duck`), and comes back after it.
+- To change the tune, edit the bars (`A`, `A2`, `B`: a note per eighth, `-` holds, `.` rests) and the chords (`CA`, `CB`, `NOTES`).
 
 ## The voice (`tools/voice.py`, `~/lili-voice`)
 

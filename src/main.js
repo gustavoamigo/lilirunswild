@@ -1090,7 +1090,7 @@ function resize() { S.resize(); hud.width = Math.round(S.view.w * S.view.dpr); h
 
 // ---- wiring ----
 function act(a) { A.initAudio(); if (ui.title) { play(); return; } if (ui.book) return; if (a === 'jump') jump(); else if (a === 'bark') bark(); else carAction(); }
-G.api = { play, jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save, spoken: A.spoken };
+G.api = { play, renderMusic: A.renderMusic, jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save, spoken: A.spoken };
 input.onAction = act;
 const btnCar = document.getElementById('btn-car'), btnMute = document.getElementById('btn-mute'), btnBook = document.getElementById('btn-book'), bookN = document.getElementById('book-n');
 const btnBark = document.getElementById('btn-bark'), btnJump = document.getElementById('btn-jump'), actions = document.getElementById('actions'), keysHelp = document.getElementById('keys');
@@ -1129,7 +1129,7 @@ function play() {
   if (!ui.title) return;
   ui.title = false; document.body.classList.remove('title'); title.classList.add('gone');
   setTimeout(() => title.classList.add('hidden'), 500);
-  A.initAudio(); bark(); ui.nextT = 1.4;
+  A.initAudio(); A.music(); bark(); ui.nextT = 1.4;
 }
 if (!STUDIO && !params.has('play')) {
   ui.title = true; document.body.classList.add('title'); title.classList.remove('hidden');

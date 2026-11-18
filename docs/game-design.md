@@ -8,6 +8,10 @@ What exists now is the dog and a small town to try him in.
 
 The game opens on a title over the live town: "Lili Runs Wild" in big wobbling letters at the top, Lili at her door in the middle, a big green play button at the bottom. Any tap, click, key or pad button plays (a five year old taps wherever); she barks, and the first job comes a moment later. The tap is also what lets the browser make sound.
 
+## Music
+
+A light, bouncy tune plays under everything from the moment the title is played, quiet enough that the barks, the car and the spoken jobs stay on top, and dipping while a job is said. It is synthesised, like most sounds: a toy marimba tune over plucked chords, a soft bass and a shaker.
+
 ## The dog
 
 Lili, liver and white: a white body, brown sides to her head with a white blaze between, long wavy brown ears, a brown nose with freckles round it, a pale pink collar with a silver tag, a brown patch where her tail begins and two small marks on her back, a wagging tail of some length, tongue out. Modelled on a photo of her (2026-11-13).

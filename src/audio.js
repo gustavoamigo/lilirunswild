@@ -1,4 +1,6 @@
 // Sounds are synthesised with WebAudio, but for the recorded and generated ones in sounds/ (loaded in loadVoice).
+import { startMusic, duck, renderMusic } from './music.js';
+export { renderMusic };
 let ac = null, master, sfx, noiseBuf;
 let muted = false;
 
@@ -181,7 +183,7 @@ export function speak(text) {
   clip(k).then((buf) => {
     if (mine !== turn || muted) return;
     const src = ac.createBufferSource(); src.buffer = buf; src.connect(master); src.start();
-    talking = src; spoken.said.push(text);
+    talking = src; spoken.said.push(text); duck(buf.duration + 0.2);
   }).catch(() => { delete said[k]; });
 }
 export function fanfare() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.11, i === 3 ? 0.5 : 0.16, { type: 'triangle', vol: 0.16, attack: 0.01 })); tone(1319, 0.44, 0.45, { type: 'sine', vol: 0.08, attack: 0.02 }); }
@@ -191,3 +193,6 @@ export function dig() { noise(0, 0.11, { type: 'bandpass', freq: 700, to: 320, q
 export function oops() { tone(392, 0, 0.18, { type: 'triangle', to: 330, vol: 0.13 }); tone(294, 0.16, 0.3, { type: 'triangle', to: 247, vol: 0.12 }); }
 export function pageTurn() { noise(0, 0.14, { type: 'highpass', freq: 1800, to: 3200, vol: 0.07 }); }
 
+
+// the music, once there is sound at all (after the first touch: the title's play)
+export function music() { initAudio(); startMusic(ac, master); }

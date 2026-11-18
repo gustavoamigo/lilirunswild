@@ -575,3 +575,7 @@ Each iteration: what was built → what to test → feedback received → what t
 **Decision (title and bark)**: the game opens on a title over the live town: the name in big wobbling letters, Lili at her door, a big green play button; any tap, key or pad button plays, she barks and the first job follows. `?play` skips it, for tests. The bark button is now a speech bubble saying WOOF!. The rest (music; jobs handed out around town; what to win; the words) follow below.
 
 **Checked by script**: the title at 1100×700, 390×844 and 844×390 (looked at); a key, and a tap anywhere, play; the first job's card comes after it and not before; nothing on the title steers her. The new button looked at beside the jump button.
+
+**Decision (music)**: a bouncy tune in C at 108 beats a minute, about 70 s before it comes round again, synthesised in `src/music.js` (a toy marimba tune over plucked off-beat chords, a soft bass and a shaker; docs/tech.md, "Music"). It starts on play, fades in, sits well under everything and dips while a line is said. Mute silences it with the rest.
+
+**Checked by script**: the whole tune rendered offline: 71 s, peak 0.21 (no clipping), about −33 dB against −17 dB for a spoken line and −18 dB for the bark. It starts on play and nothing breaks. **Not checked**: whether it is nice, or annoying after ten minutes: I cannot hear it.
