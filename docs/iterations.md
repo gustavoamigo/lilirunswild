@@ -618,3 +618,9 @@ The recognizer heard all 46 clips word for word with the new children's voice (b
 **Decision**: the new job's card no longer comes up big in the middle: it bounces in at its place at the top and pulses for a moment. The sticker when a job is done is smaller and higher (its rays shorter), and the "new jobs" banner is higher too, so Lili and whoever she is with stay in sight.
 
 **Checked by script**: frozen frames of the teddy boy asking, at 1100×700 and 390×844: the card at the top, Lili and the boy clear below it; the sticker of a finished job above them (looked at).
+
+**Feedback**: pressing play, Lili barks without the sound: only the animation.
+
+**Decision**: sounds from files start loading with the first touch (browsers allow nothing before), and play was barking before the bark had loaded. The hello bark now waits for it (`A.ready('bark')`).
+
+**Checked by script**: pressing play, the bark sound (0.37 s) starts in the same frame as her bark.

@@ -74,11 +74,11 @@ function noise(when, dur, o = {}) {
 // ---- the dog ----
 // Sounds from files: Lili herself, growling the way she does when she is pulling on something in play (recorded), and
 // generated ones (docs/tech.md, "Generated sounds"): her bark and panting, the car's engine, horn and crash, a man's yell, a woman's scream (two takes), a child's scream, crockery breaking (two takes), a bin knocked over (four takes).
-const voice = {};
+const voice = {}, loading = {};
 const FILES = ['bark', 'lili-growl-1', 'lili-growl-2', 'lili-growl-3', 'panting', 'car-horn', 'car-crash', 'man-yell', 'woman-scream-1', 'woman-scream-2', 'child-scream', 'car-engine', 'cup-break-1', 'cup-break-2', 'bin-1', 'bin-2', 'bin-3', 'bin-4'];
 function loadVoice() {
   for (const k of FILES) {
-    fetch(new URL(`../sounds/${k}.wav`, import.meta.url)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((b) => { voice[k] = b; }).catch(() => {});
+    loading[k] = fetch(new URL(`../sounds/${k}.wav`, import.meta.url)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)).then((b) => { voice[k] = b; }).catch(() => {});
   }
 }
 function say(k, vol, rate = 1) {
@@ -88,6 +88,8 @@ function say(k, vol, rate = 1) {
   src.connect(g); g.connect(sfx); src.start();
 }
 export function bark() { say('bark', 0.8); }
+// a sound from a file is there to be played (they start loading with the first touch, so the first bark can come before it)
+export const ready = (k) => loading[k] || Promise.resolve();
 // her play growl, three takes in turn: only for pulling a toy from someone (not the play bow). Nothing plays it until then.
 let growls = 0;
 export function playGrowl() { say('lili-growl-' + (growls++ % 3 + 1), 0.7); }
