@@ -994,10 +994,11 @@ function cardBox(w, u, m) {
 function drawJob(t, w, h, u) {
   const k = ui.card; if (!k) { ui.rect = null; return; }
   const m = k.m, b = cardBox(w, u, m), pr = missions.progress(), steps = m.steps.length;
-  // new: big in the middle of the screen, then up to its place
-  const e = easeInOut(clamp((k.t - 2.4) / 0.6, 0, 1)), big = Math.max(1, Math.min(1.9, (w - 30) / b.w, (h * 0.4) / b.h));
-  const sc = lerp(big, 1, e) * easeOut(Math.min(1, k.t * 4)) * (1 + ui.pip * 0.07);
-  const cx = b.x + Math.sin(ui.oops * 28) * 7 * ui.oops, cy = lerp(Math.max(h * 0.34, b.y + b.h * 0.6), b.y, e);
+  // new: it bounces in at its place at the top and pulses for a moment. (It used to come up big in the middle of the
+  // screen first, and hid Lili and whoever had just asked her, just when the job began beside them.)
+  const pop = k.t < 0.5 ? easeOut(k.t / 0.5) * (1 + Math.sin(k.t / 0.5 * Math.PI) * 0.3) : 1 + Math.max(0, Math.sin(k.t * 7)) * 0.05 * clamp(3 - k.t, 0, 1);
+  const sc = pop * (1 + ui.pip * 0.07);
+  const cx = b.x + Math.sin(ui.oops * 28) * 7 * ui.oops, cy = b.y;
   if (sc < 0.02) return;
   c.save(); c.translate(cx, cy); c.scale(sc, sc);
   Art.drawCard(c, 0, 0, b.w, b.h);
@@ -1008,24 +1009,25 @@ function drawJob(t, w, h, u) {
   c.restore();
   ui.rect = [cx - b.w * sc / 2, cy - b.h * sc / 2, b.w * sc, b.h * sc];
   const a = Math.min(1, k.t * 3, ui.sayT * 2);         // the words under it, while it is new or just tapped
-  if (a > 0) { c.globalAlpha = a; Art.drawCaption(c, ui.say, w / 2, cy + b.h * sc / 2 + 26 * u, lerp(26, 21, e) * u, w - 24); c.globalAlpha = 1; }
+  if (a > 0) { c.globalAlpha = a; Art.drawCaption(c, ui.say, w / 2, cy + b.h * sc / 2 + 26 * u, 22 * u, w - 24); c.globalAlpha = 1; }
 }
 function drawCelebration(t, w, h, u) {
   const k = ui.cele;
   if (k) {
-    const R = Math.min(100 * u, w * 0.28), a = clamp(k.t / 0.4, 0, 1), fly = easeInOut(clamp((k.t - 1.9) / 0.7, 0, 1));
-    const br = btnBook.getBoundingClientRect(), x = lerp(w / 2, br.left + br.width / 2, fly), y = lerp(h * 0.38, br.top + br.height / 2, fly);
+    const R = Math.min(100 * u, w * 0.28, h * 0.13), a = clamp(k.t / 0.4, 0, 1), fly = easeInOut(clamp((k.t - 1.9) / 0.7, 0, 1));
+    // high on the screen, so Lili and whoever she helped stay in sight below it
+    const br = btnBook.getBoundingClientRect(), x = lerp(w / 2, br.left + br.width / 2, fly), y = lerp(R * 1.2 + 44, br.top + br.height / 2, fly);
     const r = R * (easeOut(a) + Math.sin(a * Math.PI) * 0.2) * lerp(1, 0.24, fly);
     if (fly < 0.01) {                                 // rays turning behind it
       c.save(); c.translate(x, y); c.rotate(t * 0.8); c.fillStyle = `rgba(255,226,122,${0.5 * a})`;
-      for (let i = 0; i < 10; i++) { c.rotate(TAU / 10); c.beginPath(); c.moveTo(0, 0); c.lineTo(r * 1.9, -r * 0.3); c.lineTo(r * 1.9, r * 0.3); c.closePath(); c.fill(); }
+      for (let i = 0; i < 10; i++) { c.rotate(TAU / 10); c.beginPath(); c.moveTo(0, 0); c.lineTo(r * 1.5, -r * 0.3); c.lineTo(r * 1.5, r * 0.3); c.closePath(); c.fill(); }
       c.restore();
     }
     Art.drawSticker(c, k.m.picture, x, y, r, 'done');
   }
   const bn = ui.banner;
   if (bn) {                                           // a level has opened
-    const a = clamp(Math.min(bn.t * 4, (2.6 - bn.t) * 4), 0, 1), bw = Math.min(w - 30, 330 * u), y = h * 0.36;
+    const a = clamp(Math.min(bn.t * 4, (2.6 - bn.t) * 4), 0, 1), bw = Math.min(w - 30, 330 * u), y = Math.max(140 * u, h * 0.22);
     c.globalAlpha = a; Art.drawCard(c, w / 2, y, bw, 124 * u, { edge: '#4FA653' });
     for (let i = 0; i < bn.level; i++) Art.drawIcon(c, 'star', w / 2 + (i - (bn.level - 1) / 2) * 52 * u, y - 18 * u, 23 * u * (1 + 0.1 * Math.sin(t * 6 + i)));
     Art.drawWords(c, 'New jobs!', w / 2, y + 36 * u, 28 * u, bw - 30 * u, '#3B8A40'); c.globalAlpha = 1;

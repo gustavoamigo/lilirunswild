@@ -612,3 +612,9 @@ The recognizer heard all 46 clips word for word with the new children's voice (b
 **Checked by script**: with no pulling for 3 s the tug stays at 0 and the arrow shows (looked at); pulling away wins the teddy after 1.65 s of game time and the boy sits; a bark during a tug leaves him the teddy. The teddy looked at in four frozen frames while she starts, runs and turns: it hangs from her mouth and swings. The button hidden with nothing carried and shown while carrying; the teddy put down in the street lies there; put down by the basket it is in it, 6 up, kept (looked at).
 
 **Not checked**: how the tug feels by touch (pulling means holding a finger behind her); the bow and shake rates over a real play session.
+
+**Feedback**: picking up the teddy, the pop-up was in front of the dog and the girl, and I could not see what was happening.
+
+**Decision**: the new job's card no longer comes up big in the middle: it bounces in at its place at the top and pulses for a moment. The sticker when a job is done is smaller and higher (its rays shorter), and the "new jobs" banner is higher too, so Lili and whoever she is with stay in sight.
+
+**Checked by script**: frozen frames of the teddy boy asking, at 1100×700 and 390×844: the card at the top, Lili and the boy clear below it; the sticker of a finished job above them (looked at).
