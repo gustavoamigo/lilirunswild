@@ -567,3 +567,11 @@ Each iteration: what was built → what to test → feedback received → what t
 **Decision**: `af_bella` is the voice; every clip was made again with it (`tools/voice.py`, its default now).
 
 **Checked by script**: the speech recognizer heard 45 of the 47 clips word for word. "Bark! Woof, woof!" as before ("bark with wuss"), and "Say hello! Go to a friend and stand still." heard without the "a" (with `af_heart` it was heard whole). **Not checked**: how either sounds; that needs ears.
+
+## Iteration 11: a title, a bark button that says WOOF, music, and exploring
+
+**Feedback**: it needs a title screen with "Lili Runs Wild" and a play button. The bark button does not look like barking: it looks like a sound button. Jobs come one after another too soon, so there is no exploring; better if she explores and meets a person, an animal or a box with a note that gives the job, with rewards like a new colour. It treats the child as a dog ("good girl"). Some jobs are silly (Jump!). Background music would help.
+
+**Decision (title and bark)**: the game opens on a title over the live town: the name in big wobbling letters, Lili at her door, a big green play button; any tap, key or pad button plays, she barks and the first job follows. `?play` skips it, for tests. The bark button is now a speech bubble saying WOOF!. The rest (music; jobs handed out around town; what to win; the words) follow below.
+
+**Checked by script**: the title at 1100×700, 390×844 and 844×390 (looked at); a key, and a tap anywhere, play; the first job's card comes after it and not before; nothing on the title steers her. The new button looked at beside the jump button.

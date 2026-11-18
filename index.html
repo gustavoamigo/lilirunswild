@@ -30,12 +30,21 @@
       <svg viewBox="0 0 48 48" width="58%" height="58%" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><circle cx="24" cy="24" r="17"/><circle cx="24" cy="24" r="3.5" fill="#fff"/><path d="M24 24v17M24 24L9.5 16M24 24l14.5-8"/></svg>
     </button>
     <button id="btn-bark" class="round big bark" aria-label="Bark">
-      <svg viewBox="0 0 48 48" width="60%" height="60%" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round"><path d="M10 18v12h7l10 8V10l-10 8z" fill="#fff" stroke-linejoin="round"/><path d="M33 17a10 10 0 0 1 0 14"/><path d="M38 11a18 18 0 0 1 0 26"/></svg>
+    <!-- a speech bubble saying WOOF: a loudspeaker read as "sound on/off", not as barking -->
+    <svg viewBox="0 0 48 48" width="74%" height="74%"><path d="M11 7h26a8 8 0 0 1 8 8v13a8 8 0 0 1-8 8H20l-9 7 1.5-7H11a8 8 0 0 1-8-8V15a8 8 0 0 1 8-8z" fill="#fff"/>
+      <text x="24" y="26.6" text-anchor="middle" font-family="'Baloo 2', Fredoka, ui-rounded, 'Arial Rounded MT Bold', system-ui, sans-serif" font-weight="900" font-size="13" fill="#E8557E" letter-spacing=".3">WOOF!</text></svg>
     </button>
     <button id="btn-jump" class="round big jump" aria-label="Jump">
       <svg viewBox="0 0 48 48" width="60%" height="60%" fill="none" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M24 40V10M11 22L24 9l13 13"/></svg>
     </button>
   </div>
+</div>
+<!-- the title: the town lives behind it, Lili at her door; any tap or key plays -->
+<div id="title" class="hidden">
+  <h1 aria-label="Lili Runs Wild"><span class="lili">Lili</span><span class="wild">Runs Wild</span></h1>
+  <button id="btn-play" class="round" aria-label="Play">
+    <svg viewBox="0 0 48 48" width="56%" height="56%"><path d="M17 10.5 38 24 17 37.5z" fill="#fff" stroke="#fff" stroke-width="6" stroke-linejoin="round"/></svg>
+  </button>
 </div>
 <script type="module" src="src/main.js"></script>
 </body>

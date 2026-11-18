@@ -4,6 +4,10 @@ Where the game is going: an open-world game (one big town to roam freely, with c
 
 What exists now is the dog and a small town to try him in.
 
+## The title
+
+The game opens on a title over the live town: "Lili Runs Wild" in big wobbling letters at the top, Lili at her door in the middle, a big green play button at the bottom. Any tap, click, key or pad button plays (a five year old taps wherever); she barks, and the first job comes a moment later. The tap is also what lets the browser make sound.
+
 ## The dog
 
 Lili, liver and white: a white body, brown sides to her head with a white blaze between, long wavy brown ears, a brown nose with freckles round it, a pale pink collar with a silver tag, a brown patch where her tail begins and two small marks on her back, a wagging tail of some length, tongue out. Modelled on a photo of her (2026-11-13).
@@ -17,7 +21,7 @@ Lili, liver and white: a white body, brown sides to her head with a white blaze 
 | Say hello | People react by their nature and how she behaves. Stand calmly by someone and dog lovers and children come and pet her; trot into them and it is paws up on their chest, which dog lovers love and the uninterested shrug off; fly into them (jumping or galloping) and they sit down with a bump, then run away screaming. Nervous people run from anything but calm, a bark sends most of them off, and a near miss with the car too. |
 | Break stuff | Run into pots, bins, cones, boxes and a ball. Pots smash, bins spill. Jump on the picnic table and the plates go flying. Each thing counts once on the paw counter. |
 | Birds | He notices any flock nearby: his head turns, he yips, a bird appears in a thought bubble. Standing still he freezes and points for a few seconds, then relaxes (wags, bows, shakes) and points again a while later, or at once at another flock. Run at them and he goes straight into zoomies; they fly off to another spot and the bird counter goes up. Barking scares them too. |
-| Bark | Startles people and birds near him. |
+| Bark | Startles people and birds near him. Its button is a speech bubble saying WOOF! (a loudspeaker on it was read as the sound switch). |
 | Play bow | Left alone for a few seconds, he asks for a game. |
 | Drive | Near the car a wheel bubble and a yellow button appear. E (or jump onto the car) and he hops into the seat, paws on the wheel. |
 

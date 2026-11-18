@@ -874,8 +874,8 @@ function updateJobs(dt) {
     if (k.levels.length) { ui.banner = { level: k.levels[k.levels.length - 1], t: 0 }; A.fanfare(); A.speak(SAY.jobs); }
   }
   if (ui.banner && (ui.banner.t += dt) > 2.6) ui.banner = null;
-  if (!missions.job() && !ui.free && (ui.nextT -= dt) <= 0) {
-    const m = missions.next();
+  if (!ui.card && !ui.free && !ui.title && (ui.nextT -= dt) <= 0) {   // the next job, or the one saved in hand
+    const m = missions.job() || missions.next();
     if (m) missions.start(m);
     else { ui.free = true; if (!ui.saidAll) { ui.saidAll = true; A.speak(SAY.all); } }
   }
@@ -1089,8 +1089,8 @@ function tapBook(x, y) {
 function resize() { S.resize(); hud.width = Math.round(S.view.w * S.view.dpr); hud.height = Math.round(S.view.h * S.view.dpr); }
 
 // ---- wiring ----
-function act(a) { A.initAudio(); if (ui.book) return; if (a === 'jump') jump(); else if (a === 'bark') bark(); else carAction(); }
-G.api = { jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save, spoken: A.spoken };
+function act(a) { A.initAudio(); if (ui.title) { play(); return; } if (ui.book) return; if (a === 'jump') jump(); else if (a === 'bark') bark(); else carAction(); }
+G.api = { play, jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save, spoken: A.spoken };
 input.onAction = act;
 const btnCar = document.getElementById('btn-car'), btnMute = document.getElementById('btn-mute'), btnBook = document.getElementById('btn-book'), bookN = document.getElementById('book-n');
 const btnBark = document.getElementById('btn-bark'), btnJump = document.getElementById('btn-jump'), actions = document.getElementById('actions'), keysHelp = document.getElementById('keys');
@@ -1118,8 +1118,25 @@ updateCar(0);
 if (params.has('car')) enterCar();
 // the saved stickers first (the first update would otherwise start the first job and save over them); no jobs in the studio
 if (STUDIO) ui.free = ui.saidAll = true;
-else { load(); const m = missions.job() || missions.next(); if (m) missions.start(m); else ui.free = ui.saidAll = true; bookN.textContent = missions.done.size; }
+else { load(); ui.nextT = 0.8; if (!missions.job() && !missions.next()) ui.free = ui.saidAll = true; bookN.textContent = missions.done.size; }
 update(0); S.snapCamera(G.focus);
+
+// ---- the title ----
+// The town is already there behind it, Lili at her door. Any tap, click, key or pad button plays: a five year old taps
+// wherever, and the first touch is also what lets the browser make sound. ?play skips it (tests), as does the studio.
+const title = document.getElementById('title');
+function play() {
+  if (!ui.title) return;
+  ui.title = false; document.body.classList.remove('title'); title.classList.add('gone');
+  setTimeout(() => title.classList.add('hidden'), 500);
+  A.initAudio(); bark(); ui.nextT = 1.4;
+}
+if (!STUDIO && !params.has('play')) {
+  ui.title = true; document.body.classList.add('title'); title.classList.remove('hidden');
+  for (const sp of title.querySelectorAll('h1 span')) sp.innerHTML = [...sp.textContent].map((ch, i) => (ch === ' ' ? ' ' : `<i style="--i:${i}">${ch}</i>`)).join('');
+  title.addEventListener('click', play);
+  window.addEventListener('keydown', (e) => { if (!ui.title) return; e.preventDefault(); e.stopPropagation(); if (!e.repeat) play(); }, true);
+}
 
 // ------------------------------------------------------------------ studio --
 // What the buttons do. Each pose is the same state the game puts him in, so what is tuned here is what is played.
@@ -1200,7 +1217,7 @@ if (STUDIO) initStudio();
 let last = performance.now();
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
-  pollPad();
+  pollPad(); if (ui.title) input.stick = null;           // on the title a pad's buttons play, its stick does nothing
   if (STUDIO) {
     const sdt = studio.step ? 1 / 60 : studio.paused ? 0 : dt * studio.speed; studio.step = false;
     if (sdt) update(sdt);
