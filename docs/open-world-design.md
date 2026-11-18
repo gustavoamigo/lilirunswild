@@ -77,6 +77,7 @@ Jobs used to come one after another, a moment after the last (2026-11-17), and t
 - **In between, nobody asks.** While a job is in hand the bubbles are gone, and after one is done nobody asks for a few seconds, so finishing a job beside someone does not start the next.
 - **Lost.** A child who finds no one for a while (12 s before the first sticker, then 40 s) is shown the way to the nearest asker: paw prints, a marker, an arrow at the screen's edge.
 - **The first asker is in sight at the start**: the neighbour, in front of the house next door.
+- **Nothing is in hand when the game opens.** A job in hand is not saved; whoever asked for an unfinished one asks again.
 - **Words.** The askers speak to Lili, by name. The game speaks to the child: "You did it!", "Brilliant!", never "good girl" (that treated the child as the dog).
 - **No jobs that are only a button**: run, jump and bark were not jobs, and are gone. The buttons are learnt by playing and by the jobs that need them.
 

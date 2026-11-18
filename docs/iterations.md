@@ -587,3 +587,10 @@ Each iteration: what was built → what to test → feedback received → what t
 **Checked by script**: from a fresh start, nothing is asked for 3 s and more; at 12 s the way to the neighbour is shown; beside her she asks and the job is "find a bone" in her voice; done, nobody asks for 4 s even beside an asker; after one sticker the girl at the plaza and the café have a job and the rest wait for their level. The neighbour and her bubble seen from the start at 1100×700 and 390×844. The recognizer heard all 46 clips word for word, but for "Hee hee" written "Hehe".
 
 **Not checked**: how the raised children's voices sound (I cannot hear them); whether children find askers by themselves.
+
+**Feedback**: children's voices: af_sky at 1.25. And the game started with "Lili! Go and say hello to three friends!", a job starting by itself.
+
+**Decision**: every child is `af_sky` raised 1.25. The job came from the saved game: the old version had it in hand, and the new one resumed it after play. A job in hand is no longer kept at all: the game always opens with exploring, and whoever asked for an unfinished job asks again.
+
+**Checked by script**: an old save with "hello-three" in hand opens, plays, and 4 s later has no job and has said nothing; the stickers are kept.
+The recognizer heard all 46 clips word for word with the new children's voice (but "Hee hee" written "Hehe").

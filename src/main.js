@@ -877,7 +877,6 @@ function updateJobs(dt) {
     if (k.levels.length) { ui.banner = { level: k.levels[k.levels.length - 1], t: 0 }; A.fanfare(); A.speak(SAY.jobs); }
   }
   if (ui.banner && (ui.banner.t += dt) > 2.6) ui.banner = null;
-  if (!ui.card && missions.job() && !ui.title) missions.start(missions.job());   // the job saved in hand, after the title
   updateAskers(dt);
   // the button the job wants pressed pulses
   const s = guided() ? missions.step() : null, a = s && s.action, at = s && missions.target(dog, car), close = !!at && dist(at.x, at.y, dog.x, dog.y) < 330;
@@ -1160,7 +1159,7 @@ const at = (params.get('at') || '').split(',').map(Number);
 if (at.length === 2 && at.every(Number.isFinite)) { dog.x = at[0]; dog.y = at[1]; }
 updateCar(0);
 if (params.has('car')) enterCar();
-// the saved stickers first (the first update would otherwise start the first job and save over them); no jobs in the studio
+// the saved stickers first, before anything saves over them; nobody asks in the studio
 if (STUDIO) { ui.saidAll = true; ui.askT = Infinity; }
 else { load(); ui.saidAll = missions.done.size === missions.missions.length; bookN.textContent = missions.done.size; }
 update(0); S.snapCamera(G.focus);

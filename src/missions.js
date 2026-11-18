@@ -144,11 +144,10 @@ export function makeRunner(missions, world, hooks = {}) {
       }
     },
     // what is kept between visits, and putting it back
-    state: () => ({ done: [...done], job: job ? job.id : null }),
+    // (a job in hand is not kept: the game opens with exploring, and whoever asked for it asks again)
+    state: () => ({ done: [...done] }),
     restore(st) {
       for (const id of st.done || []) if (missions.some((m) => m.id === id)) done.add(id);
-      const m = missions.find((q) => q.id === st.job);
-      if (m && available(m)) { job = m; at = 0; n = 0; }
     },
   };
   return runner;
