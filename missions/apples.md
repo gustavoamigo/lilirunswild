@@ -1,8 +1,9 @@
 ---
 id: apples
 level: 3
+from: apples
 picture: [jump, apple]
-say: "Jump on the market stall. Knock off five apples!"
+say: "Lili! My apples are stuck! Jump on my stall and knock off five!"
 steps:
   - knock: apple
     count: 5

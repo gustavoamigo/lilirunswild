@@ -1,6 +1,7 @@
 // Jobs (docs/open-world-design.md, "Jobs for five to seven year olds"): each is a file in missions/ (listed in
-// missions/list.txt), a header the game reads and notes for us below it. There is one job at a time. A job has a
-// `level`; a level opens once enough stickers (jobs done) are earned, so nobody is stuck behind one job. Its `steps` are
+// missions/list.txt), a header the game reads and notes for us below it. There is one job at a time, asked for by
+// someone in town (`from`: an id in world/people.js; src/main.js has them ask). A job has a `level`; a level opens once
+// enough stickers (jobs done) are earned, so nobody is stuck behind one job. Its `steps` are
 // done in order, each one action from a small vocabulary with tags as targets (a spot's tag on a tile, a kind of person,
 // a kind of thing), never places on the map, and each may want doing `count` times. The game tells the runner what
 // happens (`event`); the runner checks the steps that depend on where she is itself (`update`). Nothing in Lili's or
@@ -43,13 +44,13 @@ export async function loadMissions() {
 // How near counts as "there", for each kind of step.
 const NEAR = { go: 120, drive: 350, poo: 110, bring: 130, at: 260 };   // drive: the road in front of a building counts
 // Stickers needed before a level's jobs open.
-export const LEVEL_AT = { 1: 0, 2: 4, 3: 9, 4: 15 };
+export const LEVEL_AT = { 1: 0, 2: 2, 3: 7, 4: 13 };
 // Steps whose target is a place (a spot's tag); every other step's target is a kind of thing or person.
 const PLACE = { go: 1, drive: 1, poo: 1 };
 
 export function makeRunner(missions, world, hooks = {}) {
   const done = new Set(), seen = new Set(), lamps = (world.tiles || []).flatMap((t) => t.things.lamps);
-  let job = null, at = 0, n = 0, last = null, quiet = 0;
+  let job = null, at = 0, n = 0, quiet = 0;
   const spots = (tag) => world.spots.filter((s) => s.tag === tag);
   const nearSpot = (tag, x, y, r) => spots(tag).some((s) => Math.hypot(s.x - x, s.y - y) < r);
   const unlocked = (level) => done.size >= (LEVEL_AT[level] ?? 0);
@@ -73,7 +74,7 @@ export function makeRunner(missions, world, hooks = {}) {
     n = 0; seen.clear(); at++;
     if (at < m.steps.length) { hooks.step?.(m, m.steps[at]); return; }
     const first = !done.has(m.id), levels = runner.levels().filter((l) => !unlocked(l));
-    done.add(m.id); last = m.id; job = null; at = 0;
+    done.add(m.id); job = null; at = 0;
     hooks.done?.(m, first, levels.filter(unlocked));
   };
   const runner = {
@@ -89,15 +90,8 @@ export function makeRunner(missions, world, hooks = {}) {
     available,
     missing: (level) => Math.max(0, (LEVEL_AT[level] ?? 0) - done.size),
     // take a job in hand (from the start)
-    start(m) { job = m; at = 0; n = 0; seen.clear(); quiet = 0; last = m.id; hooks.start?.(m); },
+    start(m) { job = m; at = 0; n = 0; seen.clear(); quiet = 0; hooks.start?.(m); },
     stop() { job = null; },
-    // the next job to offer: the first one not done after the last one in hand, in list order, round to the start again
-    // (so a job put aside comes back only after the others)
-    next() {
-      const i = missions.findIndex((m) => m.id === last);
-      for (let k = 1; k <= missions.length; k++) { const m = missions[(i + k) % missions.length]; if (!done.has(m.id) && available(m)) return m; }
-      return null;
-    },
     // the step in hand, if it is this action: what the game may offer to do (a poo on the table, dropping what she
     // carries at home)
     wants: (action) => { const s = step(); return s && s.action === action ? s : null; },
@@ -150,10 +144,9 @@ export function makeRunner(missions, world, hooks = {}) {
       }
     },
     // what is kept between visits, and putting it back
-    state: () => ({ done: [...done], job: job ? job.id : null, last }),
+    state: () => ({ done: [...done], job: job ? job.id : null }),
     restore(st) {
       for (const id of st.done || []) if (missions.some((m) => m.id === id)) done.add(id);
-      last = st.last || null;
       const m = missions.find((q) => q.id === st.job);
       if (m && available(m)) { job = m; at = 0; n = 0; }
     },

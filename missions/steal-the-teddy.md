@@ -1,8 +1,9 @@
 ---
 id: steal-the-teddy
 level: 3
+from: teddy-boy
 picture: [teddy, home]
-say: "Get the teddy and bring it home!"
+say: "Lili! Let's play! Grab my teddy and run home with it!"
 steps:
   - take: teddy
     from: child

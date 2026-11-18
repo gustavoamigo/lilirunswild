@@ -1,8 +1,9 @@
 ---
 id: hello-three
 level: 2
+from: playground-girl
 picture: [friend, heart]
-say: "Say hello to three friends!"
+say: "Lili! Go and say hello to three friends!"
 steps:
   - greet: any
     count: 3

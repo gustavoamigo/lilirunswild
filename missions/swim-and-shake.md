@@ -1,8 +1,9 @@
 ---
 id: swim-and-shake
 level: 2
+from: beach-boy
 picture: [lake, shake]
-say: "Swim in the lake. Then shake yourself dry!"
+say: "Lili! Come for a swim! Then shake yourself dry!"
 steps:
   - swim: any
     say: "Swim in the lake!"

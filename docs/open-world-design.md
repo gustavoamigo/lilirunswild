@@ -68,22 +68,34 @@ The first three missions were three cards at the top, open at once, with small p
 
 What the research says about this age (links under *References*): they are only starting to read, so say it and show it; pictures must be literal; one thing at a time; big targets; no fail states and no clock. And from playtests of open-ended games: with nothing suggested, children ask "what should I do?", so always have one idea on offer. Open-world games for this age that hand out the same errand again and again are found dull, so jobs must differ in what the hands do, not only in where.
 
+### Jobs come from people she meets
+
+Jobs used to come one after another, a moment after the last (2026-11-17), and the owner found there was no time left to explore (2026-11-18). Now exploring comes first and the jobs are found in it:
+
+- **Askers.** People about town have jobs for her (`from:` in a job's file, an `id` in `world/people.js`): her neighbour next door, a cheeky boy in the park full of naughty ideas, a girl at the plaza, a girl in the playground, the boy with the teddy, the butcher, a boy by the fountain, the man at the café, the apple seller, a boy on the beach, a girl on the lawn. Each shows what they want in a speech bubble over their head (the job's pictures), seen from afar.
+- **Asking.** She comes up to one on foot and they turn to her and ask, in their own voice ("Lili! Look at all the pigeons! Chase them!"): that is the job. Each asks for their jobs in turn, once that job's level is open; a job done is not asked for again (the sticker book plays it again).
+- **In between, nobody asks.** While a job is in hand the bubbles are gone, and after one is done nobody asks for a few seconds, so finishing a job beside someone does not start the next.
+- **Lost.** A child who finds no one for a while (12 s before the first sticker, then 40 s) is shown the way to the nearest asker: paw prints, a marker, an arrow at the screen's edge.
+- **The first asker is in sight at the start**: the neighbour, in front of the house next door.
+- **Words.** The askers speak to Lili, by name. The game speaks to the child: "You did it!", "Brilliant!", never "good girl" (that treated the child as the dog).
+- **No jobs that are only a button**: run, jump and bark were not jobs, and are gone. The buttons are learnt by playing and by the jobs that need them.
+
 ### One job at a time
 
 - **One card**, top middle: the job as two or three big pictures (who or how, then what: `Lili` + `fast`, `car` + `school`, `sausages` + `home`). A job that wants something several times shows pips that fill; a job of several steps shows a pip per step, and the pictures change with the step.
 - **Told three ways.** Said out loud when it starts (and each new step). Shown in pictures on the card. Shown in the town: paw prints lead to the nearest thing it needs, a marker bounces over it, an arrow at the screen's edge points to it, and the button to press (bark, jump) pulses.
 - **New job**: the card comes up big in the middle for two seconds with its words under it, then moves to the top. The game does not stop.
 - **Tap the card**: it is said again, the words show, and the way is shown for a while. This is the one "help" the child needs to know, and the loudspeaker on the card hints at it.
-- **Done**: a fanfare, confetti, praise, and the job turns into a sticker that flies into the sticker book. The next job starts by itself a moment later. A child never has to choose, open a menu or read to keep playing.
+- **Done**: a fanfare, confetti, praise, and the job turns into a sticker that flies into the sticker book. Then she is free to explore until she meets the next asker. A child never has to open a menu or read to keep playing.
 - **Never fails, never timed.** A job stays until it is done, or another is picked from the book. One late job (`five-friends`) has a rule, be gentle: scaring somebody empties its pips with a soft "oops" and it carries on.
 
 ### It gets trickier as they learn
 
-Jobs come in four levels. A level opens when enough stickers are earned (4, 9, 15 of 26), not when every job below is done, so nobody is stuck behind one job they cannot manage.
+Jobs come in four levels. A level opens when enough stickers are earned (2, 7, 13 of 23), not when every job below is done, so nobody is stuck behind one job they cannot manage.
 
 | Level | What it asks | The way |
 |---|---|---|
-| 1 | one thing, one button or one run: gallop, find a bone, say hello, bark, jump, chase birds | shown |
+| 1 | one thing: find a bone, say hello, chase birds | shown |
 | 2 | one skill where *how* matters, or a count of three: smash a pot (needs a gallop), drive to school, poo on the table (needs a jump up), swim then shake, three cones, three bones, three hellos | shown |
 | 3 | two steps, or a thing that needs working out: take the teddy and bring it home, sausages from the butcher, lamp posts with the car, dig up a bone, apples off the market stall (needs a jump), a jump into the lake, three pots | not shown: tap the card to ask, or it shows after 25 seconds of getting nowhere |
 | 4 | three steps, long hunts, a rule: a drive round three places, ten bones, five friends without scaring anybody, sausages to the picnic table, a big mess of three kinds, three buried bones | as level 3 |
@@ -105,13 +117,13 @@ All of it works with no job in hand: playing freely stays the game.
 
 ### What comes next
 
-The town is full enough for these 26. More jobs now need more places, each small and dense with its own things to do, built and shown one at a time:
+The town is full enough for these 23. More jobs now need more places, each small and dense with its own things to do, built and shown one at a time:
 
 1. **The dog park**: agility jumps, a tunnel, a see-saw, other dogs to play with. Jobs: once round the course, through the tunnel, play with a dog.
 2. **The farm**, past the edge of town: sheep to round up, chickens, mud to roll in, hay bales, a tractor to drive.
 3. Then the other places in `docs/game-design.md`.
 
-Also open: things for Lili to wear as rewards for whole levels (a collar, a bandana), and a recorded voice.
+Next in this round: a prize for every job (things to wear, toys she can play with, a new dog house), a cat and a duck who ask too, and a note in a bottle on the beach. Also open: a recorded voice.
 
 ## Missions: the files and the runner
 
@@ -178,6 +190,7 @@ Each step is playable and shown to the owner before the next.
 2. **Bigger town and loading.** A town several times larger from `map.txt`, only nearby tiles built. Done.
 3. **Missions.** The file format, the runner, the first actions, three missions. Done.
 4. **For the child.** One job at a time, said and pictured, levels, the sticker book, saving, 26 jobs, bones and digging. Done 2026-11-17 (*Jobs for five to seven year olds*).
+4b. **Exploring first.** Jobs asked for by people she meets, prizes, a cat and a duck, a note in a bottle. Begun 2026-11-18 (*Jobs come from people she meets*).
 5. **The dog park**, with its jobs.
 6. **The farm**, with its jobs.
 

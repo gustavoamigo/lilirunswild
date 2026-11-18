@@ -1,10 +1,7 @@
 # The jobs, one file each in this folder (docs/open-world-design.md, "Jobs for five to seven year olds"). The game
 # reads this list; the order here is the order they are offered in within a level.
-zoomies
 find-a-bone
 say-hello
-big-bark
-jump
 chase-the-birds
 smash-a-pot
 drive-to-school

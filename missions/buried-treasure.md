@@ -1,8 +1,9 @@
 ---
 id: buried-treasure
 level: 4
+from: lawn-girl
 picture: [dig, star]
-say: "Dig up three bones!"
+say: "Lili! There's treasure buried in town! Dig up three bones!"
 steps:
   - dig: mound
     count: 3

@@ -1,8 +1,9 @@
 ---
 id: smash-a-pot
 level: 2
+from: cheeky
 picture: [fast, pot]
-say: "Run fast and smash a flower pot!"
+say: "Hee hee! Run really fast and smash a flower pot!"
 steps:
   - smash: pot
 ---

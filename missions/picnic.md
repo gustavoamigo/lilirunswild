@@ -1,8 +1,9 @@
 ---
 id: picnic
 level: 4
+from: butcher
 picture: [sausage, table]
-say: "Get the sausages. Bring them to the picnic table!"
+say: "Lili! Take these sausages to the picnic table!"
 steps:
   - take: sausage
     from: adult

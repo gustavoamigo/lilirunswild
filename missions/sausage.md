@@ -1,8 +1,9 @@
 ---
 id: sausage
 level: 3
+from: butcher
 picture: [sausage, home]
-say: "Get the sausages from the butcher. Bring them home!"
+say: "Lili! Take these sausages home for your dinner!"
 steps:
   - take: sausage
     from: adult

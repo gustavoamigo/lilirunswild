@@ -1,8 +1,9 @@
 ---
 id: dig-a-bone
 level: 3
+from: lawn-girl
 picture: [dig, bone]
-say: "Dig up a bone! Stand on the earth."
+say: "Lili! There's a bone under the earth. Dig it up!"
 steps:
   - dig: mound
 ---

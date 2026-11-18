@@ -1,8 +1,9 @@
 ---
 id: three-bones
 level: 2
+from: fountain-boy
 picture: [bone]
-say: "Find three bones!"
+say: "Lili! Can you find three bones for me?"
 steps:
   - collect: bone
     count: 3

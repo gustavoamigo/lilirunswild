@@ -1,8 +1,9 @@
 ---
 id: ten-bones
 level: 4
+from: fountain-boy
 picture: [bone, star]
-say: "Find ten bones!"
+say: "Lili! Can you find ten bones? That's a lot of bones!"
 steps:
   - collect: bone
     count: 10

@@ -1,8 +1,9 @@
 ---
 id: drive-to-school
 level: 2
+from: neighbour
 picture: [car, school]
-say: "Drive the car to school!"
+say: "Lili! Can you drive my car to the school?"
 steps:
   - drive: school-door
 ---

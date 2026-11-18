@@ -1,8 +1,9 @@
 ---
 id: big-splash
 level: 3
+from: beach-boy
 picture: [jump, splash]
-say: "Jump into the lake! Splash!"
+say: "Lili! Jump into the lake! Big splash!"
 steps:
   - splash: any
 ---

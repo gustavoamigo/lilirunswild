@@ -1,8 +1,9 @@
 ---
 id: chase-the-birds
 level: 1
+from: plaza-girl
 picture: [lili, birds]
-say: "Chase the birds!"
+say: "Lili! Look at all the pigeons! Chase them!"
 steps:
   - chase: birds
 ---

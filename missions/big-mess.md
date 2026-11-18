@@ -1,8 +1,9 @@
 ---
 id: big-mess
 level: 4
+from: cheeky
 picture: [pot, cone, lamp]
-say: "Make a big mess! Pots, cones and lamp posts!"
+say: "Let's make a big mess! Pots, cones and lamp posts!"
 steps:
   - smash: pot
     count: 3

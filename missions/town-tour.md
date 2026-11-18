@@ -1,8 +1,9 @@
 ---
 id: town-tour
 level: 4
+from: neighbour
 picture: [car, star]
-say: "Drive around town! First to school."
+say: "Lili! Drive me round town! First to the school, then to the beach!"
 steps:
   - drive: school-door
     say: "Drive to school!"

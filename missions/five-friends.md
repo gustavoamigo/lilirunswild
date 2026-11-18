@@ -1,8 +1,9 @@
 ---
 id: five-friends
 level: 4
+from: playground-girl
 picture: [friend, heart]
-say: "Make five friends. Be gentle! No barking!"
+say: "Make five friends, Lili. Be gentle! No barking!"
 careful: scare
 steps:
   - greet: any

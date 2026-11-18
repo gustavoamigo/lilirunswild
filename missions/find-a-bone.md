@@ -1,8 +1,9 @@
 ---
 id: find-a-bone
 level: 1
+from: neighbour
 picture: [lili, bone]
-say: "Find a bone!"
+say: "Lili! There are bones hidden all over town. Can you find one?"
 steps:
   - collect: bone
 ---

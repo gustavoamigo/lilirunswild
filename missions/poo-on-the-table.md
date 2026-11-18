@@ -1,8 +1,9 @@
 ---
 id: poo-on-the-table
 level: 2
+from: cheeky
 picture: [poo, table]
-say: "Do a poo on the picnic table! Jump up and stand still."
+say: "Hee hee! Do a poo on the picnic table! Jump up and stand still."
 steps:
   - poo: table
 ---

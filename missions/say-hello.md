@@ -1,8 +1,9 @@
 ---
 id: say-hello
 level: 1
+from: cafe
 picture: [lili, heart]
-say: "Say hello! Go to a friend and stand still."
+say: "Hello, Lili! Come and say hello to me!"
 steps:
   - greet: any
 ---

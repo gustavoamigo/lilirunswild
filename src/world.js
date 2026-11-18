@@ -168,7 +168,7 @@ export function buildTown(tiles, pop) {
   const FACING = { east: 0, south: Math.PI / 2, west: Math.PI, north: -Math.PI / 2 };
   { const [x, y] = place(pop.car.at); car = { x, y, heading: FACING[pop.car.facing] || 0 }; }
   for (const p of pop.people) {
-    const o = { look: p.look, nature: p.nature, heading: FACING[p.facing] || 0, state: 'stand', t: 0, cool: 0, walk: null, seed: people.length * 2 };
+    const o = { look: p.look, nature: p.nature, id: p.id, voice: p.voice, heading: FACING[p.facing] || 0, state: 'stand', t: 0, cool: 0, walk: null, seed: people.length * 2 };
     if (p.walk) { const [a, b] = p.walk.map(place); o.walk = { ax: a[0], ay: a[1], bx: b[0], by: b[1], dir: 1 }; [o.x, o.y] = a; o.state = 'walk'; }
     else [o.x, o.y] = place(p.at);
     // something held: a prop that stays in their arms until it is taken from them (updatePeople keeps it there)

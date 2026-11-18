@@ -57,7 +57,7 @@ const missions = makeRunner(STUDIO ? [] : await loadMissions(), world, {
   oops: () => { ui.oops = 1; A.oops(); A.speak(SAY.oops); },
   done: (m, first, levels) => jobDone(m, first, levels),
 });
-const ui = { card: null, cele: null, banner: null, nextT: 0, book: false, helpT: 0, sayT: 0, pip: 0, oops: 0, bonePop: 0, fly: [], free: false, saidAll: false, tidyT: 0, saveT: 10, rect: null, boneAt: [0, 0] };
+const ui = { card: null, cele: null, banner: null, askT: 0, lostT: 0, book: false, helpT: 0, sayT: 0, pip: 0, oops: 0, bonePop: 0, fly: [], saidAll: false, tidyT: 0, saveT: 10, rect: null, boneAt: [0, 0] };
 const G = { t: 0, mess: 0, birds: 0, bones: 0, pop: 0, ui, missions, dog, car, world, props: world.props, people: world.people, flocks: world.flocks, debris: [], focus: { x: dog.x, y: dog.y, vx: 0, vy: 0, zoom: 1 }, input };
 window.__G = G;
 for (const o of world.people) o.who = isChild(o.look) ? 'child' : 'adult';
@@ -825,6 +825,7 @@ function drawOverlay(t) {
   Art.drawBone(c, x3 + 18 * u, y + 2 * u, 19 * u * (1 + ui.bonePop * 0.35)); Art.drawNum(c, G.bones, x3 + 46 * u, y + 2 * u, 34 * u);
   ui.boneAt = [x3 + 18 * u, y + 2 * u]; ui.hudRight = x3 + 46 * u + c.measureText(G.bones).width;
   drawTrail(t);
+  drawAskers(t);
   for (const f of ui.fly) {                           // a bone just found, on its way to the counter
     const k = easeInOut(clamp(f.t / 0.6, 0, 1));
     Art.drawBone(c, lerp(f.x, ui.boneAt[0], k), lerp(f.y, ui.boneAt[1], k) - Math.sin(k * Math.PI) * 60, lerp(28, 19, k) * u, -0.5 + k * 6.28);
@@ -834,14 +835,16 @@ function drawOverlay(t) {
 }
 
 // ------------------------------------------------------------------- jobs --
-// One job at a time (docs/open-world-design.md, "Jobs for five to seven year olds"). It is told three ways: said out
-// loud, shown as pictures on a card at the top, and pointed to in the town (paw prints, a marker, an arrow at the
-// screen's edge, the button to press pulsing). Done, it becomes a sticker in the sticker book and the next one starts
-// by itself. Nothing is timed and nothing can be failed.
+// One job at a time (docs/open-world-design.md, "Jobs for five to seven year olds"). Jobs are not handed out one after
+// another: people about town ask for them, each with what they want in a bubble over their head, when she comes by
+// (askers below); in between she explores. A job is told three ways: said out loud by whoever asked, shown as pictures
+// on a card at the top, and pointed to in the town (paw prints, a marker, an arrow at the screen's edge, the button to
+// press pulsing). Done, it becomes a sticker in the sticker book. Nothing is timed and nothing can be failed.
 // What the game itself says (a job's own words are in its file). Each line is a clip made by tools/voice.py: run it
 // after changing one.
-const SAY = { oops: 'Oops! Gently. Try again.', jobs: 'Wow! New jobs!', all: 'You did every job! You are the best dog in town!', more: 'Get more stickers first!', wait: 'Not yet!' };
-const PRAISE = ['Good girl, Lili!', 'Well done!', 'Woof! You did it!', 'Clever dog!', 'Hooray!'];
+const SAY = { oops: 'Oops! Gently. Try again.', jobs: 'Wow! New jobs!', all: 'You helped everyone in town! Hooray!', more: 'Get more stickers first!', wait: 'Not yet!' };
+// said to the child, not to the dog they play (it said good girl)
+const PRAISE = ['You did it!', 'Well done!', 'Hooray!', 'Brilliant!', 'Amazing!'];
 const picture = (m) => missions.step()?.picture || m.picture;
 const words = (m) => missions.step()?.say || m.say;
 // Is the way shown? Always in the first two levels. After that the child finds it, unless they ask (a tap on the card)
@@ -849,13 +852,13 @@ const words = (m) => missions.step()?.say || m.say;
 const guided = () => { const m = missions.job(); return !!m && (m.level <= 2 || ui.helpT > 0 || missions.quiet() > 25); };
 
 function jobStarted(m) {
-  ui.card = { m, t: 0 }; ui.cele = null; ui.banner = null; ui.helpT = 0; ui.sayT = 4.2; ui.say = m.say; ui.free = false;
+  ui.card = { m, t: 0 }; ui.cele = null; ui.banner = null; ui.helpT = 0; ui.sayT = 4.2; ui.say = m.say;
   for (const s of m.steps) prepare(s);
   A.speak(m.say); save();
 }
 function stepStarted(m, s) { ui.pip = 1; ui.sayT = 4; ui.say = s.say || m.say; A.ding(); if (s.say) A.speak(s.say); }
 function jobDone(m, first, levels) {
-  ui.card = null; ui.cele = { m, t: 0, first, levels }; ui.nextT = levels.length ? 6.4 : 3.6;
+  ui.card = null; ui.cele = { m, t: 0, first, levels }; ui.askT = 4; ui.lostT = 0;
   A.fanfare(); A.speak(m.praise || PRAISE[missions.done.size % PRAISE.length]); G.pop = 1;
   for (let i = 0; i < 30; i++) spawn({ type: 'confetti', x: dog.x, z: dog.y, y: 120, vx: (Math.random() - 0.5) * 340, vz: (Math.random() - 0.5) * 340, vy: 200 + Math.random() * 240, g: 500, drag: 1, life: 1.6, size: 9, rot: Math.random() * 6, vr: 8, color: confettiColor() });
   save();
@@ -874,11 +877,8 @@ function updateJobs(dt) {
     if (k.levels.length) { ui.banner = { level: k.levels[k.levels.length - 1], t: 0 }; A.fanfare(); A.speak(SAY.jobs); }
   }
   if (ui.banner && (ui.banner.t += dt) > 2.6) ui.banner = null;
-  if (!ui.card && !ui.free && !ui.title && (ui.nextT -= dt) <= 0) {   // the next job, or the one saved in hand
-    const m = missions.job() || missions.next();
-    if (m) missions.start(m);
-    else { ui.free = true; if (!ui.saidAll) { ui.saidAll = true; A.speak(SAY.all); } }
-  }
+  if (!ui.card && missions.job() && !ui.title) missions.start(missions.job());   // the job saved in hand, after the title
+  updateAskers(dt);
   // the button the job wants pressed pulses
   const s = guided() ? missions.step() : null, a = s && s.action, at = s && missions.target(dog, car), close = !!at && dist(at.x, at.y, dog.x, dog.y) < 330;
   btnBark.classList.toggle('hint', a === 'bark' || a === 'honk');
@@ -892,6 +892,50 @@ input.onTap = (x, y) => {
   if (!r || !ui.card || x < r[0] || x > r[0] + r[2] || y < r[1] || y > r[1] + r[3]) return false;
   ui.helpT = 14; ui.sayT = 4; ui.say = words(ui.card.m); A.initAudio(); A.yip(); A.speak(ui.say); return true;   // tapped: said again, and the way shown
 };
+
+// ---- who asks ----
+// Someone with a job for her shows it in a bubble over their head (the pictures of the job); she comes within ASK_R of
+// them on foot and they turn to her and ask: the job starts, in their voice. Each asks for their jobs in list order, a
+// job once its level is open; one done is not asked for again (the sticker book has it). While a job is in hand, or
+// just after one, nobody asks. A child who finds no one for a while (LOST, shorter before the first sticker) is shown
+// the way to the nearest asker, as to a job.
+const ASK_R = 120, LOST = 40, LOST_FIRST = 12;
+const askers = world.people.filter((o) => o.id && missions.missions.some((m) => m.from === o.id));
+const offer = (o) => missions.missions.find((m) => m.from === o.id && !missions.done.has(m.id) && missions.available(m)) || null;
+const asking = () => !missions.job() && !ui.cele && !ui.title && ui.askT <= 0;
+function updateAskers(dt) {
+  ui.askT = Math.max(0, ui.askT - dt);
+  if (!asking()) { ui.lostT = 0; return; }
+  ui.lostT += dt;
+  if (!ui.saidAll && missions.done.size === missions.missions.length) { ui.saidAll = true; A.speak(SAY.all); }
+  if (dog.state === 'drive' || dog.air) return;
+  for (const o of askers) {
+    const m = offer(o); if (!m || dist(o.x, o.y, dog.x, dog.y) > ASK_R) continue;
+    o.heading = Math.atan2(dog.y - o.y, dog.x - o.x); missions.start(m); return;
+  }
+}
+// the asker to show the way to, if she has been looking for one long enough
+function lostWay() {
+  if (!asking() || ui.lostT < (missions.done.size ? LOST : LOST_FIRST)) return null;
+  let best = null;
+  for (const o of askers) if (offer(o) && (!best || dist(o.x, o.y, dog.x, dog.y) < dist(best.x, best.y, dog.x, dog.y))) best = o;
+  return best;
+}
+function drawAskers(t) {
+  if (!asking()) return;
+  for (const o of askers) {
+    const m = offer(o); if (!m) continue;
+    const [sx, sy, k, ok] = S.project(o.x, isChild(o.look) ? 150 : 200, o.y); if (!ok) continue;
+    const s = clamp(34 * k, 20, 46), pics = m.picture.slice(0, 2), bw = s * (pics.length * 1.9 + 0.6), bh = s * 2.3;
+    const x = sx, y = sy - bh / 2 + Math.sin(t * 3 + o.seed) * s * 0.12;
+    c.save(); c.fillStyle = 'rgba(40,40,30,.18)'; c.beginPath(); c.roundRect(x - bw / 2 + 2, y - bh / 2 + 4, bw, bh, s * 0.7); c.fill();
+    c.fillStyle = '#FFFDF4'; c.strokeStyle = '#E8A93A'; c.lineWidth = Math.max(2, s * 0.12);
+    c.beginPath(); c.roundRect(x - bw / 2, y - bh / 2, bw, bh, s * 0.7); c.moveTo(x - s * 0.35, y + bh / 2 - 1); c.lineTo(x, y + bh / 2 + s * 0.55); c.lineTo(x + s * 0.35, y + bh / 2 - 1);
+    c.fill(); c.stroke(); c.fillStyle = '#FFFDF4'; c.fillRect(x - s * 0.3, y + bh / 2 - c.lineWidth * 1.5, s * 0.6, c.lineWidth * 2);
+    pics.forEach((p, i) => Art.drawIcon(c, p, x + (i - (pics.length - 1) / 2) * s * 1.9, y, s * 0.82));
+    c.restore();
+  }
+}
 
 // ---- the card ----
 // Where it sits: top middle; under the counters and the round buttons when there is no room between them.
@@ -945,8 +989,8 @@ function drawCelebration(t, w, h, u) {
 // Paw prints on the ground from her towards what the job needs, appearing one after another; near it a bouncing marker
 // over the place; out of sight, an arrow at the edge of the screen pointing the way.
 function drawTrail(t) {
-  if (!guided() || dog.state === 'hop') return;
-  const at = missions.target(dog, car); if (!at) return;
+  if (dog.state === 'hop') return;
+  const at = missions.job() ? guided() && missions.target(dog, car) : lostWay(); if (!at) return;
   const from = dog.state === 'drive' ? car : dog, dx = at.x - from.x, dy = at.y - from.y, d = Math.hypot(dx, dy), ux = dx / (d || 1), uy = dy / (d || 1);
   const { w, h } = S.view;
   if (d < 180) {
@@ -1117,8 +1161,8 @@ if (at.length === 2 && at.every(Number.isFinite)) { dog.x = at[0]; dog.y = at[1]
 updateCar(0);
 if (params.has('car')) enterCar();
 // the saved stickers first (the first update would otherwise start the first job and save over them); no jobs in the studio
-if (STUDIO) ui.free = ui.saidAll = true;
-else { load(); ui.nextT = 0.8; if (!missions.job() && !missions.next()) ui.free = ui.saidAll = true; bookN.textContent = missions.done.size; }
+if (STUDIO) { ui.saidAll = true; ui.askT = Infinity; }
+else { load(); ui.saidAll = missions.done.size === missions.missions.length; bookN.textContent = missions.done.size; }
 update(0); S.snapCamera(G.focus);
 
 // ---- the title ----
@@ -1129,7 +1173,7 @@ function play() {
   if (!ui.title) return;
   ui.title = false; document.body.classList.remove('title'); title.classList.add('gone');
   setTimeout(() => title.classList.add('hidden'), 500);
-  A.initAudio(); A.music(); bark(); ui.nextT = 1.4;
+  A.initAudio(); A.music(); bark();
 }
 if (!STUDIO && !params.has('play')) {
   ui.title = true; document.body.classList.add('title'); title.classList.remove('hidden');
