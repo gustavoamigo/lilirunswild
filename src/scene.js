@@ -25,6 +25,8 @@ const _mx = new THREE.Matrix4(), _q = new THREE.Quaternion(), _s = new THREE.Vec
 // how something she carries hangs from her mouth: its middle `y` below her teeth, turned `rz` (the teddy by its head,
 // the string of sausages by one end)
 const HANG = { teddy: { y: -19.6, rz: 0 }, sausage: { y: -29, rz: Math.PI / 2 } };
+// and how it lies in a tug of war, stretched along `axis`: the teddy on its side with its head towards her
+const TUG = { teddy: { rz: -Math.PI / 2, axis: 'y' }, sausage: { rz: 0, axis: 'x' } };
 
 let dog, car;
 // Swimming: her waterline is the lake's surface, and she pushes the water as she goes (src/water.js), which makes her
@@ -294,12 +296,17 @@ export function render(G, dt) {
     if (o.kind === 'bone' && !o.carried) { e.root.position.y = o.z + 12 + Math.sin(t * 3 + o.x) * 5; e.root.rotation.y = t * 1.6 + o.x; }   // a bone to find: it turns and bobs, to be seen
     e.tip.rotation.z = -o.tip + Math.sin(t * 28) * o.wob * 0.12;
     e.spin.rotation.z = -o.roll;
-    const hang = o.carried && HANG[o.kind];
+    const hang = o.carried && HANG[o.kind], pull = !hang && o.tugged && TUG[o.kind];
     if (hang) {                                      // in her mouth: hung from between her teeth, swinging (carryAt in main.js)
       dog.bite.getWorldPosition(e.root.position);
       e.root.rotation.set(o.swingS || 0, -o.dir, o.swingF || 0, 'YXZ');
-      e.spin.position.y = hang.y; e.spin.rotation.z = hang.rz;
-    } else if (e.root.rotation.order === 'YXZ') { e.root.rotation.set(0, -o.dir, 0, 'XYZ'); e.spin.position.y = e.spin.userData.mid; }
+      e.spin.position.y = hang.y; e.spin.rotation.z = hang.rz; e.spin.scale.set(1, 1, 1); e.spin.userData.posed = true;
+    } else if (pull) {                               // in a tug of war: lying along the pull, stretched between them
+      e.root.rotation.set(0, -o.dir, 0, 'XYZ'); e.spin.position.y = 0; e.spin.rotation.z = pull.rz;
+      e.spin.scale.set(1, 1, 1); e.spin.scale[pull.axis] = o.stretch || 1; e.spin.userData.posed = true;
+    } else if (e.spin.userData.posed) {
+      e.root.rotation.set(0, -o.dir, 0, 'XYZ'); e.spin.position.y = e.spin.userData.mid; e.spin.scale.set(1, 1, 1); e.spin.userData.posed = false;
+    }
   }
   // what is left behind: broken pots and plates, spilt rubbish
   for (let i = debris.length; i < G.debris.length; i++) {

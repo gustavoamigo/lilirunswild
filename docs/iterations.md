@@ -624,3 +624,12 @@ The recognizer heard all 46 clips word for word with the new children's voice (b
 **Decision**: sounds from files start loading with the first touch (browsers allow nothing before), and play was barking before the bark had loaded. The hello bark now waits for it (`A.ready('bark')`).
 
 **Checked by script**: pressing play, the bark sound (0.37 s) starts in the same frame as her bark.
+
+**Feedback**: the tug of war can be more real: the teddy stretched between them, and actually pulling, something you keep pressing until she has more power than the girl. After she drops the teddy there is no way to pick it up again. And she could bring her toy to another child to play: they throw it and she fetches it, or they hold it and it is a tug of war. That is how you play with a dog.
+
+**Decision**:
+- **Tug won by tapping**: every tap (screen, any button, any key) is a yank; the child pulls back all the time. A bar over them, her face at one end and theirs at the other with the toy between, shows who is winning; the buttons pulse. She wins with about three taps a second in four seconds; with no taps the child wins in four and a half and keeps the toy. The pull runs across the screen, her mouth a toy's length from their hands, the toy lying along it and stretched, more on each yank.
+- **Picking up again**: the bug was the short pause before something put down can be picked up: it stopped counting once the thing settled, so it never ended. Fixed (it also kept resting things from being knocked).
+- **Playing with people**: stopping beside a child or a dog lover with a toy, they take it, then throw it over her head to fetch or hold it out for a tug.
+
+**Checked by script**: no taps for 5.5 s: the boy wins and keeps the teddy. Tapping every 0.2 s: won after 11 taps, 3.9 s; the boy sits. Put down, she picks it up again running over it. Brought to the girl at the plaza: thrown and fetched; offered and tugged. The tug looked at from both sides, at rest and on a yank: the teddy stretched between her mouth and his hands, the bar the right way round.

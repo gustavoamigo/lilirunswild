@@ -14,6 +14,7 @@ python3 tools/serve.py 8765     # then open http://localhost:8765/
 | Jump | Space | green button | A |
 | Start | any key | tap anywhere on the title | any button |
 | Bark (horn in the car) | B, Q or X | pink button (a dog barking) | X |
+| Pull in a tug of war | any key, again and again | tap again and again | any button |
 | Put down what she carries | G or C | purple button (shows while she carries something) | B |
 | In / out of the car | E, F or Enter | yellow button (shows near the car) | Y |
 | Hear the job again, and be shown the way | | tap the job card | |

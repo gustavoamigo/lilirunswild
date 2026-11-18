@@ -9,6 +9,7 @@ export const input = {
   stick: null,           // game controller: { x, y, mag } while its stick or D-pad is pushed (see gamepad.js)
   onAction: null,        // ('jump' | 'bark' | 'car')
   onTap: null,           // (x, y) => true if the overlay used the tap
+  onKey: null,           // an arrow key pressed (a pull, in a tug of war)
 };
 
 const MOVE_KEYS = {
@@ -45,7 +46,7 @@ export function initInput(canvas) {
   window.addEventListener('contextmenu', (e) => e.preventDefault());
 
   window.addEventListener('keydown', (e) => {
-    if (MOVE_KEYS[e.code]) { input.keys.add(e.code); e.preventDefault(); return; }
+    if (MOVE_KEYS[e.code]) { input.keys.add(e.code); e.preventDefault(); if (!e.repeat) input.onKey?.(); return; }
     if (e.repeat || !ACTION_KEYS[e.code]) return;
     e.preventDefault(); input.onAction?.(ACTION_KEYS[e.code]);
   });

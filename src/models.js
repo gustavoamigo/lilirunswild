@@ -555,7 +555,7 @@ export function makeDog() {
     } else if (p.poo > 0) {                              // a poo: haunches right down, tail up, still
       T.pitch = 0.42; T.hl = T.hr = 1.0; T.rh = 22; T.wh = 1; T.y = -8; T.tailUp = 1.0; T.wag = 0; T.hp = 0.2;
     } else if (p.state === 'tug') {                      // pulling a toy: braced back on her haunches, head shaking it
-      const pull = p.tug && p.tug.pulling;                // pulling hard: further back, head going faster
+      const pull = p.tug && p.tug.jerk > 0.2;             // just yanked: further back, head going faster
       T.pitch = pull ? 0.3 : 0.22; T.y = pull ? -9 : -6; T.yaw = Math.sin(t * (pull ? 20 : 16)) * 0.35; T.hp = 0.1; T.wag = 0.7; T.wagHz = 16; T.tailUp = 0.8;
     } else if (p.swim) {                                 // swimming: low in the water (what is under it is hidden by the ground), head up
       T.y = -30 + Math.sin(t * 5) * 1.5; T.pitch = 0.22; T.hp = 0.25; T.tailUp = -0.1; T.wag = 0.18; T.wagHz = 5;   // rump low, chest and head up

@@ -196,7 +196,6 @@ function bark() {
   const driving = dog.state === 'drive';
   dog.barkT = 0.26; dog.bow = 0; dog.idleT = 0;
   if (dog.carry) drop();                              // she opens her mouth to bark: whatever she carries falls
-  if (dog.state === 'tug') { const o = dog.tug.o; o.state = baseState(o); o.cool = 3; dog.state = 'idle'; dog.stT = 0; dog.tug = null; }   // and a toy she is pulling stays with them
   if (driving) A.horn(); else A.bark();
   missions.event(driving ? 'honk' : 'bark', { x: dog.x, y: dog.y });
   const hx = Math.cos(dog.heading), hy = Math.sin(dog.heading);
@@ -425,7 +424,9 @@ function updateHop(dt) {
 // a mission wants it, or barks.
 // is she up on the thing a job names (a poo on the table is on it, not beside it)? True if it is not a thing to be on.
 const onIt = (kind) => !world.platforms.some((o) => o.kind === kind) || floorAt(world, dog.x, dog.y, dog.z)[1]?.kind === kind;
-const MOUTH = 86, MOUTH_UP = 22, POO_T = 1.6, PULL_T = 1.6;   // PULL_T: seconds of pulling for a child to let go of their toy
+const MOUTH = 86, MOUTH_UP = 22, POO_T = 1.6;
+// the tug of war: where it starts (0 they win, 1 she does), how much each tap pulls, how fast they pull back (a second)
+const TUG_START = 0.4, TUG_YANK = 0.085, TUG_BACK = 0.09;
 const FIDGET_MIN = 12, FIDGET_MORE = 10, SHAKE_ODDS = 0.15;   // standing about: a bow after 12 to 22 s, now and then a shake instead
 // What she carries hangs from her mouth and swings, as her ears do: a pendulum (SWING_L long) hung from the front of
 // her mouth, pushed by the mouth's own speeding up, slowing down and turning, and jiggled by her stride. o.swingF is its
@@ -582,8 +583,9 @@ function updateProps(dt) {
     const K = KINDS[o.kind];
     if (K.find || K.dig) continue;                     // bones and heaps of earth stay where they are (updateFinds)
     o.wob = Math.max(0, o.wob - dt * 3);
+    o.cool -= dt;                                      // (counted down at rest too: it used to stop when a thing settled, and she could never pick up again what she had put down)
     if (!o.rest) {
-      o.cool -= dt; o.vz -= GRAV * dt;
+      o.vz -= GRAV * dt;
       o.x += o.vx * dt; o.y += o.vy * dt; o.z += o.vz * dt;
       const [fl] = floorAt(world, o.x, o.y, o.z);
       const sp = Math.hypot(o.vx, o.vy);
@@ -656,6 +658,20 @@ function startle(o, x, y) {
   o.to = { x: clamp(x, BOUNDS.x0 + 30, BOUNDS.x1 - 30), y: clamp(y, BOUNDS.y0 + 30, BOUNDS.y1 - 30) };
   A.yelp();
 }
+// ---- playing with people ----
+// With a toy in her mouth she stops beside a child or a dog lover, and they take it: then they throw it for her to fetch
+// (she runs after it and picks it up), or hold it out and wiggle it for a tug of war. Not someone frightened of dogs, and
+// not while a job wants the toy taken somewhere. That is how you play with a dog: she brings it, you throw it or pull.
+const TOY = { teddy: true }, PLAY_R = 100, GIVE_T = 0.5, THROW_ODDS = 0.6, OFFER_T = 8;
+function updatePlay(dt) {
+  const toy = dog.carry, still = Math.hypot(dog.vx, dog.vy) < 50;
+  if (!toy || !TOY[toy.kind] || dog.state !== 'idle' || dog.air || !still || missions.wants('bring')?.target === toy.kind) { dog.giveT = 0; return; }
+  const o = world.people.find((q) => !q.holds && q.cool <= 0 && ['stand', 'walk', 'love'].includes(q.state) && (isChild(q.look) || q.nature === 'lover') && dist(q.x, q.y, dog.x, dog.y) < PLAY_R);
+  if (!o) { dog.giveT = 0; return; }
+  if ((dog.giveT = (dog.giveT || 0) + dt) < GIVE_T) return;
+  dog.giveT = 0; dog.carry = null; Object.assign(toy, { carried: false, px: undefined, held: o, rest: true, kept: false }); o.holds = toy;
+  o.state = 'play'; o.t = 0; o.play = Math.random() < THROW_ODDS ? 'throw' : 'offer'; dog.happy = Math.max(dog.happy, 1);
+}
 function updatePeople(dt) {
   const hx = Math.cos(car.heading), hy = Math.sin(car.heading);
   // nobody stands inside anybody else (two children both coming to pet her used to crouch on the same spot)
@@ -690,24 +706,41 @@ function updatePeople(dt) {
     }
     else if (o.state === 'approach') { if (walkTo(dog.x, dog.y, 80) < 75 || o.t > 3) { o.state = 'love'; o.t = 0; A.aww(); hearts(o.x, o.y, 120); } }
     else if (o.state === 'tug') {
-      // She has hold of their toy, and it is a tug of war that the child playing has to win: steering her away from
-      // them pulls (her play growl, and she backs off a little); not pulling, they pull it back, slowly. Pulled for
-      // PULL_T in all, they let go and sit down with a bump, and the toy is in her mouth. A bark lets go of it instead.
+      // She has hold of their toy: a tug of war, won by tapping (yank). Every tap pulls her side up; they pull back all the
+      // time. Her side full, they let go and sit down with a bump, and it is in her mouth; theirs full (she stopped), she
+      // lets go and they keep it. The tug bar over them shows who is winning (drawTug), and the toy is stretched between
+      // her mouth and their hands (src/scene.js).
       face(toDog, 8);
-      const T = dog.tug, toy = o.holds, nx = (dog.x - o.x) / (dd || 1), ny = (dog.y - o.y) / (dd || 1);
-      const s = steering(dog.x, dog.y, 0), pulling = s.mag > 0 && s.x * nx + s.y * ny > 0.3;
-      T.pull = clamp(T.pull + (pulling ? dt / PULL_T : -dt / (PULL_T * 3)), 0, 1); T.idle = pulling ? 0 : T.idle + dt; T.pulling = pulling;
-      if (pulling && (T.growlT -= dt) <= 0) { T.growlT = 1.1; A.playGrowl(); }
-      const reach = 62 + 30 * T.pull + Math.sin(o.t * 16) * (pulling ? 5 : 2), k = Math.sin(o.t * 16) * 6;
-      dog.x = o.x + nx * reach; dog.y = o.y + ny * reach; dog.heading = Math.atan2(-ny, -nx); dog.vx = dog.vy = 0;
-      toy.x = (o.x + dog.x) / 2 + nx * k; toy.y = (o.y + dog.y) / 2 + ny * k; toy.z = 40;
-      if (pulling && (T.dustT -= dt) <= 0) { T.dustT = 0.15; dust(dog.x + nx * 20, dog.y + ny * 20, 1, { speed: 60 }); }
-      if (T.pull >= 1) {
-        o.holds = null; toy.held = null; toy.carried = true; dog.carry = toy; dog.tug = null; dog.state = 'idle'; dog.stT = 0;
+      const T = dog.tug, toy = o.holds, nx = T.nx, ny = 0;
+      T.jerk = Math.max(0, T.jerk - dt * 4); T.growlT -= dt;
+      if (T.win < 1) T.win = clamp(T.win - TUG_BACK * dt, 0, 1);   // (not once a tap has filled it: then she has won)
+      // her mouth (MOUTH in front of her) a toy's length from their hands, further as she wins and on each yank
+      const reach = MOUTH + 46 + 22 * T.win + 14 * T.jerk + Math.sin(o.t * 16) * 2, hands = 16;
+      const ease = 1 - Math.exp(-dt * 14);                // (she goes round to her side quickly, not in one jump)
+      dog.x = lerp(dog.x, o.x + nx * reach, ease); dog.y = lerp(dog.y, o.y + ny * reach, ease); dog.vx = dog.vy = 0;
+      dog.heading += angDiff(Math.atan2(o.y - dog.y, o.x - dog.x), dog.heading) * ease;
+      const mid = (hands + reach - MOUTH) / 2; toy.x = o.x + nx * mid; toy.y = o.y + ny * mid; toy.z = isChild(o.look) ? 62 : 76; toy.dir = Math.atan2(ny, nx);   // between their hands and her mouth
+      toy.tugged = true; toy.stretch = 1.15 + 0.12 * T.win + 0.3 * T.jerk + 0.05 * Math.sin(o.t * 16);
+      if (T.win >= 1) {
+        toy.tugged = false; o.holds = null; toy.held = null; toy.carried = true; dog.carry = toy; dog.tug = null; dog.state = 'idle'; dog.stT = 0;
         dog.vx = nx * 170; dog.vy = ny * 170; input.target = null;                    // she staggers back with it
         o.state = 'sit'; o.t = 0; o.cool = 6; o.next = 'meh'; A.oof();
         missions.event('take', { kind: toy.kind, id: toy, from: o.who, x: o.x, y: o.y });
+      } else if (T.win <= 0) {                                                       // they won: they keep it, and laugh
+        toy.tugged = false; dog.tug = null; dog.state = 'idle'; dog.stT = 0; dog.vx = -nx * 90; dog.vy = -ny * 90;
+        o.state = baseState(o); o.cool = 3; o.wave = 1.4; A.aww();
       }
+    }
+    else if (o.state === 'play') {
+      // she has brought them her toy: they throw it for her to fetch, or hold it out for a tug of war (updatePlay)
+      face(toDog, 6);
+      const toy = o.holds;
+      if (!toy) o.state = baseState(o);
+      else if (o.play === 'throw' && o.t > 0.9) {
+        const a = toDog + (Math.random() - 0.5) * 1.8, s = 300 + Math.random() * 120;   // over her head, more or less
+        o.holds = null; toy.held = null; Object.assign(toy, { rest: false, cool: 0.6, vx: Math.cos(a) * s, vy: Math.sin(a) * s, vz: 560, z: isChild(o.look) ? 60 : 85 });
+        o.state = baseState(o); o.wave = 1.4; o.cool = 2; dog.excited = 0.8; A.yip();
+      } else if (o.play === 'offer' && o.t > OFFER_T) o.state = baseState(o);       // they keep it; she can still come and tug
     }
     else if (o.state === 'love') {
       face(toDog, 6);
@@ -758,7 +791,9 @@ function updatePeople(dt) {
       } else if (o.holds && dog.state === 'idle' && sp > 40 && !dog.carry) {
         // they have a toy: she grabs it, and it is a tug of war (her play growl)
         o.state = 'tug'; o.t = 0; o.cool = 4; o.heading = toDog;
-        dog.state = 'tug'; dog.stT = Infinity; dog.tug = { o, pull: 0, idle: 0, growlT: 1.1, dustT: 0 }; dog.vx = dog.vy = 0; dog.heading = toDog + Math.PI; dog.runT = 0;
+        // the pull runs across the screen (she goes round to their side she came from): along the camera's view her head
+        // hid the toy stretched between them
+        dog.state = 'tug'; dog.stT = Infinity; dog.tug = { o, win: TUG_START, jerk: 0, growlT: 1.1, nx: dog.x >= o.x ? 1 : -1 }; dog.vx = dog.vy = 0; dog.heading = toDog + Math.PI; dog.runT = 0;
         dog.zoom = false; input.target = null;
         dog.x = o.x + nx * 62; dog.y = o.y + ny * 62;
         A.playGrowl();
@@ -820,6 +855,7 @@ function update(dt) {
   updateCar(dt);
   updateProps(dt);
   updatePeople(dt);
+  updatePlay(dt);
   carryAt(dt);
   updateFinds(dt);
   updateJobs(dt);
@@ -864,7 +900,7 @@ function drawOverlay(t) {
   ui.boneAt = [x3 + 18 * u, y + 2 * u]; ui.hudRight = x3 + 46 * u + c.measureText(G.bones).width;
   drawTrail(t);
   drawAskers(t);
-  drawPull(t);
+  drawTug(t);
   for (const f of ui.fly) {                           // a bone just found, on its way to the counter
     const k = easeInOut(clamp(f.t / 0.6, 0, 1));
     Art.drawBone(c, lerp(f.x, ui.boneAt[0], k), lerp(f.y, ui.boneAt[1], k) - Math.sin(k * Math.PI) * 60, lerp(28, 19, k) * u, -0.5 + k * 6.28);
@@ -919,25 +955,44 @@ function updateJobs(dt) {
   updateAskers(dt);
   // the button the job wants pressed pulses
   const s = guided() ? missions.step() : null, a = s && s.action, at = s && missions.target(dog, car), close = !!at && dist(at.x, at.y, dog.x, dog.y) < 330;
-  btnBark.classList.toggle('hint', a === 'bark' || a === 'honk');
-  btnJump.classList.toggle('hint', a === 'jump' || (close && (a === 'hop' || a === 'splash' || a === 'poo' || (a === 'knock' && s.target === 'apple'))));
+  btnBark.classList.toggle('hint', a === 'bark' || a === 'honk' || !!dog.tug);   // in a tug, the buttons pulse: press, press!
+  btnJump.classList.toggle('hint', !!dog.tug || a === 'jump' || (close && (a === 'hop' || a === 'splash' || a === 'poo' || (a === 'knock' && s.target === 'apple'))));
   if ((ui.tidyT -= dt) <= 0) { ui.tidyT = 2; tidyFar(); }
   if ((ui.saveT -= dt) <= 0) { ui.saveT = 10; save(); }
 }
 input.onTap = (x, y) => {
   if (ui.book) { tapBook(x, y); return true; }
+  if (dog.tug) { A.initAudio(); yank(); return true; }       // in a tug of war every tap is a pull
+
   const r = ui.rect;
   if (!r || !ui.card || x < r[0] || x > r[0] + r[2] || y < r[1] || y > r[1] + r[3]) return false;
   ui.helpT = 14; ui.sayT = 4; ui.say = words(ui.card.m); A.initAudio(); A.yip(); A.speak(ui.say); return true;   // tapped: said again, and the way shown
 };
 
-// ---- the tug of war: which way to pull ----
-// Not pulling for a moment, an arrow on the ground behind her points away from whoever holds the toy.
-function drawPull(t) {
-  const T = dog.tug; if (!T || T.idle < 0.8) return;
-  const nx = (dog.x - T.o.x) / (dist(dog.x, dog.y, T.o.x, T.o.y) || 1), ny = (dog.y - T.o.y) / (dist(dog.x, dog.y, T.o.x, T.o.y) || 1), d = 100 + Math.sin(t * 6) * 10;
-  const [ax, ay, k, ok] = S.project(dog.x + nx * d, 6, dog.y + ny * d), [bx, by] = S.project(dog.x + nx * (d + 40), 6, dog.y + ny * (d + 40));
-  if (ok) Art.drawArrow(c, ax, ay, Math.atan2(by - ay, bx - ax), Math.max(26, 44 * k));
+// ---- the tug of war ----
+// A tap, a button or a key: she yanks it, and her side of the tug bar goes up.
+function yank() {
+  const T = dog.tug; if (!T) return;
+  T.win = Math.min(1, T.win + TUG_YANK); T.jerk = 1;
+  dust(dog.x - Math.cos(dog.heading) * 20, dog.y - Math.sin(dog.heading) * 20, 2, { speed: 90 });
+  if (T.growlT <= 0) { T.growlT = 1.1; A.playGrowl(); }
+}
+// The tug bar, over the two of them: her face at her end, theirs at theirs, and the toy between, where the pulling is.
+// Her side fills pink as she wins. No words: the children cannot read.
+function drawTug(t) {
+  const T = dog.tug; if (!T) return;
+  const o = T.o, [dx, dy, k, ok] = S.project(dog.x, 150, dog.y), [px, py, , ok2] = S.project(o.x, isChild(o.look) ? 175 : 215, o.y); if (!ok || !ok2) return;
+  const u = clamp(k * 1.4, 0.75, 1.3), w = 170 * u, hgt = 24 * u, cx = (dx + px) / 2, cy = Math.min(dy, py) - 26 * u, left = dx < px;
+  const at = left ? cx - w / 2 + w * T.win : cx + w / 2 - w * T.win;
+  c.save(); c.fillStyle = 'rgba(40,40,30,.2)'; c.beginPath(); c.roundRect(cx - w / 2 + 2, cy - hgt / 2 + 3, w, hgt, hgt / 2); c.fill();
+  c.fillStyle = '#BFE3F7'; c.beginPath(); c.roundRect(cx - w / 2, cy - hgt / 2, w, hgt, hgt / 2); c.fill();
+  c.fillStyle = '#FF7FA0'; c.beginPath(); c.roundRect(left ? cx - w / 2 : at, cy - hgt / 2, left ? at - (cx - w / 2) : cx + w / 2 - at, hgt, hgt / 2); c.fill();
+  c.strokeStyle = '#fff'; c.lineWidth = 3 * u; c.beginPath(); c.roundRect(cx - w / 2, cy - hgt / 2, w, hgt, hgt / 2); c.stroke();
+  const face = 22 * u * (1 + 0.15 * T.jerk);
+  Art.drawIcon(c, 'lili', left ? cx - w / 2 - 6 * u : cx + w / 2 + 6 * u, cy, face);
+  Art.drawIcon(c, 'friend', left ? cx + w / 2 + 6 * u : cx - w / 2 - 6 * u, cy, 22 * u);
+  Art.drawIcon(c, o.holds ? o.holds.kind : 'teddy', at, cy + Math.sin(t * 16) * 2 * u, 18 * u);
+  c.restore();
 }
 
 // ---- who asks ----
@@ -1089,7 +1144,8 @@ function updateFinds() {
 // something to knock over. What she took goes back to whoever had it.
 const TIDY = ['cone', 'bin', 'box', 'pot', 'plate', 'apple', 'lamp'], lampPosts = world.tiles.flatMap((t) => t.things.lamps);
 function giveBack(o) {
-  const p = o.owner; if (!p || o.held) return;
+  const p = o.owner; if (!p || o.held === p) return;
+  if (o.held) { o.held.holds = null; o.held = null; }  // someone else is playing with it
   if (dog.carry === o) dog.carry = null;
   Object.assign(o, { carried: false, kept: false, held: p, rest: true, vx: 0, vy: 0, vz: 0, tip: 0, roll: 0 }); p.holds = o;
 }
@@ -1182,9 +1238,10 @@ function tapBook(x, y) {
 function resize() { S.resize(); hud.width = Math.round(S.view.w * S.view.dpr); hud.height = Math.round(S.view.h * S.view.dpr); }
 
 // ---- wiring ----
-function act(a) { A.initAudio(); if (ui.title) { play(); return; } if (ui.book) return; if (a === 'jump') jump(); else if (a === 'bark') bark(); else if (a === 'drop') { if (dog.carry) drop(); } else carAction(); }
+function act(a) { A.initAudio(); if (ui.title) { play(); return; } if (ui.book) return; if (dog.tug) { yank(); return; } if (a === 'jump') jump(); else if (a === 'bark') bark(); else if (a === 'drop') { if (dog.carry) drop(); } else carAction(); }
 G.api = { play, renderMusic: A.renderMusic, jump, bark, car: carAction, knock, smash: smashProp, enterCar, leaveCar, flyAway, openBook, closeBook, tidy, save, spoken: A.spoken };
 input.onAction = act;
+input.onKey = () => { if (dog.tug) yank(); };   // and so is every arrow key
 const btnDrop = document.getElementById('btn-drop'), btnCar = document.getElementById('btn-car'), btnMute = document.getElementById('btn-mute'), btnBook = document.getElementById('btn-book'), bookN = document.getElementById('book-n');
 const btnBark = document.getElementById('btn-bark'), btnJump = document.getElementById('btn-jump'), actions = document.getElementById('actions'), keysHelp = document.getElementById('keys');
 for (const [id, a] of [['btn-jump', 'jump'], ['btn-bark', 'bark'], ['btn-car', 'car'], ['btn-drop', 'drop']]) {
