@@ -13,7 +13,7 @@ python3 tools/serve.py 8765     # then open http://localhost:8765/
 | Run | arrows / WASD | tap or hold where she should go | stick / D-pad |
 | Jump | Space | green button | A |
 | Start | any key | tap anywhere on the title | any button |
-| Bark (horn in the car) | B, Q or X | pink WOOF! button | X |
+| Bark (horn in the car) | B, Q or X | pink button (a dog barking) | X |
 | In / out of the car | E, F or Enter | yellow button (shows near the car) | Y |
 | Hear the job again, and be shown the way | | tap the job card | |
 | Sticker book | | star button | |

@@ -594,3 +594,9 @@ Each iteration: what was built → what to test → feedback received → what t
 
 **Checked by script**: an old save with "hello-three" in hand opens, plays, and 4 s later has no job and has said nothing; the stickers are kept.
 The recognizer heard all 46 clips word for word with the new children's voice (but "Hee hee" written "Hehe").
+
+**Feedback**: the WOOF! bubble is not good: an icon with text in it is not an icon, and children of 5 to 7 in Denmark do not read. It should be a dog barking.
+
+**Decision**: the bark button is a picture of a dog's head barking, in profile: round head, floppy ear, mouth open, three shout lines. Not arcs (they made the old loudspeaker read as the sound switch). From now on every button and prompt has to work as a picture alone; the spoken lines carry the words.
+
+**Checked by script**: drawn large and at both button sizes beside the jump button (looked at), then in the game at 1100×700 and 390×844.
