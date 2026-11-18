@@ -5,7 +5,7 @@ src/main.js). Each becomes sounds/voice/<its words>.mp3, said by Kokoro (a speec
 set up in ~/lili-voice), and sounds/voice/lines.json lists the file of each line. Clips of lines no longer said are
 removed. Run it again after changing or adding a line.
 
-  ~/lili-voice/.venv/bin/python tools/voice.py [--voice=af_heart] [--speed=0.9] [--out=DIR] [--only=N] [--check]
+  ~/lili-voice/.venv/bin/python tools/voice.py [--voice=af_bella] [--speed=0.9] [--out=DIR] [--only=N] [--check]
 
 --out=DIR writes somewhere else (to compare voices); --only=N makes the first N lines only.
 --check does not make anything: a speech recognizer writes down what each clip says and the lines that differ from
@@ -102,7 +102,7 @@ def main():
   only = arg('only')
   if only: todo = todo[:int(only)]
   if '--check' in sys.argv: check(out, todo)
-  else: make(out, todo, arg('voice', 'af_heart'), float(arg('speed', '0.9')))
+  else: make(out, todo, arg('voice', 'af_bella'), float(arg('speed', '0.9')))
 
 
 if __name__ == '__main__':

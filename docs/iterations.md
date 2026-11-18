@@ -561,3 +561,9 @@ Each iteration: what was built → what to test → feedback received → what t
 - In the browser: nothing is said before the first key; then the first job's line; after the job, the praise and the next job's line; a tap on the card says it again; muted, a tap says nothing; no errors.
 
 **Not checked**: how it sounds. I cannot hear it, and the check only says the words are there. Loudness against the barks and the car; on a phone or tablet.
+
+**Feedback**: af_bella is really good.
+
+**Decision**: `af_bella` is the voice; every clip was made again with it (`tools/voice.py`, its default now).
+
+**Checked by script**: the speech recognizer heard 45 of the 47 clips word for word. "Bark! Woof, woof!" as before ("bark with wuss"), and "Say hello! Go to a friend and stand still." heard without the "a" (with `af_heart` it was heard whole). **Not checked**: how either sounds; that needs ears.
