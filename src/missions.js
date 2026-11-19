@@ -51,7 +51,7 @@ const PLACE = { go: 1, drive: 1, poo: 1 };
 
 export function makeRunner(missions, world, hooks = {}) {
   const done = new Set(), seen = new Set(), lamps = (world.tiles || []).flatMap((t) => t.things.lamps);
-  let job = null, at = 0, n = 0, quiet = 0;
+  let job = null, at = 0, n = 0;
   const spots = (tag) => world.spots.filter((s) => s.tag === tag);
   const nearSpot = (tag, x, y, r) => spots(tag).some((s) => Math.hypot(s.x - x, s.y - y) < r);
   const unlocked = (level) => done.size >= (LEVEL_AT[level] ?? 0);
@@ -70,7 +70,7 @@ export function makeRunner(missions, world, hooks = {}) {
   };
   const advance = () => {
     const m = job, s = step();
-    n++; quiet = 0;
+    n++;
     if (n < (s.count || 1)) { hooks.progress?.(m, s, n); return; }
     n = 0; seen.clear(); at++;
     if (at < m.steps.length) { hooks.step?.(m, m.steps[at]); return; }
@@ -85,13 +85,12 @@ export function makeRunner(missions, world, hooks = {}) {
     step,
     // how far the step in hand has got: which step, how many times done, of how many
     progress: () => ({ i: at, n, count: step()?.count || 1 }),
-    quiet: () => quiet,
     levels: () => [...new Set(missions.map((m) => m.level))].sort((a, b) => a - b),
     unlocked,
     available,
     missing: (level) => Math.max(0, (LEVEL_AT[level] ?? 0) - done.size),
     // take a job in hand (from the start)
-    start(m) { job = m; at = 0; n = 0; seen.clear(); quiet = 0; hooks.start?.(m); },
+    start(m) { job = m; at = 0; n = 0; seen.clear(); hooks.start?.(m); },
     stop() { job = null; },
     // the step in hand, if it is this action: what the game may offer to do (a poo on the table, dropping what she
     // carries at home)
@@ -102,7 +101,7 @@ export function makeRunner(missions, world, hooks = {}) {
     // counts once; from: who a thing was taken from.
     event(type, d = {}) {
       if (!job) return;
-      if (job.careful === type && (n || at)) { n = 0; at = 0; seen.clear(); quiet = 0; hooks.oops?.(job); return; }
+      if (job.careful === type && (n || at)) { n = 0; at = 0; seen.clear(); hooks.oops?.(job); return; }
       if (!fits(step(), type, d)) return;
       if (d.id) seen.add(d.id);
       advance();
@@ -110,7 +109,6 @@ export function makeRunner(missions, world, hooks = {}) {
     // steps that are about where she is: go somewhere on foot, drive somewhere
     update(dt, dog, car) {
       const s = step(); if (!s) return;
-      quiet += dt;
       if (s.action === 'go' && dog.state !== 'drive' && nearSpot(s.target, dog.x, dog.y, NEAR.go)) advance();
       else if (s.action === 'drive' && dog.state === 'drive' && nearSpot(s.target, car.x, car.y, NEAR.drive)) advance();
     },

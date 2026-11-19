@@ -58,7 +58,7 @@ const missions = makeRunner(jobs, world, {
   oops: () => { ui.oops = 1; A.oops(); A.speak(SAY.oops); },
   done: (m, first, levels) => jobDone(m, first, levels),
 });
-const ui = { card: null, cele: null, banner: null, askT: 0, lostT: 0, book: false, helpT: 0, sayT: 0, pip: 0, oops: 0, bonePop: 0, fly: [], saidAll: false, tidyT: 0, saveT: 10, rect: null, boneAt: [0, 0] };
+const ui = { card: null, cele: null, banner: null, askT: 0, lostT: 0, book: false, sayT: 0, pip: 0, oops: 0, bonePop: 0, fly: [], saidAll: false, tidyT: 0, saveT: 10, rect: null, boneAt: [0, 0] };
 const G = { t: 0, mess: 0, birds: 0, bones: 0, pop: 0, ui, missions, dog, car, world, props: world.props, people: world.people, flocks: world.flocks, debris: [], focus: { x: dog.x, y: dog.y, vx: 0, vy: 0, zoom: 1 }, input };
 window.__G = G;
 for (const o of world.people) o.who = isChild(o.look) ? 'child' : 'adult';
@@ -937,12 +937,9 @@ const SAY = { oops: 'Oops! Gently. Try again.', jobs: 'Wow! New jobs!', all: 'Yo
 const PRAISE = ['You did it!', 'Well done!', 'Hooray!', 'Brilliant!', 'Amazing!'];
 const picture = (m) => missions.step()?.picture || m.picture;
 const words = (m) => missions.step()?.say || m.say;
-// Is the way shown? Always in the first two levels. After that the child finds it, unless they ask (a tap on the card)
-// or have got nowhere for a while.
-const guided = () => { const m = missions.job(); return !!m && (m.level <= 2 || ui.helpT > 0 || missions.quiet() > 25); };
 
 function jobStarted(m) {
-  ui.card = { m, t: 0 }; ui.cele = null; ui.banner = null; ui.helpT = 0; ui.sayT = 4.2; ui.say = m.say;
+  ui.card = { m, t: 0 }; ui.cele = null; ui.banner = null; ui.sayT = 4.2; ui.say = m.say;
   for (const s of m.steps) prepare(s);
   A.speak(m.say); save();
 }
@@ -955,7 +952,7 @@ function jobDone(m, first, levels) {
 }
 function updateJobs(dt) {
   missions.update(dt, dog, car);
-  ui.helpT = Math.max(0, ui.helpT - dt); ui.sayT = Math.max(0, ui.sayT - dt); ui.pip = Math.max(0, ui.pip - dt * 2.5);
+  ui.sayT = Math.max(0, ui.sayT - dt); ui.pip = Math.max(0, ui.pip - dt * 2.5);
   ui.oops = Math.max(0, ui.oops - dt * 1.6); ui.bonePop = Math.max(0, ui.bonePop - dt * 3);
   if (ui.card) ui.card.t += dt;
   for (const f of ui.fly) f.t += dt;
@@ -969,7 +966,7 @@ function updateJobs(dt) {
   if (ui.banner && (ui.banner.t += dt) > 2.6) ui.banner = null;
   updateAskers(dt);
   // the button the job wants pressed pulses
-  const s = guided() ? missions.step() : null, a = s && s.action, at = s && missions.target(dog, car), close = !!at && dist(at.x, at.y, dog.x, dog.y) < 330;
+  const s = missions.step(), a = s && s.action, at = s && missions.target(dog, car), close = !!at && dist(at.x, at.y, dog.x, dog.y) < 330;
   btnBark.classList.toggle('hint', a === 'bark' || a === 'honk' || !!dog.tug);   // in a tug, the buttons pulse: press, press!
   btnJump.classList.toggle('hint', !!dog.tug || a === 'jump' || (close && (a === 'hop' || a === 'splash' || a === 'poo' || (a === 'knock' && s.target === 'apple'))));
   if ((ui.tidyT -= dt) <= 0) { ui.tidyT = 2; tidyFar(); }
@@ -981,7 +978,7 @@ input.onTap = (x, y) => {
 
   const r = ui.rect;
   if (!r || !ui.card || x < r[0] || x > r[0] + r[2] || y < r[1] || y > r[1] + r[3]) return false;
-  ui.helpT = 14; ui.sayT = 4; ui.say = words(ui.card.m); A.initAudio(); A.yip(); A.speak(ui.say); return true;   // tapped: said again, and the way shown
+  ui.sayT = 4; ui.say = words(ui.card.m); A.initAudio(); A.yip(); A.speak(ui.say); return true;   // tapped: said again, and the way shown
 };
 
 // ---- the tug of war ----
@@ -1083,7 +1080,7 @@ function drawJob(t, w, h, u) {
   const pips = pr.count > 1 ? [pr.n, pr.count] : steps > 1 ? [pr.i, steps] : null;
   Art.drawPictures(c, picture(m), 0, pips ? -11 * u : 0, b.w - 40 * u, (pips ? 70 : 90) * u);
   if (pips) Art.drawPips(c, 0, b.h / 2 - 16 * u, Math.min(7 * u, (b.w - 30 * u) / (pips[1] * 2.7)), pips[0], pips[1], ui.pip);
-  Art.drawSpeaker(c, b.w / 2 - 16 * u, -b.h / 2 + 16 * u, 9 * u, guided() ? 0 : 0.5 + 0.5 * Math.sin(t * 5));
+  Art.drawSpeaker(c, b.w / 2 - 16 * u, -b.h / 2 + 16 * u, 9 * u, 0);
   c.restore();
   ui.rect = [cx - b.w * sc / 2, cy - b.h * sc / 2, b.w * sc, b.h * sc];
   const a = Math.min(1, k.t * 3, ui.sayT * 2);         // the words under it, while it is new or just tapped
@@ -1118,7 +1115,8 @@ function drawCelebration(t, w, h, u) {
 // the arrow at the screen's edge it replaced looked messy and confused (owner, 2026-11-19).
 function wayTo() {
   if (dog.state === 'hop' || ui.title) return null;
-  const at = missions.job() ? guided() && missions.target(dog, car) : lostWay(); if (!at) return null;
+  // the way is shown at every level (it was hidden from level 3 unless the card was tapped: children do not know to)
+  const at = missions.job() ? missions.target(dog, car) : lostWay(); if (!at) return null;
   const from = dog.state === 'drive' ? car : dog;
   return { x0: from.x, y0: from.y, x1: at.x, y1: at.y, big: dog.state === 'drive' };
 }

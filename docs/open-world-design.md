@@ -86,7 +86,7 @@ Jobs used to come one after another, a moment after the last (2026-11-17), and t
 - **One card**, top middle: the job as two or three big pictures (who or how, then what: `Lili` + `fast`, `car` + `school`, `sausages` + `home`). A job that wants something several times shows pips that fill; a job of several steps shows a pip per step, and the pictures change with the step.
 - **Told three ways.** Said out loud when it starts (and each new step). Shown in pictures on the card. Shown in the town, on the ground: orange chevrons from her feet towards the nearest thing it needs, a glow running along them the way to go, and a pulsing ring round it; the button to press (bark, jump) pulses.
 - **New job**: the card bounces in at its place at the top and pulses for a moment, its words under it. The game does not stop. (It used to come up big in the middle first, and hid Lili and whoever had just asked her, right when the job began beside them. Anything shown over the town stays high on the screen for the same reason: the sticker when a job is done, the banner when a level opens.)
-- **Tap the card**: it is said again, the words show, and the way is shown for a while. This is the one "help" the child needs to know, and the loudspeaker on the card hints at it.
+- **Tap the card**: it is said again and the words show. The loudspeaker on the card hints at it.
 - **Done**: a fanfare, confetti, praise, and the job turns into a sticker that flies into the sticker book. Then she is free to explore until she meets the next asker. A child never has to open a menu or read to keep playing.
 - **Never fails, never timed.** A job stays until it is done, or another is picked from the book. One late job (`five-friends`) has a rule, be gentle: scaring somebody empties its pips with a soft "oops" and it carries on.
 
@@ -98,10 +98,10 @@ Jobs come in four levels. A level opens when enough stickers are earned (2, 7, 1
 |---|---|---|
 | 1 | one thing: find a bone, say hello, chase birds | shown |
 | 2 | one skill where *how* matters, or a count of three: smash a pot (needs a gallop), drive to school, poo on the table (needs a jump up), swim then shake, three cones, three bones, three hellos | shown |
-| 3 | two steps, or a thing that needs working out: take the teddy and bring it home, sausages from the butcher, lamp posts with the car, apples off the market stall (needs a jump), a jump into the lake, three pots | not shown: tap the card to ask, or it shows after 25 seconds of getting nowhere |
-| 4 | three steps, long hunts, a rule: a drive round three places, ten bones, five friends without scaring anybody, sausages to the picnic table, a big mess of three kinds | as level 3 |
+| 3 | two steps, or a thing that needs working out: take the teddy and bring it home, sausages from the butcher, lamp posts with the car, apples off the market stall (needs a jump), a jump into the lake, three pots | shown |
+| 4 | three steps, long hunts, a rule: a drive round three places, ten bones, five friends without scaring anybody, sausages to the picnic table, a big mess of three kinds | shown |
 
-So the help is taken away as the child learns the town, and comes back by itself when they are lost.
+The way is shown at every level (2026-11-19). It used to be hidden from level 3, shown only when the card was tapped or after 25 seconds of getting nowhere; but children do not know to tap the card, and a job without a way looked broken (the teddy on its way home). The levels get harder by what they ask, not by hiding the way.
 
 ### The sticker book
 

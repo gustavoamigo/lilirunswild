@@ -761,3 +761,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: the build left out the raw recordings folder (`sounds/lili/`) by a test that also matched the growls' names (`sounds/lili-growl-…`). It now leaves out that folder only.
 
 **Checked by script**: every sound in `sounds/` is in `dist/sounds/`, the raw folder is not; the growls are found on the published site.
+
+**Feedback**: bringing the teddy home, the way is not shown.
+
+**Decision**: from level 3 the way was hidden on purpose (shown only after a tap on the card or 25 s with no progress), and the teddy is level 3; children do not know to tap the card, so it looked broken. The way is now shown at every level; the levels get harder by what they ask.
+
+**Checked by script**: the teddy job (level 3): the way to the boy at the start, and with the teddy in her mouth the chevrons lead to the basket at home (looked at).
