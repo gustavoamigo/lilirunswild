@@ -82,7 +82,7 @@ export const STEP = 14;      // how far below a top the feet may be and still co
 
 // What can be knocked about. `tough`: below this speed he only shoves it; `fly`/`pop`: how far and how
 // high it goes; `mess`: counts on the mess counter the first time; `carry`: she can pick it up in her mouth; `find`:
-// picked up for good by running over it (a bone); `dig`: something is buried under it (a mound of earth).
+// picked up for good by running over it (a bone).
 export const KINDS = {
   cone:  { r: 20, h: 46, tough: 120, fly: 1.1, pop: 260, drag: 2.2, tips: true, mess: true },
   bin:   { r: 30, h: 72, tough: 460, fly: 0.6, pop: 130, drag: 3.2, tips: true, spills: true, mess: true },
@@ -96,7 +96,6 @@ export const KINDS = {
   frisbee: { r: 16, h: 5, tough: 0, fly: 1.3, pop: 200, drag: 2.6, carry: true, glide: true },   // glide: comes down slowly
   apple: { r: 8, h: 14, tough: 0, fly: 1.4, pop: 240, drag: 1.0, rolls: true, mess: true },
   bone: { r: 16, h: 12, find: true },
-  mound: { r: 30, h: 12, dig: true },
 };
 
 // how big each kind of fixture is (its radius as an obstacle), and the shops' colours: walls, roof, awning stripes

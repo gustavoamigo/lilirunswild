@@ -19,13 +19,11 @@ gulls
 steal-the-teddy
 sausage
 lamp-posts
-dig-a-bone
 apples
 big-splash
 smash-three-pots
 pond-splash
 frisbee-five
-woods-treasure
 park-tour
 beach-bones
 town-tour
@@ -33,4 +31,3 @@ ten-bones
 five-friends
 picnic
 big-mess
-buried-treasure

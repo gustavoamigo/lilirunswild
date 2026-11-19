@@ -4,5 +4,4 @@ export default {
   flowers: 10,
   trees: [[100, 120], [300, 290]],
   birds: [[270, 120]],
-  props: [['mound', 190, 210]],
 };

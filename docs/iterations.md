@@ -733,3 +733,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: profiled the start. Half a second went on finding which tile a point is on by looking through every tile (the sea's shore map asks half a million times; the beach and park made the map much bigger), now a grid lookup; half a second on building the same shapes again for every bone, heap, bird and person, now built once and shared.
 
 **Checked by script**: the first frame in headless Chromium 7.1 s → 3.5 s (most of the rest is its software renderer); four places on the beach looked at, unchanged. **Not checked**: the start on the iPad.
+
+**Feedback** (with a picture of a heap on grass): the bone stuffed in poo is still there?
+
+**Decision**: all heaps are gone, not only those on sand: however they were coloured they looked like a bone in a pile of poo. Digging and its three jobs (dig up a bone, the treasure in the woods, three buried bones) went with them: 31 jobs.
+
+**Checked by script**: the game loads with no heaps and 31 jobs; every job line has its clip; the woods run without errors.

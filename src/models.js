@@ -1101,17 +1101,6 @@ export function makeProp(kind) {
     blob('#B5793F', 2, -9, 3.5, 3, 2.6, 2.8), blob('#B5793F', 2, -9, -3.5, 3, 2.6, 2.8)]; }
   else if (kind === 'bone') { mid = 7; parts = [   // a bone: a shaft and two knuckles at each end
     cyl('#FFFFFF', 0, 0, 0, 4, 26, [0, 0, Math.PI / 2]), blob('#FFFFFF', -14, 0, 4, 5.5), blob('#FFFFFF', -14, 0, -4, 5.5), blob('#FFFFFF', 14, 0, 4, 5.5), blob('#FFFFFF', 14, 0, -4, 5.5)]; }
-  else if (kind === 'mound') {
-    // A heap of dug earth with clods thrown round it and a bone sticking out of the top. Low and wide, lighter and warmer
-    // than a poo, which it looked like when dark brown. There are none on sand: a bone stuck in sand looked silly.
-    const [a, b, d] = ['#A77B52', '#8E6542', '#BC9064'];
-    parts = [blob(a, 0, 2, 0, 31, 11, 27), blob(b, -12, 6, 8, 13, 7, 11), blob(d, 12, 5, -7, 12, 6, 11), blob(b, 4, 8, 4, 10, 5, 9),
-      ...[0, 1, 2, 3, 4, 5].map((i) => blob(i % 2 ? b : a, Math.cos(i * 1.1 + 0.4) * (36 + (i % 3) * 5), 2, Math.sin(i * 1.1 + 0.4) * (32 + (i % 2) * 6), 4 + (i % 3), 2.5, 4)),
-      cyl('#FFFFFF', 6, 17, -2, 3, 20, [0, 0, 0.5]), blob('#FFFFFF', -0.5, 25, 1, 4.5), blob('#FFFFFF', 2.5, 26.5, -5, 4.5)];
-  }
-  else if (kind === 'sausage') { mid = 7; parts = [   // a string of sausages
-    blob('#D9705A', -17, 0, 0, 9, 5.5, 5.5), blob('#D9705A', 0, 0, 0, 9, 5.5, 5.5), blob('#D9705A', 17, 0, 0, 9, 5.5, 5.5),
-    blob('#B5503E', -8.5, 0, 0, 2), blob('#B5503E', 8.5, 0, 0, 2), blob('#B5503E', -26, 0, 0, 2), blob('#B5503E', 26, 0, 0, 2)]; }
   else if (kind === 'sandcastle') parts = [   // a sandcastle: a mound, a keep with battlements, two towers, a little red flag
     cyl('#E3C27E', 0, 6, 0, 26, 12, undefined, 30), cyl('#E9CF8E', 0, 19, 0, 15, 14), ...[0, 1, 2, 3].map((i) => box('#E9CF8E', Math.cos(i * 1.57) * 12, 28, Math.sin(i * 1.57) * 12, 6, 5, 6)),
     cyl('#E9CF8E', -19, 16, 6, 6, 20), cyl('#E9CF8E', 18, 15, -7, 6, 18), cyl('#8A6A4A', 0, 36, 0, 0.8, 16), box('#E2453C', 4, 41, 0, 8, 5, 0.8)];

@@ -353,19 +353,6 @@ function updateDog(dt) {
   // ---- carrying something to where a mission wants it: she drops it there once she stands still ----
   if (still && p.carry && missions.wants('bring')?.target === p.carry.kind && missions.near(p.x, p.y)) { p.dropT = (p.dropT || 0) + dt; if (p.dropT > 0.6) drop(); }
   else p.dropT = 0;
-  // ---- standing on a heap of earth: she digs, earth flying, and up comes a bone ----
-  const mound = still && !(p.poo > 0) && world.props.find((o) => o.kind === 'mound' && !o.gone && dist(o.x, o.y, p.x, p.y) < 62);
-  if (mound) {
-    p.digT = (p.digT || 0) + dt; p.idleT = 0;
-    if (p.digT > 0.3) {
-      p.bow = Math.max(p.bow, 0.25); p.digN = (p.digN || 0) - dt;
-      if (p.digN <= 0) { p.digN = 0.14; A.dig(); dust(p.x + Math.cos(p.heading) * 34, p.y + Math.sin(p.heading) * 34, 3, { speed: 170, color: '#9A6A46', size: 7 }); }
-    }
-    if (p.digT > 1.7) {
-      p.digT = 0; mound.gone = true; mound.back = G.t + BONE_BACK * 1.5;
-      missions.event('dig', { kind: 'mound', id: mound, x: p.x, y: p.y }); gotBone(mound);
-    }
-  } else p.digT = 0;
 
   // ---- nothing to do? Now and then she asks for a game (a play bow), and once in a long while has a shake. A bow or a
   // shake every 4.5 s in turn was far too often: she seemed to do nothing else. ----
@@ -581,7 +568,7 @@ function updateProps(dt) {
   for (const o of world.props) {
     if (o.gone || o.held || o.carried) continue;          // in someone's arms or her mouth: they place it
     const K = KINDS[o.kind];
-    if (K.find || K.dig) continue;                     // bones and heaps of earth stay where they are (updateFinds)
+    if (K.find) continue;                              // bones stay where they are (updateFinds)
     o.wob = Math.max(0, o.wob - dt * 3);
     o.cool -= dt;                                      // (counted down at rest too: it used to stop when a thing settled, and she could never pick up again what she had put down)
     if (!o.rest) {
@@ -1148,7 +1135,7 @@ function gotBone(o) {
 function updateFinds() {
   const me = dog.state === 'drive' ? car : dog, reach = dog.state === 'drive' ? 95 : 54;
   for (const o of world.props) {
-    const K = KINDS[o.kind]; if (!K.find && !K.dig) continue;
+    const K = KINDS[o.kind]; if (!K.find) continue;
     if (o.gone) { if (G.t > o.back && dist(o.x, o.y, dog.x, dog.y) > FAR) o.gone = false; continue; }
     if (K.find && dog.state !== 'hop' && dist(o.x, o.y, me.x, me.y) < reach && dog.z < 60) { o.gone = true; o.back = G.t + BONE_BACK; gotBone(o); }
   }

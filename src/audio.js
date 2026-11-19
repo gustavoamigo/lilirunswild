@@ -192,8 +192,6 @@ export function speak(text) {
 }
 export function fanfare() { [523, 659, 784, 1047].forEach((f, i) => tone(f, i * 0.11, i === 3 ? 0.5 : 0.16, { type: 'triangle', vol: 0.16, attack: 0.01 })); tone(1319, 0.44, 0.45, { type: 'sine', vol: 0.08, attack: 0.02 }); }
 export function chime() { tone(880, 0, 0.12, { type: 'sine', vol: 0.14 }); tone(1320, 0.08, 0.22, { type: 'sine', vol: 0.12 }); }
-export function ding() { tone(660, 0, 0.1, { type: 'triangle', vol: 0.13 }); tone(990, 0.07, 0.18, { type: 'triangle', vol: 0.11 }); }
-export function dig() { noise(0, 0.11, { type: 'bandpass', freq: 700, to: 320, q: 0.8, vol: 0.16 }); }
 export function oops() { tone(392, 0, 0.18, { type: 'triangle', to: 330, vol: 0.13 }); tone(294, 0.16, 0.3, { type: 'triangle', to: 247, vol: 0.12 }); }
 export function pageTurn() { noise(0, 0.14, { type: 'highpass', freq: 1800, to: 3200, vol: 0.07 }); }
 

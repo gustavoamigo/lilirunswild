@@ -64,7 +64,7 @@ See *Design rules* in `CLAUDE.md`: not violent, he is a dog, the camera never tu
 
 Jobs for children of 5 to 7 (`docs/open-world-design.md`, *Jobs for five to seven year olds*): asked for by people she meets while exploring (a bubble over their head shows what they want), one at a time, said out loud, shown as big pictures on one card and pointed to in the town; done, it becomes a sticker in a sticker book and the next starts by itself. Nothing is timed and nothing fails. 26 jobs in four levels that get trickier: first one button or one run, then a skill or a count of three, then two steps with the way no longer shown, then three steps, long hunts and one rule (be gentle). Any job can be picked or played again from the book.
 
-Things to do without a job: bones to find all over town and a counter for them, heaps of earth to dig up, more people to meet (a butcher with sausages to steal). What she breaks is put back once she is far away.
+Things to do without a job: bones to find all over town and a counter for them, more people to meet (a butcher with sausages to steal). What she breaks is put back once she is far away.
 
 ## Where it is going
 

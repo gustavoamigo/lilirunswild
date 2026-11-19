@@ -98,8 +98,8 @@ Jobs come in four levels. A level opens when enough stickers are earned (2, 7, 1
 |---|---|---|
 | 1 | one thing: find a bone, say hello, chase birds | shown |
 | 2 | one skill where *how* matters, or a count of three: smash a pot (needs a gallop), drive to school, poo on the table (needs a jump up), swim then shake, three cones, three bones, three hellos | shown |
-| 3 | two steps, or a thing that needs working out: take the teddy and bring it home, sausages from the butcher, lamp posts with the car, dig up a bone, apples off the market stall (needs a jump), a jump into the lake, three pots | not shown: tap the card to ask, or it shows after 25 seconds of getting nowhere |
-| 4 | three steps, long hunts, a rule: a drive round three places, ten bones, five friends without scaring anybody, sausages to the picnic table, a big mess of three kinds, three buried bones | as level 3 |
+| 3 | two steps, or a thing that needs working out: take the teddy and bring it home, sausages from the butcher, lamp posts with the car, apples off the market stall (needs a jump), a jump into the lake, three pots | not shown: tap the card to ask, or it shows after 25 seconds of getting nowhere |
+| 4 | three steps, long hunts, a rule: a drive round three places, ten bones, five friends without scaring anybody, sausages to the picnic table, a big mess of three kinds | as level 3 |
 
 So the help is taken away as the child learns the town, and comes back by itself when they are lost.
 
@@ -110,7 +110,6 @@ A star button, top right, with the number of stickers on it. It opens a page wit
 ### More to do in the same town
 
 - **Bones** lie all over town (26). Running or driving over one picks it up; a counter at the top keeps them. They come back after a minute, once she is far away.
-- **Heaps of earth** (under the trees, and in the park's woods; none on sand) hide a bone: standing still on one, she digs it up.
 - **More people** (19, from 11): a butcher with sausages outside his shop, a market seller, children by the fountain, on the beach and the lawn, walkers across the town square and along the lake.
 - **Things are put back**: what she broke or knocked over is back when a job needs it, and otherwise once she is far away. What she took goes back to its owner.
 
@@ -120,7 +119,7 @@ All of it works with no job in hand: playing freely stays the game.
 
 The owner wanted more open space: a big park east of the town, through a gate in the houses opposite the middle road, half the size of the town again. Agreed plan, in two pieces:
 
-1. **The park** (built): woods all round with a path through them, a wide meadow in the middle, a round pond with ducks, the ice cream van at the end of the main path. New askers: the duck on the pond's bank (an animal, quacking), a girl with a frisbee in the meadow, the park keeper in the woods, the ice cream seller. Seven jobs: swim in the pond and a big splash into it (the duck), fetch the frisbee three and five times (the girl: she throws it, Lili brings it back, she throws it again), three bones in the woods and the treasure buried there (the keeper), and a run round the whole park: the pond, the woods, back to the van (the ice cream seller). The ducks paddle away from her across the water and never fly off.
+1. **The park** (built): woods all round with a path through them, a wide meadow in the middle, a round pond with ducks, the ice cream van at the end of the main path. New askers: the duck on the pond's bank (an animal, quacking), a girl with a frisbee in the meadow, the park keeper in the woods, the ice cream seller. Seven jobs (six since the heaps to dig were taken out): swim in the pond and a big splash into it (the duck), fetch the frisbee three and five times (the girl: she throws it, Lili brings it back, she throws it again), three bones in the woods (the keeper), and a run round the whole park: the pond, the woods, back to the van (the ice cream seller). The ducks paddle away from her across the water and never fly off.
 2. **The dog park** (next): a fenced corner with jumps, a tunnel and a see-saw, and other dogs to play with.
 
 Not yet: the wooden bridge over the pond, kites, the hill, squirrels to chase up trees.
@@ -187,7 +186,6 @@ A boy outside the school holds a teddy. ...
 | `zoom`, `jump`, `bark`, `honk` | she gallops, jumps, barks, sounds the horn |
 | `swim`, `splash`, `shake` | she is in the water, jumps into it, shakes dry after it |
 | `collect: bone` | she gets a bone (found or dug up) |
-| `dig: mound` | she digs up a heap of earth |
 
 Every action is code written once. Counted steps count different things: the same pot, person or bone counts once.
 

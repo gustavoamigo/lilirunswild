@@ -246,11 +246,6 @@ const ICONS = {
       c.fillStyle = 'rgba(255,255,255,.4)'; ell(c, x + dx * s - s * 0.05, y + dy * s - s * 0.08, s * 0.14, s * 0.04, 0.46); c.fill();
     }
   },
-  dig: (c, x, y, s) => {                             // a heap of earth with a bone in it, earth flying
-    drawBone(c, x + s * 0.1, y - s * 0.1, s * 0.5, -1.0);
-    c.fillStyle = '#8A5A3C'; c.beginPath(); c.moveTo(x - s * 0.95, y + s * 0.8); c.quadraticCurveTo(x - s * 0.3, y - s * 0.35, x + s * 0.1, y + s * 0.15); c.quadraticCurveTo(x + s * 0.5, y - s * 0.1, x + s * 0.95, y + s * 0.8); c.closePath(); c.fill();
-    c.fillStyle = '#A9744A'; for (const [dx, dy, r] of [[-0.7, -0.35, 0.1], [-0.4, -0.7, 0.08], [0.72, -0.4, 0.09], [0.5, -0.75, 0.07]]) { circ(c, x + dx * s, y + dy * s, s * r); c.fill(); }
-  },
   beach: (c, x, y, s) => {                           // sand and water, and a beach ball
     c.fillStyle = '#F0DDA8'; ell(c, x, y + s * 0.35, s * 0.95, s * 0.48); c.fill();
     c.fillStyle = '#4FA3E0'; c.beginPath(); c.ellipse(x, y + s * 0.35, s * 0.95, s * 0.48, 0, 0.15, Math.PI - 0.15); c.closePath(); c.fill();
