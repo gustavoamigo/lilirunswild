@@ -739,3 +739,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: all heaps are gone, not only those on sand: however they were coloured they looked like a bone in a pile of poo. Digging and its three jobs (dig up a bone, the treasure in the woods, three buried bones) went with them: 31 jobs.
 
 **Checked by script**: the game loads with no heaps and 31 jobs; every job line has its clip; the woods run without errors.
+
+**Feedback**: it takes long to load: dozens of files.
+
+**Decision** (first part): the 44 tile files were loaded one after another, each waiting for the last, and the 31 jobs only after the town: all are now asked for at once, the jobs alongside the town. A build that packs the game into a few files follows.
+
+**Checked by script**: on a simulated phone connection (80 ms, 20 Mbit/s) the game is ready in 3.5 s, not 6.7 s.

@@ -21,7 +21,8 @@ const BRAKE = ZOOM * 2.3, SKID_END = ZOOM * 0.23;
 const BONK = ZOOM * 0.73;                                    // faster than this into something solid and he sees stars
 const CAR_TOP = 900;
 
-const world = await loadTown();
+// the town and the jobs are loaded side by side (the jobs used to wait for the town)
+const [world, jobs] = await Promise.all([loadTown(), location.search.includes('studio') ? [] : loadMissions()]);
 const params = new URLSearchParams(location.search);
 // ?studio: an empty floor and a close camera, for working on how he moves (see the end of this file)
 const STUDIO = params.has('studio');
@@ -50,7 +51,7 @@ const dog = {
 };
 const car = { ...world.car, v: 0, steer: 0, bump: 0, on: false, rev: false, skidT: 0 };
 // jobs: one at a time, on a card at the top of the screen (see "jobs" below)
-const missions = makeRunner(STUDIO ? [] : await loadMissions(), world, {
+const missions = makeRunner(jobs, world, {
   start: (m) => jobStarted(m),
   step: (m, s) => stepStarted(m, s),
   progress: () => { ui.pip = 1; A.ding(); },

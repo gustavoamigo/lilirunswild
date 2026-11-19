@@ -46,6 +46,7 @@ export function unturn(rot, x, y) { for (let k = 0; k < (rot & 3); k++) [x, y] =
 
 // Read the map, every tile it names, and who is in town (world/people.js).
 export async function loadTown() {
+  const people = import(new URL('../world/people.js', import.meta.url));   // (asked for now, while the map comes)
   const text = await (await fetch(new URL('../world/map.txt', import.meta.url))).text();
   const legend = {}, rows = [];
   let bounds = null;
@@ -57,8 +58,10 @@ export async function loadTown() {
     else if (line.startsWith('bounds')) bounds = line.split(/\s+/).slice(1).map(Number);
     else rows.push(line.split(/\s+/));
   }
-  const defs = {};
-  for (const name of new Set(Object.values(legend))) defs[name] = (await import(new URL(`../world/tiles/${name}.js`, import.meta.url))).default;
+  // every tile file asked for at once: one after another, each waiting for the last, they took over 3 s on a phone's
+  // connection
+  const names = [...new Set(Object.values(legend))], defs = {};
+  (await Promise.all(names.map((n) => import(new URL(`../world/tiles/${n}.js`, import.meta.url))))).forEach((m, i) => { defs[names[i]] = m.default; });
   const tiles = [];
   rows.forEach((row, r) => row.forEach((cell, c) => {
     const m = cell.match(/^(.+?)(>>|>|<)?$/), name = legend[m[1]];
@@ -67,7 +70,7 @@ export async function loadTown() {
   }));
   W = Math.max(...rows.map((r) => r.length)) * TILE; H = rows.length * TILE;
   [BOUNDS.x0, BOUNDS.y0, BOUNDS.x1, BOUNDS.y1] = bounds || [0, 0, W, H];
-  const pop = (await import(new URL('../world/people.js', import.meta.url))).default;
+  const pop = (await people).default;
   return buildTown(tiles, pop);
 }
 
