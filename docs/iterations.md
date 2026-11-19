@@ -721,3 +721,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: every heap on sand is gone (the beach's, the lake's beach, the sandpit), and with it the beach's treasure job (34 jobs). Heaps of earth stay under the trees and in the woods.
 
 **Checked by script**: the game loads with no heap on sand and 34 jobs.
+
+**Feedback**: the way to where a job wants her (paw prints, the marker, the arrow) does not look good and is confusing; maybe have it on the floor.
+
+**Decision**: the way is drawn on the ground in the 3D scene, under everyone standing on it: up to seven orange chevrons with a white rim from a little ahead of her towards the place, a glow running along them the way to go, and a pulsing orange ring round the place. The paw prints, the bouncing marker and the arrow at the screen's edge are gone.
+
+**Checked by script**: looked at four ways: to the neighbour at the start (chevrons, ring round her feet), a bone close by (the ring alone), the sea from the town centre (chevrons down the screen), the seagulls on the sand.

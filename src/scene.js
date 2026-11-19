@@ -133,6 +133,7 @@ export function initScene(canvas, w) {
   car = M.makeCar(); scene.add(car.root);
   dog = M.makeDog(); scene.add(dog.root);
   water = makeWater(world, renderer); if (water) scene.add(...water.meshes);
+  guide = makeGuide();
   resize();
 }
 
@@ -283,6 +284,48 @@ export function byKind(x, y, r = 1e9) {
   return out;
 }
 export const stats = () => ({ calls: renderer.info.render.calls, triangles: renderer.info.render.triangles, geometries: renderer.info.memory.geometries, dpr: renderer.getPixelRatio(), objects: scene.children.length });
+// ---- the way, on the ground (G.guide, set by main.js: from where she is to where the job wants her) ----
+// Orange chevrons with a white rim lying on the ground from a little ahead of her towards the place, a glow running along
+// them the way to go; a pulsing ring round the place. Flat meshes just above the ground, drawn after it and under
+// everyone standing on them (no depth written, so they never cut into the ground).
+const GUIDE_N = 7, GUIDE_GAP = 78, GUIDE_FIRST = 105;
+let guide = null;
+function makeGuide() {
+  const chev = new THREE.Shape();
+  [[16, 0], [-12, 30], [-28, 30], [-2, 0], [-28, -30], [-12, -30]].forEach(([x, y], i) => (i ? chev.lineTo(x, y) : chev.moveTo(x, y)));
+  const flat = (g) => g.rotateX(-Math.PI / 2);
+  const chevGeo = flat(new THREE.ShapeGeometry(chev)), rimGeo = chevGeo.clone().scale(1.32, 1, 1.32).translate(-3, 0, 0);
+  const mat = (color) => new THREE.MeshBasicMaterial({ color, transparent: true, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2 });
+  const g = { root: new THREE.Group(), chevs: [] };
+  for (let i = 0; i < GUIDE_N; i++) {
+    const rim = new THREE.Mesh(rimGeo, mat('#FFFFFF')), fill = new THREE.Mesh(chevGeo, mat('#FF8A2A'));
+    rim.renderOrder = 2; fill.renderOrder = 3; fill.position.y = 0.4;
+    const c = new THREE.Group(); c.add(rim, fill); g.root.add(c); g.chevs.push({ c, rim, fill });
+  }
+  g.ring = new THREE.Group();
+  const rimRing = new THREE.Mesh(flat(new THREE.RingGeometry(56, 86, 48)), mat('#FFFFFF')), fillRing = new THREE.Mesh(flat(new THREE.RingGeometry(62, 80, 48)), mat('#FF8A2A'));
+  rimRing.renderOrder = 2; fillRing.renderOrder = 3; fillRing.position.y = 0.4; g.ring.add(rimRing, fillRing); g.root.add(g.ring);
+  g.ringParts = [rimRing, fillRing];
+  g.root.position.y = 1.5; g.root.visible = false; scene.add(g.root);
+  return g;
+}
+function updateGuide(w, t) {
+  if (!guide) return;
+  guide.root.visible = !!w; if (!w) return;
+  const dx = w.x1 - w.x0, dy = w.y1 - w.y0, d = Math.hypot(dx, dy) || 1, ux = dx / d, uy = dy / d, k = w.big ? 1.5 : 1;
+  const head = (t * 2.2) % (GUIDE_N + 2);                  // the glow running along them, the way to go
+  guide.chevs.forEach(({ c, rim, fill }, i) => {
+    const at = (GUIDE_FIRST + i * GUIDE_GAP) * k, show = at < d - 70;
+    c.visible = show; if (!show) return;
+    c.position.set(w.x0 + ux * at, 0, w.y0 + uy * at); c.rotation.y = -Math.atan2(uy, ux); c.scale.setScalar(k);
+    const glow = Math.max(0, 1 - Math.abs(i - head) * 0.55), fade = Math.min(1, (d - 70 - at) / 120);
+    rim.material.opacity = (0.55 + 0.4 * glow) * fade; fill.material.opacity = (0.6 + 0.4 * glow) * fade; c.position.y = glow * 1.5;
+  });
+  const pulse = 1 + 0.08 * Math.sin(t * 5);
+  guide.ring.position.set(w.x1, 0, w.y1); guide.ring.scale.setScalar(pulse * k);
+  guide.ringParts[0].material.opacity = 0.8; guide.ringParts[1].material.opacity = 0.9;
+}
+
 export function render(G, dt) {
   const t = G.t, f = G.focus;
   // ---- camera: a little ahead of where he is going, further back the faster he goes ----
@@ -298,6 +341,7 @@ export function render(G, dt) {
   zoom = lerp(zoom, f.zoom || 1, 1 - Math.exp(-dt * 2));
   placeCamera();
 
+  updateGuide(G.guide, t);
   dog.update(G.dog, t); updateSwim(G.dog, t); updateCrowns(dt); if (water) water.update(t, dt, G.dog.x, G.dog.y);
   car.update(G.car, t, dt);
   streamTiles(camAim.x, camAim.z);

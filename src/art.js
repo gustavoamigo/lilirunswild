@@ -297,19 +297,6 @@ export function drawWords(c, text, x, y, size, w, fill = '#3A3F4A') {
   c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillStyle = fill; c.fillText(text, x, y);
 }
 
-// a big green arrow pointing at angle a (screen), for the way to go; and a bouncing marker over a place
-export function drawArrow(c, x, y, a, s) {
-  c.save(); c.translate(x, y); c.rotate(a);
-  c.fillStyle = '#4FA653'; c.strokeStyle = '#fff'; c.lineWidth = s * 0.16; c.lineJoin = 'round';
-  c.beginPath(); c.moveTo(s, 0); c.lineTo(-s * 0.2, -s * 0.8); c.lineTo(-s * 0.2, -s * 0.35); c.lineTo(-s, -s * 0.35); c.lineTo(-s, s * 0.35); c.lineTo(-s * 0.2, s * 0.35); c.lineTo(-s * 0.2, s * 0.8); c.closePath();
-  c.stroke(); c.fill(); c.restore();
-}
-export function drawMarker(c, x, y, s) {
-  c.fillStyle = '#4FA653'; c.strokeStyle = '#fff'; c.lineWidth = s * 0.16; c.lineJoin = 'round';
-  c.beginPath(); c.moveTo(x, y + s); c.lineTo(x - s * 0.7, y); c.lineTo(x - s * 0.3, y); c.lineTo(x - s * 0.3, y - s * 0.8); c.lineTo(x + s * 0.3, y - s * 0.8); c.lineTo(x + s * 0.3, y); c.lineTo(x + s * 0.7, y); c.closePath();
-  c.stroke(); c.fill();
-}
-
 // a small loudspeaker in the corner of a job's card: "tap, and it is said again". wave 0..1 makes its sound waves pulse.
 export function drawSpeaker(c, x, y, s, wave = 0) {
   c.fillStyle = '#B9A77E'; c.beginPath(); c.moveTo(x - s, y - s * 0.35); c.lineTo(x - s * 0.45, y - s * 0.35); c.lineTo(x + s * 0.1, y - s * 0.85); c.lineTo(x + s * 0.1, y + s * 0.85); c.lineTo(x - s * 0.45, y + s * 0.35); c.lineTo(x - s, y + s * 0.35); c.closePath(); c.fill();

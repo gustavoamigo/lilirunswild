@@ -925,7 +925,6 @@ function drawOverlay(t) {
   const x3 = x2 + 50 * u + c.measureText(G.birds).width + 30 * u;
   Art.drawBone(c, x3 + 18 * u, y + 2 * u, 19 * u * (1 + ui.bonePop * 0.35)); Art.drawNum(c, G.bones, x3 + 46 * u, y + 2 * u, 34 * u);
   ui.boneAt = [x3 + 18 * u, y + 2 * u]; ui.hudRight = x3 + 46 * u + c.measureText(G.bones).width;
-  drawTrail(t);
   drawAskers(t);
   drawTug(t);
   for (const f of ui.fly) {                           // a bone just found, on its way to the counter
@@ -941,8 +940,8 @@ function drawOverlay(t) {
 // One job at a time (docs/open-world-design.md, "Jobs for five to seven year olds"). Jobs are not handed out one after
 // another: people about town ask for them, each with what they want in a bubble over their head, when she comes by
 // (askers below); in between she explores. A job is told three ways: said out loud by whoever asked, shown as pictures
-// on a card at the top, and pointed to in the town (paw prints, a marker, an arrow at the screen's edge, the button to
-// press pulsing). Done, it becomes a sticker in the sticker book. Nothing is timed and nothing can be failed.
+// on a card at the top, and pointed to in the town (chevrons and a ring on the ground, the button to press pulsing).
+// Done, it becomes a sticker in the sticker book. Nothing is timed and nothing can be failed.
 // What the game itself says (a job's own words are in its file). Each line is a clip made by tools/voice.py: run it
 // after changing one.
 const SAY = { oops: 'Oops! Gently. Try again.', jobs: 'Wow! New jobs!', all: 'You helped everyone in town! Hooray!', more: 'Get more stickers first!', wait: 'Not yet!' };
@@ -1126,34 +1125,14 @@ function drawCelebration(t, w, h, u) {
 }
 
 // ---- the way ----
-// Paw prints on the ground from her towards what the job needs, appearing one after another; near it a bouncing marker
-// over the place; out of sight, an arrow at the edge of the screen pointing the way.
-function drawTrail(t) {
-  if (dog.state === 'hop') return;
-  const at = missions.job() ? guided() && missions.target(dog, car) : lostWay(); if (!at) return;
-  const from = dog.state === 'drive' ? car : dog, dx = at.x - from.x, dy = at.y - from.y, d = Math.hypot(dx, dy), ux = dx / (d || 1), uy = dy / (d || 1);
-  const { w, h } = S.view;
-  if (d < 180) {
-    const [sx, sy, kk, ok] = S.project(at.x, (at.look === undefined ? 130 : 190) + Math.sin(t * 5) * 12, at.y);
-    if (ok) Art.drawMarker(c, sx, sy, Math.max(16, 26 * kk));
-    return;
-  }
-  const n = Math.min(7, Math.floor((d - 60) / 70)), wave = (t * 3) % (n + 3);
-  for (let i = 0; i < n; i++) {
-    const s = 90 + i * 70, side = i % 2 ? 1 : -1, x = from.x + ux * s - uy * side * 12, y = from.y + uy * s + ux * side * 12;
-    const [sx, sy, kk, ok] = S.project(x, 1, y); if (!ok) continue;
-    const [ax, ay] = S.project(x + ux * 10, 1, y + uy * 10);
-    c.save(); c.globalAlpha = Math.max(0.15, Math.min(1, 1 - Math.abs(wave - i) * 0.35)); c.translate(sx, sy); c.rotate(Math.atan2(ay - sy, ax - sx) + Math.PI / 2); c.scale(1, 0.6);
-    const ps = Math.max(12, 19 * kk); Art.drawPaw(c, 1.5, 2.5, ps, 'rgba(30,40,30,.45)'); Art.drawPaw(c, 0, 0, ps, '#FFFFFF'); c.restore();   // white with a shadow: shows on grass and road
-  }
-  // the place itself out of sight: an arrow at the edge of the screen
-  const [px, py, , pok] = S.project(at.x, 40, at.y), [qx, qy] = S.project(from.x, 40, from.y);
-  if (!pok || px < 0 || px > w || py < 0 || py > h) {
-    // inside a frame clear of the card along the top and the buttons along the bottom
-    const a = Math.atan2(pok ? py - qy : dy, pok ? px - qx : dx), top = 190, bottom = h - 150, side = 60, cx = w / 2, cy = (top + bottom) / 2;
-    const s = Math.min((w / 2 - side) / Math.abs(Math.cos(a) || 1e-6), ((bottom - top) / 2) / Math.abs(Math.sin(a) || 1e-6));
-    Art.drawArrow(c, cx + Math.cos(a) * s, cy + Math.sin(a) * s, a, 34 + Math.sin(t * 6) * 4);
-  }
+// Where to go, on the ground (drawn by src/scene.js, `guide`): orange chevrons from her feet towards what the job needs,
+// a glow running along them the way to go, and a ring round the place itself. The paw prints, the bouncing marker and
+// the arrow at the screen's edge it replaced looked messy and confused (owner, 2026-11-19).
+function wayTo() {
+  if (dog.state === 'hop' || ui.title) return null;
+  const at = missions.job() ? guided() && missions.target(dog, car) : lostWay(); if (!at) return null;
+  const from = dog.state === 'drive' ? car : dog;
+  return { x0: from.x, y0: from.y, x1: at.x, y1: at.y, big: dog.state === 'drive' };
 }
 
 // ---- bones ----
@@ -1449,6 +1428,7 @@ function frame(now) {
   }
   if (ui.book) { S.render(G, 0); drawBook(now / 1000); requestAnimationFrame(frame); return; }   // the sticker book is open: the town waits
   update(dt);
+  G.guide = wayTo();
   S.render(G, dt);
   drawOverlay(G.t);
   requestAnimationFrame(frame);
