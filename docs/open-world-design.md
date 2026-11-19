@@ -110,7 +110,7 @@ A star button, top right, with the number of stickers on it. It opens a page wit
 ### More to do in the same town
 
 - **Bones** lie all over town (26). Running or driving over one picks it up; a counter at the top keeps them. They come back after a minute, once she is far away.
-- **Heaps of earth** (7: under the trees, in the sandpit, on the beach) hide a bone: standing still on one, she digs it up.
+- **Heaps of earth** (under the trees, and in the park's woods; none on sand) hide a bone: standing still on one, she digs it up.
 - **More people** (19, from 11): a butcher with sausages outside his shop, a market seller, children by the fountain, on the beach and the lawn, walkers across the town square and along the lake.
 - **Things are put back**: what she broke or knocked over is back when a job needs it, and otherwise once she is far away. What she took goes back to its owner.
 
@@ -127,7 +127,7 @@ Not yet: the wooden bridge over the pond, kites, the hill, squirrels to chase up
 
 ### The beach (2026-11-19)
 
-The owner's idea: a beach along the bottom of the world, where only the beach is seen, never the horizon (the camera looks north). Kept simple, as asked: one long strip of sand under the town and the park, the sea below it, two paths down between the houses and the park's woods path onto the sand. On it: sandcastles, umbrellas with towels, seagulls, a heap of sand with treasure. Askers: a boy and a girl with their sandcastles, a woman by her umbrella. Five jobs: knock down three sandcastles, chase the seagulls, a swim in the sea (level 2); dig up the treasure in the sand, three bones on the beach (level 3). Left out to keep it simple: a crab, a lifeguard's tower, waves washing in and out.
+The owner's idea: a beach along the bottom of the world, where only the beach is seen, never the horizon (the camera looks north). Kept simple, as asked: one long strip of sand under the town and the park, the sea below it, two paths down between the houses and the park's woods path onto the sand. On it: sandcastles, umbrellas with towels, seagulls. Askers: a boy and a girl with their sandcastles, a woman by her umbrella. Four jobs: knock down three sandcastles, chase the seagulls, a swim in the sea (level 2); three bones on the beach (level 3). (A heap of sand with a bone in it, to dig up as treasure, looked silly and was taken out, with the heaps on the lake's beach and in the sandpit.) Left out to keep it simple: a crab, a lifeguard's tower, waves washing in and out.
 
 ### What comes next
 

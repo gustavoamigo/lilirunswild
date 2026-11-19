@@ -1075,7 +1075,7 @@ export function makeBird(color) {
 // ---------------------------------------------------------------- props --
 // Each prop is root (place, facing) > tip (falls over about its foot) > spin (tumbles about its middle).
 const FOOT = { bin: 28.5, cone: 18 };
-export function makeProp(kind, on) {   // on: what it lies on, where that changes its look ('sand': a heap of sand)
+export function makeProp(kind) {
   const root = new THREE.Group(), tip = new THREE.Group(), spin = new THREE.Group();
   root.add(tip); tip.add(spin);
   let parts, mid = 0;
@@ -1094,8 +1094,8 @@ export function makeProp(kind, on) {   // on: what it lies on, where that change
     cyl('#FFFFFF', 0, 0, 0, 4, 26, [0, 0, Math.PI / 2]), blob('#FFFFFF', -14, 0, 4, 5.5), blob('#FFFFFF', -14, 0, -4, 5.5), blob('#FFFFFF', 14, 0, 4, 5.5), blob('#FFFFFF', 14, 0, -4, 5.5)]; }
   else if (kind === 'mound') {
     // A heap of dug earth with clods thrown round it and a bone sticking out of the top. Low and wide, lighter and warmer
-    // than a poo, which it looked like (dark brown, and on the sand most of all); on the beach it is a heap of sand.
-    const [a, b, d] = on === 'sand' ? ['#E3C27E', '#D4AE68', '#EED7A0'] : ['#A77B52', '#8E6542', '#BC9064'];
+    // than a poo, which it looked like when dark brown. There are none on sand: a bone stuck in sand looked silly.
+    const [a, b, d] = ['#A77B52', '#8E6542', '#BC9064'];
     parts = [blob(a, 0, 2, 0, 31, 11, 27), blob(b, -12, 6, 8, 13, 7, 11), blob(d, 12, 5, -7, 12, 6, 11), blob(b, 4, 8, 4, 10, 5, 9),
       ...[0, 1, 2, 3, 4, 5].map((i) => blob(i % 2 ? b : a, Math.cos(i * 1.1 + 0.4) * (36 + (i % 3) * 5), 2, Math.sin(i * 1.1 + 0.4) * (32 + (i % 2) * 6), 4 + (i % 3), 2.5, 4)),
       cyl('#FFFFFF', 6, 17, -2, 3, 20, [0, 0, 0.5]), blob('#FFFFFF', -0.5, 25, 1, 4.5), blob('#FFFFFF', 2.5, 26.5, -5, 4.5)];

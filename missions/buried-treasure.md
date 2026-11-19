@@ -8,4 +8,4 @@ steps:
   - dig: mound
     count: 3
 ---
-Three different heaps of earth: the beach, the sandpit, under the trees.
+Three different heaps of earth, under the trees in town or in the park's woods.

@@ -715,3 +715,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: it had the poo's dark brown. On sand a heap is now sand-coloured; on earth a lighter, warmer brown; both with clods thrown round and more of the bone showing.
 
 **Checked by script**: the beach's heap and a heap on a lawn looked at.
+
+**Feedback**: the bone stuck in sand is silly (three other treasure ideas offered). Owner: just remove it.
+
+**Decision**: every heap on sand is gone (the beach's, the lake's beach, the sandpit), and with it the beach's treasure job (34 jobs). Heaps of earth stay under the trees and in the woods.
+
+**Checked by script**: the game loads with no heap on sand and 34 jobs.

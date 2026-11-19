@@ -56,7 +56,7 @@ East of the town, through a gate (`gate`: the path between two stone gateposts) 
 
 South of everything (2026-11-19), the whole width of the map: a row of sand (`sand`, and `sand-castles`, `sand-umbrella`, `sand-gulls` with things on), a row where the sand meets the water (`sea-edge`), then four rows of `sea`. Two paths come down between the houses on the south side of town (`beach-path`), and the park's path through the woods runs onto the sand. Lili can go as far as `BOUNDS.y1` 5700, a little way out to sea; the camera looks north, so the sea is only ever at the bottom of the screen and no horizon is seen.
 
-- **Heaps to dig** (`mound`): low and wide, clods thrown round them, the bone sticking well out; earth is a light warm brown, and on sand (`makeProp(kind, on)`, from `surfaceAt` where it lies) it is a heap of sand. The dark brown heap looked like a pile of poo, on the beach most of all.
+- **Heaps to dig** (`mound`): low and wide, a light warm brown, clods thrown round them, the bone sticking well out (the dark brown heap looked like a pile of poo). Only on earth: under the trees in town and in the park's woods. Heaps on sand (the beach, the lake's beach, the sandpit) were taken out: a bone stuck in sand looked silly (owner, 2026-11-19).
 - **Sandcastles** (`KINDS.sandcastle`): break like pots, at a trot (`tough` 60), leaving a heap of sand; put back when she is far away (`TIDY`).
 - **Seagulls** (`gulls: [[x, y]]` on a tile; flocks with `kind: 'gull'`, white `BIRD[3]`): pigeons in all but where they land: `birdSpot(avoid, 'gull')` picks sand on the beach tiles inside the bounds.
 - **The umbrella** is a fixture (only its pole is solid), with the towel beside it.

@@ -27,7 +27,6 @@ pond-splash
 frisbee-five
 woods-treasure
 park-tour
-beach-treasure
 beach-bones
 town-tour
 ten-bones

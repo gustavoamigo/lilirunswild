@@ -7,4 +7,4 @@ say: "Lili! There's a bone under the earth. Dig it up!"
 steps:
   - dig: mound
 ---
-Heaps of earth are under the trees, in the sandpit and on the beach. Standing still on one, she digs.
+Heaps of earth are under the trees and in the park's woods (none on sand: a bone stuck in sand looked silly). Standing still on one, she digs.

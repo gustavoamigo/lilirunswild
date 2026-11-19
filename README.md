@@ -2,7 +2,7 @@
 
 A browser game about a very active cocker spaniel loose in a small town. She gallops, jumps on things and people, breaks pots, chases birds and drives a car. Nobody gets hurt.
 
-For children of 5 to 7: a town, a big park and a beach to run wild in, where people (and a duck) she meets ask her for help, out loud and in pictures (find a bone, take the sausages home, dig up treasure): 35 jobs, one at a time, and a sticker book that fills as they are done. Nothing is timed and nothing fails. Play it at https://gustavoamigo.github.io/lilirunswild/.
+For children of 5 to 7: a town, a big park and a beach to run wild in, where people (and a duck) she meets ask her for help, out loud and in pictures (find a bone, take the sausages home, dig up treasure): 34 jobs, one at a time, and a sticker book that fills as they are done. Nothing is timed and nothing fails. Play it at https://gustavoamigo.github.io/lilirunswild/.
 
 ```
 python3 tools/serve.py 8765     # then open http://localhost:8765/
