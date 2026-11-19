@@ -92,6 +92,7 @@ export const KINDS = {
   ball:  { r: 13, h: 26, tough: 0, fly: 1.5, pop: 300, drag: 0.7, rolls: true },
   teddy: { r: 18, h: 40, tough: 0, fly: 1.1, pop: 200, drag: 1.6, tumbles: true, carry: true },
   sausage: { r: 16, h: 14, tough: 0, fly: 1.0, pop: 180, drag: 2.2, carry: true },
+  sandcastle: { r: 24, h: 34, tough: 60, breaks: true, mess: true },   // knocked down at a trot
   frisbee: { r: 16, h: 5, tough: 0, fly: 1.3, pop: 200, drag: 2.6, carry: true, glide: true },   // glide: comes down slowly
   apple: { r: 8, h: 14, tough: 0, fly: 1.4, pop: 240, drag: 1.0, rolls: true, mess: true },
   bone: { r: 16, h: 12, find: true },
@@ -99,7 +100,7 @@ export const KINDS = {
 };
 
 // how big each kind of fixture is (its radius as an obstacle), and the shops' colours: walls, roof, awning stripes
-const FIXTURE_R = { kennel: 34, basket: 26, fountain: 78, 'cafe-table': 30, gatepost: 16, van: 66 };
+const FIXTURE_R = { kennel: 34, basket: 26, fountain: 78, 'cafe-table': 30, gatepost: 16, van: 66, umbrella: 8 };
 const SHOP = {
   butcher: { color: '#F4F1EA', roof: '#8A5A44', awning: ['#D9483B', '#ffffff'] },
   bakery: { color: '#F7E1B5', roof: '#B5483A', awning: ['#9A6A3A', '#F6EBC8'] },
@@ -156,6 +157,12 @@ export function buildTown(tiles, pop) {
       flocks.push({ x: X, y: Y, h: 0, state: 'ground', t: 0, seed: i * 2.3,
         birds: Array.from({ length: 5 }, (_, k) => ({ ox: Math.cos(k * 1.3 + i) * (28 + k * 9), oy: Math.sin(k * 1.3 + i) * (22 + k * 7), ph: R() * 6, face: R() * 6, color: k % 3 })) });
     }
+    // seagulls: like the pigeons, but on the beach, and back to the beach when they fly (birdSpot)
+    for (const [x, y] of d.gulls || []) {
+      const [X, Y] = at(x, y), i = flocks.length;
+      flocks.push({ kind: 'gull', x: X, y: Y, h: 0, state: 'ground', t: 0, seed: i * 2.3,
+        birds: Array.from({ length: 4 }, (_, k) => ({ ox: Math.cos(k * 1.5 + i) * (30 + k * 10), oy: Math.sin(k * 1.5 + i) * (22 + k * 8), ph: R() * 6, face: R() * 6, color: 3 })) });
+    }
     // ducks: paddling about on the water, three to a flock; they never fly off (updateDucks in main.js)
     for (const [x, y] of d.ducks || []) {
       const [X, Y] = at(x, y), i = flocks.length;
@@ -194,13 +201,15 @@ export function buildTown(tiles, pop) {
   // Is this a free bit of open ground (nothing solid within `room`)?
   const freeSpot = (x, y, room = 60) => x > BOUNDS.x0 + room && x < BOUNDS.x1 - room && y > BOUNDS.y0 + room && y < BOUNDS.y1 - room
     && obstacles.every((o) => Math.hypot(o.x - x, o.y - y) > o.r + room) && platforms.every((o) => platDist(o, x, y) > o.r + room);
-  // Where a scared flock comes down: on the grass of a park tile, well away from whatever scared it.
-  const park = tiles.filter((t) => t.def.park);
+  // Where a scared flock comes down: on the grass of a park tile (seagulls: on the beach's sand), well away from whatever
+  // scared it.
+  const park = tiles.filter((t) => t.def.park), beach = tiles.filter((t) => (t.def.spots || []).some((s) => s[0] === 'seaside'));
   const start = spots.find((s) => s.tag === 'start') || { x: W / 2, y: H / 2 };
-  const birdSpot = (avoid) => {
+  const birdSpot = (avoid, kind) => {
+    const on = kind === 'gull' ? beach : park, ground = kind === 'gull' ? 'sand' : 'grass';
     for (let far = 900; far > 200; far -= 100) for (let i = 0; i < 40; i++) {
-      const t = park[(Math.random() * park.length) | 0], x = t.col * TILE + 60 + Math.random() * 280, y = t.row * TILE + 60 + Math.random() * 280;
-      if (surfaceAt(x, y) === 'grass' && freeSpot(x, y, 90) && avoid.every((a) => Math.hypot(a.x - x, a.y - y) > far)) return { x, y };
+      const t = on[(Math.random() * on.length) | 0], x = t.col * TILE + 60 + Math.random() * 280, y = t.row * TILE + 60 + Math.random() * 280;
+      if (x > BOUNDS.x0 && x < BOUNDS.x1 && surfaceAt(x, y) === ground && freeSpot(x, y, 90) && avoid.every((a) => Math.hypot(a.x - x, a.y - y) > far)) return { x, y };
     }
     return { x: start.x, y: start.y };
   };

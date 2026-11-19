@@ -125,6 +125,10 @@ The owner wanted more open space: a big park east of the town, through a gate in
 
 Not yet: the wooden bridge over the pond, kites, the hill, squirrels to chase up trees.
 
+### The beach (2026-11-19)
+
+The owner's idea: a beach along the bottom of the world, where only the beach is seen, never the horizon (the camera looks north). Kept simple, as asked: one long strip of sand under the town and the park, the sea below it, two paths down between the houses and the park's woods path onto the sand. On it: sandcastles, umbrellas with towels, seagulls, a heap of sand with treasure. Askers: a boy and a girl with their sandcastles, a woman by her umbrella. Five jobs: knock down three sandcastles, chase the seagulls, a swim in the sea (level 2); dig up the treasure in the sand, three bones on the beach (level 3). Left out to keep it simple: a crab, a lifeguard's tower, waves washing in and out.
+
 ### What comes next
 
 1. **The dog park**, in the big park (above).

@@ -184,6 +184,12 @@ const ICONS = {
     c.fillStyle = '#fff'; for (let i = -3; i <= 3; i += 2) c.fillRect(x + i * s * 0.22 - s * 0.1, y - s * 0.1, s * 0.2, s * 0.28);
   },
   lake: water,
+  castle: (c, x, y, s) => {                         // a sandcastle with two towers and a flag
+    c.fillStyle = '#E3C27E'; c.beginPath(); c.roundRect(x - s * 0.8, y + s * 0.45, s * 1.6, s * 0.35, s * 0.1); c.fill();
+    c.fillStyle = '#E9CF8E'; c.fillRect(x - s * 0.45, y - s * 0.15, s * 0.9, s * 0.62); c.fillRect(x - s * 0.75, y - s * 0.3, s * 0.3, s * 0.77); c.fillRect(x + s * 0.45, y - s * 0.3, s * 0.3, s * 0.77);
+    for (const k of [-0.3, -0.05, 0.2]) c.fillRect(x + k * s, y - s * 0.3, s * 0.15, s * 0.16);
+    c.fillStyle = '#8A6A4A'; c.fillRect(x - s * 0.02, y - s * 0.75, s * 0.05, s * 0.45); c.fillStyle = '#E2453C'; c.beginPath(); c.moveTo(x + s * 0.03, y - s * 0.75); c.lineTo(x + s * 0.35, y - s * 0.63); c.lineTo(x + s * 0.03, y - s * 0.52); c.fill();
+  },
   duck: (c, x, y, s) => {                            // a yellow duck, side on, facing right
     c.fillStyle = '#F6C93C'; ell(c, x - s * 0.08, y + s * 0.25, s * 0.62, s * 0.4); c.fill();
     c.beginPath(); c.moveTo(x - s * 0.62, y + s * 0.1); c.lineTo(x - s * 0.82, y - s * 0.12); c.lineTo(x - s * 0.5, y + s * 0.05); c.fill();

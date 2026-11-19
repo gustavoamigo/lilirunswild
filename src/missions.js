@@ -133,7 +133,7 @@ export function makeRunner(missions, world, hooks = {}) {
           return from(all.filter((o) => o.nature === 'lover' || o.who === 'child')) || from(all);
         }
         case 'scare': return from(world.people.filter((o) => !seen.has(o)));
-        case 'chase': return from(world.flocks.filter((f) => f.state === 'ground'));
+        case 'chase': return from(world.flocks.filter((f) => f.state === 'ground' && f.kind !== 'duck' && (!s.at || nearSpot(s.at, f.x, f.y, NEAR.at))));
         case 'smash': return thing(s.target);
         case 'knock': return s.target === 'lamp' ? from(lamps.filter((o) => !o.fallen)) : thing(s.target);
         case 'hop': return from(world.platforms.filter((o) => o.kind === s.target && !o.off && !seen.has(o)).map((o) => ({ x: (o.ax + o.bx) / 2, y: (o.ay + o.by) / 2 })));

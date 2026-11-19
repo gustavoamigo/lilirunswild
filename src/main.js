@@ -822,7 +822,7 @@ function updatePeople(dt) {
 
 // ------------------------------------------------------------------ birds --
 function flyAway(f) {
-  const to = world.birdSpot([dog, car]);
+  const to = world.birdSpot([dog, car], f.kind);
   f.from = { x: f.x, y: f.y }; f.to = to; f.t = 0; f.T = 3.2 + dist(f.x, f.y, to.x, to.y) / 600;
   f.state = 'fly'; f.dir = Math.atan2(to.y - f.y, to.x - f.x);
   A.flutter(); G.birds += f.birds.length; G.pop = 1; missions.event('chase', { kind: 'birds', id: f, x: f.x, y: f.y });
@@ -1178,7 +1178,7 @@ function updateFinds() {
 // ---- putting things back ----
 // What she broke or knocked over is put back when a job needs it, and otherwise once she is far away: there is always
 // something to knock over. What she took goes back to whoever had it.
-const TIDY = ['cone', 'bin', 'box', 'pot', 'plate', 'apple', 'lamp'], lampPosts = world.tiles.flatMap((t) => t.things.lamps);
+const TIDY = ['cone', 'bin', 'box', 'pot', 'plate', 'apple', 'sandcastle', 'lamp'], lampPosts = world.tiles.flatMap((t) => t.things.lamps);
 function giveBack(o) {
   const p = o.owner; if (!p || o.held === p) return;
   if (o.held) { o.held.holds = null; o.held = null; }  // someone else is playing with it

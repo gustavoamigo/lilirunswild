@@ -1032,7 +1032,7 @@ function hairParts(c, style, r) {
 }
 
 // ---------------------------------------------------------------- birds --
-const BIRD = [['#8E9AAF', '#6F7B91'], ['#B9BDC6', '#8A8F9C'], ['#A08872', '#7C6654']];
+const BIRD = [['#8E9AAF', '#6F7B91'], ['#B9BDC6', '#8A8F9C'], ['#A08872', '#7C6654'], ['#F6F6F3', '#A3ACB8']];   // pigeons, and a seagull (3)
 // A duck: on the water (the pond), or standing on the bank on orange feet (feet: the duck who asks for jobs). Colours: 0
 // a drake (green head, white ring, brown chest), 1 a brown duck, 2 a white farmyard duck, bigger.
 const DUCK = [['#C9B48E', '#2F7A4A', '#8A5A3C'], ['#A9825A', '#A9825A', '#8A6A4A'], ['#F6F3EA', '#F6F3EA', '#E8E2D2']];
@@ -1098,6 +1098,9 @@ export function makeProp(kind) {
   else if (kind === 'sausage') { mid = 7; parts = [   // a string of sausages
     blob('#D9705A', -17, 0, 0, 9, 5.5, 5.5), blob('#D9705A', 0, 0, 0, 9, 5.5, 5.5), blob('#D9705A', 17, 0, 0, 9, 5.5, 5.5),
     blob('#B5503E', -8.5, 0, 0, 2), blob('#B5503E', 8.5, 0, 0, 2), blob('#B5503E', -26, 0, 0, 2), blob('#B5503E', 26, 0, 0, 2)]; }
+  else if (kind === 'sandcastle') parts = [   // a sandcastle: a mound, a keep with battlements, two towers, a little red flag
+    cyl('#E3C27E', 0, 6, 0, 26, 12, undefined, 30), cyl('#E9CF8E', 0, 19, 0, 15, 14), ...[0, 1, 2, 3].map((i) => box('#E9CF8E', Math.cos(i * 1.57) * 12, 28, Math.sin(i * 1.57) * 12, 6, 5, 6)),
+    cyl('#E9CF8E', -19, 16, 6, 6, 20), cyl('#E9CF8E', 18, 15, -7, 6, 18), cyl('#8A6A4A', 0, 36, 0, 0.8, 16), box('#E2453C', 4, 41, 0, 8, 5, 0.8)];
   else if (kind === 'frisbee') { mid = 2; parts = [cyl('#E2453C', 0, 0, 0, 16, 3), cyl('#F2675D', 0, 1.7, 0, 11, 0.6), cyl('#ffffff', 0, 1.9, 0, 6, 0.4)]; }   // a red flying disc
   else if (kind === 'apple') { mid = 7; parts = [blob('#D9342B', 0, 0, 0, 8, 7.5, 8), cyl('#6E4630', 0, 8, 0, 1, 4), blob('#4FA653', 3, 9, 0, 3, 1.2, 2)]; }
   else { mid = 13; parts = [blob('#D7E84A', 0, 0, 0, 13), { geo: new THREE.TorusGeometry(12.6, 1.2, 6, 20), color: '#ffffff', at: [0, 0, 0], scale: [1, 1, 1], rot: [0.5, 0.4, 0], flat: true }]; }
@@ -1112,6 +1115,10 @@ export function makeProp(kind) {
 export function makeShards(kind) {
   // a cartoon poo: a soft brown swirl of three
   if (kind === 'poo') return mesh([blob('#7A4A2A', 0, 3, 0, 7, 3.5, 7), blob('#86532F', 0, 7, 0, 5, 3, 5), blob('#93603A', 0.5, 10.5, 0, 3, 2.6, 3)]);
+  if (kind === 'sandcastle') {                       // a heap of sand where it stood
+    const sand = []; for (let i = 0; i < 7; i++) { const a = i * 2.2, d = 6 + (i % 3) * 7; sand.push(blob(i % 2 ? '#E3C27E' : '#E9CF8E', Math.cos(a) * d, 2, Math.sin(a) * d, 9, 4, 8)); }
+    return mesh(sand);
+  }
   const c = kind === 'pot' ? ['#C9683F', '#D97B50', '#5A4636', '#4FA653', '#FF7FA0'] : kind === 'bin' ? ['#F4E9B0', '#ffffff', '#8FB7E0', '#E8B04A', '#C9D1D9'] : ['#ffffff', '#E9EDF2', '#F6A6C1', '#ffffff', '#E0453A'];
   const parts = [], wide = kind === 'bin' ? 2.4 : 1;
   for (let i = 0; i < 9; i++) { const a = i * 2.4, d = (6 + ((i * 7) % 5) * 5) * wide; parts.push(box(c[i % c.length], Math.cos(a) * d, 1.8, Math.sin(a) * d, 9 - (i % 3) * 2, 3, 6 + (i % 2) * 3, [0, a, 0.25])); }
@@ -1211,6 +1218,11 @@ function makeShop(h) {
 // square's fountain; a café table with two chairs.
 export function fixtureGeometry(kind) {
   if (kind === 'kennel') return kennelGeometry;
+  if (kind === 'umbrella') return merged([   // a striped beach umbrella over a towel
+    cyl('#F4F2EA', 0, 70, 0, 2.5, 140), { geo: new THREE.ConeGeometry(1, 1, 8), color: '#F2675D', at: [0, 136, 0], scale: [72, 26, 72], flat: true },
+    { geo: new THREE.ConeGeometry(1, 1, 8), color: '#FFF4E2', at: [0, 137, 0], scale: [44, 17, 44], rot: [0, Math.PI / 8, 0], flat: true }, blob('#F4F2EA', 0, 150, 0, 4),
+    box('#4FA3E0', 46, 1, 34, 52, 2, 96), box('#ffffff', 46, 2.2, 14, 52, 0.5, 10), box('#ffffff', 46, 2.2, 54, 52, 0.5, 10),
+  ]);
   if (kind === 'gatepost') return merged([   // a stone gatepost with a ball on top
     box('#C9C2B4', 0, 44, 0, 30, 88, 30), box('#B9B4A8', 0, 90, 0, 36, 6, 36), blob('#D9D3C6', 0, 104, 0, 12),
   ]);

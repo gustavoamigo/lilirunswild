@@ -699,3 +699,13 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: the girl only took a toy when she was not resting after something (`cool`), but Lili coming close makes children pet her, and petting starts that rest: she was always petting and never took it. The test had cleared the rest before going back, so it passed. Now taking a toy is not held back by it (only by a short pause after a throw), and they take it while coming to pet her or petting her too.
 
 **Checked by script**: running back to her and stopping, as a child would (nothing reset): she took it 0.7 s after Lili stopped, twice, and the job was done after three.
+
+## Iteration 13: the beach
+
+**Feedback**: a beach along the bottom of the world: you only see the beach, never the horizon. Keep it simple.
+
+**Decision**: one long strip of sand under the town and the park, the sea below it (Lili can swim out a little way), two paths down between the houses and the park's woods path onto the sand. Sandcastles (knocked down at a trot, built again when she is far away), umbrellas with towels, seagulls (they fly off and land further along the sand), a heap of sand with treasure. A boy and a girl with sandcastles and a woman by her umbrella ask for five jobs. The sea has no ripples (too big to work out on an old tablet; a splash still shows) and no hedge stands in it. Left out: a crab, a lifeguard's tower, waves.
+
+**Checked by script**: five places looked at (the path down, the sandcastles, the umbrella, swimming in the sea, the park's end of the beach), 140 000 to 260 000 triangles a frame; the boy asked and three sandcastles knocked down did his job; the girl asked and running at the seagulls did hers, and they landed on sand; the woman asked and a swim in the sea did hers; the recognizer heard every new line ("sand castles" for "sandcastles").
+
+**Not checked**: on the iPad; the treasure and bones jobs played through (the same actions as in the woods, which were).

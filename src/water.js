@@ -120,6 +120,7 @@ function makeRipples(renderer, map) {
   const caps = renderer.capabilities, ext = renderer.extensions;
   if (!caps.isWebGL2 || !(ext.has('EXT_color_buffer_float') || ext.has('EXT_color_buffer_half_float'))) return null;   // older devices: no ripples
   const w = Math.ceil((map.x1 - map.x0) / RIPPLE_CELL), h = Math.ceil((map.y1 - map.y0) / RIPPLE_CELL);
+  if (w * h > 400000) return null;                    // the sea: far too big to work out ripples over (a splash still shows)
   const rt = () => new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, format: THREE.RGBAFormat, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, depthBuffer: false });
   let a = rt(), b = rt();
   const pushes = Array.from({ length: PUSHES }, () => new THREE.Vector4());

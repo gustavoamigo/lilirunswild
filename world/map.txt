@@ -10,6 +10,10 @@
 # East of the town, through a gate in the houses opposite the middle road, the big park: woods all round, a path north
 # to south through them, a wide meadow in the middle, a round pond with ducks (north), and the ice cream van at the end of
 # the main path from the gate.
+#
+# South of it all, the beach: sand the whole way along, two paths down to it between the houses (and the park's path
+# through the woods), sandcastles, umbrellas, seagulls; then the sea, as far as can be seen (no horizon: the camera
+# looks north). Lili can swim out a little way.
 
 h = house
 . = grass
@@ -48,8 +52,15 @@ f = woods
 d = woods-path
 o = pond
 i = icecream
+r = beach-path
+b = sand
+c = sand-castles
+u = sand-umbrella
+x = sand-gulls
+e = sea-edge
+s = sea
 
-bounds 400 400 9600 4800
+bounds 400 400 9600 5700
 
 .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
 .   h   h   L   h   h   h   h   h   h   h   h   S   h   h   h   f   d   f<  f   f>  f   f<  f   .
@@ -62,5 +73,10 @@ bounds 400 400 9600 4800
 .   h<  R<  V<  w   V>  R<  q   O   q   R>  P   T   P   R>  h>  m   p>  m   m   m   m   m   f   .
 .   h<  R<  v<  V>> v>> R<  M   q   M   R>  h   h   h   R>  h>  f<  p>  m   n   m   m   f   f>  .
 .   h<  C<  R>> R>> R>> Y>> R>> R>> R>> Y>> R>> R>> R>> C>> h>  f   d   f   m   m   f>  f   f<  .
-.   h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> h>> f>  d   f   f<  f   f>  f   f   .
-.   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .   .
+.   h>> h>> h>> r   h>> h>> h>> h>> r   h>> h>> h>> h>> h>> h>> f>  d   f   f<  f   f>  f   f   .
+b   b   b   c   b   u   x   b   c   b   b   u   b   c   b   x   u   b   b   c   b   u   x   b   b
+e   e   e   e   e   e   e   e   e   e   e   e   e   e   e   e   e   e   e   e   e   e   e   e   e
+s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s
+s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s
+s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s
+s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s   s

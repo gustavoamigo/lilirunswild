@@ -37,6 +37,11 @@ export default {
     { look: 5, nature: 'meh', walk: [[16, 6, 60, 260], [20, 6, 340, 260]] },        // walking the main path
     { look: 4, nature: 'lover', walk: [[18, 4, 60, 200], [22, 4, 340, 200]] },      // running about the meadow
     { look: 8, nature: 'lover', at: [20, 4, 120, 60], facing: 'north' },            // watching the ducks
+    // the beach, south of everything
+    { look: 6, nature: 'lover', at: [8, 12, 330, 110], facing: 'west', id: 'castle-boy', voice: 'kid:af_sky:1.25' },   // with his sandcastles
+    { look: 3, nature: 'lover', at: [13, 12, 330, 110], facing: 'west', id: 'castle-girl', voice: 'kid:af_sky:1.25' },  // with hers
+    { look: 1, nature: 'lover', at: [11, 12, 110, 260], facing: 'south', id: 'sunbather', voice: 'bf_emma' },           // by her umbrella
+    { look: 8, nature: 'lover', walk: [[2, 12, 100, 330], [7, 12, 300, 330]] },     // along the water's edge
   ],
   // animals who ask for jobs: kind (a model in src/models.js), id and voice as for people
   animals: [

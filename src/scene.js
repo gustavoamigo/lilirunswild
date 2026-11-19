@@ -110,6 +110,7 @@ export function initScene(canvas, w) {
   const R = rng(7), spots = [];
   for (let x = BOUNDS.x0; x <= BOUNDS.x1; x += 62) spots.push([x, BOUNDS.y0 - 34], [x, BOUNDS.y1 + 34]);
   for (let y = BOUNDS.y0; y <= BOUNDS.y1; y += 62) spots.push([BOUNDS.x0 - 34, y], [BOUNDS.x1 + 34, y]);
+  for (let i = spots.length - 1; i >= 0; i--) if (world.surfaceAt(spots[i][0], spots[i][1]) === 'water') spots.splice(i, 1);   // no hedge in the sea
   const bush = new THREE.SphereGeometry(1, 10, 7), hedgeMat = M.surf({ color: '#ffffff' }), col = new THREE.Color();
   chunked(spots.map(([x, y]) => [x + (R() - 0.5) * 14, y + (R() - 0.5) * 14, 40 + R() * 14, 34 + R() * 16, ['#3F9A55', '#4FA653', '#5CB563'][(R() * 3) | 0]]), (list) => {
     const hedge = new THREE.InstancedMesh(bush, hedgeMat, list.length);

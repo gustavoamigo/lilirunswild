@@ -12,6 +12,10 @@ The game opens on a title over the live town: "Lili Runs Wild" in big wobbling l
 
 A light, bouncy tune plays under everything from the moment the title is played, quiet enough that the barks, the car and the spoken jobs stay on top, and dipping while a job is said. It is synthesised, like most sounds: a toy marimba tune over plucked chords, a soft bass and a shaker.
 
+## The beach
+
+Along the whole south of the world, below the town and the park: sand, sandcastles to knock down, umbrellas, seagulls that fly off and land further along, and the sea to swim in (only the bottom of the screen: no horizon). Two children with sandcastles and a woman by her umbrella ask for jobs.
+
 ## The big park
 
 East of the town, through a gate in the houses: woods all round, a wide meadow, a round pond with ducks that paddle away from her (they never fly off), an ice cream van. A duck on the bank, a girl with a frisbee, the park keeper and the ice cream seller ask for jobs. See `docs/open-world-design.md`, *The big park*.
