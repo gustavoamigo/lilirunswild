@@ -745,3 +745,7 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision** (first part): the 44 tile files were loaded one after another, each waiting for the last, and the 31 jobs only after the town: all are now asked for at once, the jobs alongside the town. A build that packs the game into a few files follows.
 
 **Checked by script**: on a simulated phone connection (80 ms, 20 Mbit/s) the game is ready in 3.5 s, not 6.7 s.
+
+**Found by the build, and the owner's screenshot**: removing digging also took out the chime a job plays when it counts one or goes to its next step (`A.ding`, on the line beside the dig sound): since then a job's count hit an error. Restored. And catching the frisbee five times, Lili ran into the girl just as she was about to throw, and it was a tug of war: a frisbee is now never pulled, not while it is about to be thrown either.
+
+**Checked by script**: running into her as the job starts, no tug and the frisbee is thrown; a count plays the chime and the game goes on; the build has no warnings.

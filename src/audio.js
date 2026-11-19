@@ -128,6 +128,8 @@ export function boing() { tone(260, 0, 0.16, { to: 520, sweep: 0.1, vol: 0.14 })
 // ---- birds and people ----
 export function flutter() { for (let i = 0; i < 9; i++) noise(i * 0.055, 0.05, { freq: 1500 + (i % 2) * 700, q: 1.4, vol: 0.13 }); }
 export function coo() { tone(520, 0, 0.22, { to: 610, sweep: 0.1, vol: 0.05, attack: 0.05 }); tone(560, 0.26, 0.3, { to: 470, vol: 0.05, attack: 0.05 }); }
+// a job counts one, or goes on to its next step
+export function ding() { tone(660, 0, 0.1, { type: 'triangle', vol: 0.13 }); tone(990, 0.07, 0.18, { type: 'triangle', vol: 0.11 }); }
 export function quack() { tone(520, 0, 0.11, { type: 'sawtooth', to: 360, vol: 0.05, attack: 0.008 }); tone(500, 0.13, 0.13, { type: 'sawtooth', to: 330, vol: 0.05, attack: 0.008 }); }
 export function aww() { tone(440, 0, 0.5, { type: 'triangle', to: 660, sweep: 0.25, vol: 0.13, attack: 0.06 }); tone(660, 0.3, 0.4, { type: 'triangle', to: 520, vol: 0.1, attack: 0.06 }); }
 export function oof() { tone(300, 0, 0.25, { type: 'triangle', to: 130, vol: 0.2 }); noise(0.05, 0.12, { freq: 400, q: 0.8, vol: 0.18 }); }
@@ -175,7 +177,7 @@ export function panting(level) { loopAt('panting', level * 0.13, 1.05 + level * 
 let touched = false, waiting = null, lines = null, talking = null, turn = 0;
 const said = {}, here = (f) => new URL(`../sounds/voice/${f}`, import.meta.url);
 export const spoken = { said: [], silent: [] };          // for tests: what was played, and lines with no clip
-fetch(here('lines.json')).then((r) => r.json()).then((t) => { lines = t; if (touched && waiting) { const w = waiting; waiting = null; speak(w); } }).catch(() => { lines = {}; });
+(globalThis.LILI_PACK ? Promise.resolve(globalThis.LILI_PACK.lines) : fetch(here('lines.json')).then((r) => r.json())).then((t) => { lines = t; if (touched && waiting) { const w = waiting; waiting = null; speak(w); } }).catch(() => { lines = {}; });
 const clip = (k) => (said[k] ||= fetch(here(`${k}.mp3`)).then((r) => r.arrayBuffer()).then((b) => ac.decodeAudioData(b)));
 function hush() { turn++; if (talking) { try { talking.stop(); } catch {} talking = null; } }
 export function speak(text) {

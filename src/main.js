@@ -783,7 +783,7 @@ function updatePeople(dt) {
       } else if (o.holds && TOY[o.holds.kind] === 'throw' && o.state !== 'play') {
         // a frisbee is not pulled from them: running up to them, she gets it thrown
         o.state = 'play'; o.t = 0.4; o.play = 'throw';
-      } else if (o.holds && dog.state === 'idle' && sp > 40 && !dog.carry) {
+      } else if (o.holds && TOY[o.holds.kind] !== 'throw' && dog.state === 'idle' && sp > 40 && !dog.carry) {   // (a frisbee is never pulled: not while it is about to be thrown either)
         // they have a toy: she grabs it, and it is a tug of war (her play growl)
         o.state = 'tug'; o.t = 0; o.cool = 4; o.heading = toDog;
         // the pull runs across the screen (she goes round to their side she came from): along the camera's view her head
