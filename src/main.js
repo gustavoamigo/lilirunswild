@@ -668,7 +668,8 @@ const TOY = { teddy: 'either', frisbee: 'throw' }, PLAY_R = 100, GIVE_T = 0.5, T
 function updatePlay(dt) {
   const toy = dog.carry, still = Math.hypot(dog.vx, dog.vy) < 50;
   if (!toy || !TOY[toy.kind] || dog.state !== 'idle' || dog.air || !still || missions.wants('bring')?.target === toy.kind) { dog.giveT = 0; return; }
-  const o = world.people.find((q) => !q.holds && q.cool <= 0 && ['stand', 'walk', 'love'].includes(q.state) && (isChild(q.look) || q.nature === 'lover') && dist(q.x, q.y, dog.x, dog.y) < PLAY_R);
+  // (not q.cool: petting her starts it, and she came close, so they were always petting her and never took the toy)
+  const o = world.people.find((q) => !q.holds && !(q.playCool > 0) && ['stand', 'walk', 'love', 'approach'].includes(q.state) && (isChild(q.look) || q.nature === 'lover') && dist(q.x, q.y, dog.x, dog.y) < PLAY_R);
   if (!o) { dog.giveT = 0; return; }
   if ((dog.giveT = (dog.giveT || 0) + dt) < GIVE_T) return;
   dog.giveT = 0; dog.carry = null; Object.assign(toy, { carried: false, px: undefined, held: o, rest: true, kept: false }); o.holds = toy;
@@ -685,7 +686,7 @@ function updatePeople(dt) {
     a.x -= nx * push; a.y -= ny * push; b.x += nx * push; b.y += ny * push;
   }
   for (const o of world.people) {
-    o.t += dt; o.cool = Math.max(0, o.cool - dt); o.wave = Math.max(0, (o.wave || 0) - dt); o.glance = Math.max(0, (o.glance || 0) - dt);
+    o.t += dt; o.cool = Math.max(0, o.cool - dt); o.playCool = Math.max(0, (o.playCool || 0) - dt); o.wave = Math.max(0, (o.wave || 0) - dt); o.glance = Math.max(0, (o.glance || 0) - dt);
     o.home ||= { x: o.x, y: o.y };
     const dd = dist(o.x, o.y, dog.x, dog.y), toDog = Math.atan2(dog.y - o.y, dog.x - o.x);
     const face = (a, r) => { o.heading += angDiff(a, o.heading) * (1 - Math.exp(-dt * r)); };
@@ -742,7 +743,7 @@ function updatePeople(dt) {
         // over her head, more or less; a frisbee further and flatter (it glides)
         const disc = toy.kind === 'frisbee', a = toDog + (Math.random() - 0.5) * 1.8, s = disc ? 420 + Math.random() * 90 : 300 + Math.random() * 120;
         o.holds = null; toy.held = null; Object.assign(toy, { rest: false, cool: 0.6, thrown: true, vx: Math.cos(a) * s, vy: Math.sin(a) * s, vz: disc ? 330 : 560, z: isChild(o.look) ? 60 : 85 });
-        o.state = baseState(o); o.wave = 1.4; o.cool = 2; dog.excited = 0.8; A.yip();
+        o.state = baseState(o); o.wave = 1.4; o.cool = 2; o.playCool = 1.5; dog.excited = 0.8; A.yip();
       } else if (o.play === 'offer' && o.t > OFFER_T) o.state = baseState(o);       // they keep it; she can still come and tug
     }
     else if (o.state === 'love') {

@@ -693,3 +693,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: the drive round town says "the lake", and its card shows the lake: children know it by that, there is no sea, and the park's pond has a sandy edge too. Where it counts is unchanged (the sand round the lake).
 
 **Checked by script**: both new lines made in their voices and heard word for word.
+
+**Feedback** (with a screenshot): she never gets the frisbee back.
+
+**Decision**: the girl only took a toy when she was not resting after something (`cool`), but Lili coming close makes children pet her, and petting starts that rest: she was always petting and never took it. The test had cleared the rest before going back, so it passed. Now taking a toy is not held back by it (only by a short pause after a throw), and they take it while coming to pet her or petting her too.
+
+**Checked by script**: running back to her and stopping, as a child would (nothing reset): she took it 0.7 s after Lili stopped, twice, and the job was done after three.
