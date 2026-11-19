@@ -755,3 +755,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: `npm run build` (`tools/build.mjs`, esbuild) packs all the code, three.js and the game's data (map, tiles, people, jobs, the list of spoken lines) into one file; sounds and icons are copied. A GitHub workflow builds and publishes it on every push to main; the Pages source is switched to "GitHub Actions". The source still runs as it is, locally.
 
 **Checked by script**: the packed game served from `dist/` runs; on the simulated phone connection it is 2 requests and ready in 2.7 s (the source: 97 requests, 3.5 s; before today 6.7 s). The build's first run found the lost chime.
+
+**Feedback**: the published game: sounds/lili-growl-1.wav to 3 not found (404).
+
+**Decision**: the build left out the raw recordings folder (`sounds/lili/`) by a test that also matched the growls' names (`sounds/lili-growl-…`). It now leaves out that folder only.
+
+**Checked by script**: every sound in `sounds/` is in `dist/sounds/`, the raw folder is not; the growls are found on the published site.

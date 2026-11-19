@@ -46,7 +46,9 @@ await build({
 for (const f of ['index.html', 'style.css', 'manifest.webmanifest']) fs.copyFileSync(path.join(ROOT, f), path.join(OUT, f));
 const copyDir = (from, to, skip = () => false) => fs.cpSync(path.join(ROOT, from), path.join(OUT, to), { recursive: true, filter: (s) => !skip(s) });
 copyDir('icons', 'icons');
-copyDir('sounds', 'sounds', (s) => s.includes(`${path.sep}sounds${path.sep}lili`));   // (Lili's raw recordings are not part of the game)
+// (Lili's raw recordings, the folder sounds/lili/, are not part of the game; her growls, sounds/lili-growl-*.wav, are)
+const raw = path.join(ROOT, 'sounds', 'lili');
+copyDir('sounds', 'sounds', (s) => s === raw || s.startsWith(raw + path.sep));
 fs.rmSync(TMP, { recursive: true, force: true });
 
 const size = (f) => (fs.statSync(path.join(OUT, f)).size / 1024).toFixed(0);
