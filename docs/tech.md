@@ -1,6 +1,6 @@
 # Tech
 
-Three.js r170 (vendored), plain ES modules, no build step, and no asset files but the icon (`icons/`, drawn in code: *Icons* below) and sounds (`sounds/`): `lili-growl-*.wav` are Lili's own play growl, the sound she makes pulling on something, recorded by the owner and kept for pulling a toy from someone; the rest (bark, panting, car engine, horn and crash, a man's yell, a woman's and a child's scream) are generated (*Generated sounds* below), the lines said out loud (`sounds/voice/*.mp3`) are made by a speech model (*The voice* below), and everything else is synthesised in `src/audio.js`. Same architecture as wheek.
+Three.js r170 (vendored), plain ES modules run as they are (only the published site is packed: *Publishing* below), and no asset files but the icon (`icons/`, drawn in code: *Icons* below) and sounds (`sounds/`): `lili-growl-*.wav` are Lili's own play growl, the sound she makes pulling on something, recorded by the owner and kept for pulling a toy from someone; the rest (bark, panting, car engine, horn and crash, a man's yell, a woman's and a child's scream) are generated (*Generated sounds* below), the lines said out loud (`sounds/voice/*.mp3`) are made by a speech model (*The voice* below), and everything else is synthesised in `src/audio.js`. Same architecture as wheek.
 
 ## Files
 
@@ -20,6 +20,7 @@ Three.js r170 (vendored), plain ES modules, no build step, and no asset files bu
 | `src/input.js`, `src/gamepad.js` | Keys, pointer, pad |
 | `src/style.js` | `?style=real` (default) or `toon` |
 | `tools/serve.py` | Local server with caching off |
+| `tools/build.mjs`, `package.json`, `.github/workflows/pages.yml` | Packing the game for the web, and publishing it (see *Publishing* below) |
 | `src/music.js` | The background music: its score and its synthesised instruments (see *Music* below) |
 | `tools/icon.html`, `tools/make_icons.py` | The game's icon, drawn in code, and the script that saves it at each size into `icons/` (see *Icons* below) |
 | `tools/voice.py` | Makes the clip of every line the game says (see *The voice* below) |
@@ -192,6 +193,14 @@ Only what is near is built (the tiles), and three.js draws nothing outside the c
 - **Starting up** (measured with a CPU profile of the load in headless Chromium, 2026-11-19): 7.1 s to the first frame, of which half a second was `tileAt` looking through every tile (the sea's shore map asks it for half a million points; now a grid lookup) and half a second building the same shapes again for every bone, heap, bird and person (`merged` now builds each set of parts once and shares it; a shape changed after it is made, like her body, is built from a geometry of its own and never shared). Now 3.5 s, most of the rest the software renderer's own work, much less on a real device.
 - **Quality levels** (`QUALITY` in `src/main.js`, `setQuality` in `src/scene.js`): 3D pixels per screen pixel 2, 1.5, 1.25, 1, 1, with soft 2048 shadows, then hard 1024 ones, and last none. While playing, frames are averaged over 3 s; slower than 45 a second, the next level is taken (it never goes back up in a visit) and kept in `localStorage['lili-quality-1']` for the next visit. A gap of a second or more is a hidden tab, not slowness. The overlay (`#hud`) keeps the screen's sharpness.
 - `?fps` shows the frame rate, the level, draw calls and triangles; `?quality=N` sets a level and stops the watching. Headless Chromium draws in software at a few frames a second and steps down to the last level within seconds: **tests that look at screenshots should pass `?quality=0`**.
+
+## Publishing (`tools/build.mjs`, GitHub Pages)
+
+The game is worked on and run from the source files as they are (`tools/serve.py`). The published site is packed: on every push to main, `.github/workflows/pages.yml` runs `npm ci && npm run build` and puts `dist/` on GitHub Pages (the repository's Pages source is "GitHub Actions" since 2026-11-19; before, Pages served main as it was).
+
+- **What the build does**: esbuild (pinned in `package.json`) bundles all the code and three.js into one minified file, `dist/src/main.js` (about 730 kB, a quarter of that compressed), with the game's data in it as `globalThis.LILI_PACK`: the map, every tile named in its legend, the people, the jobs in list order and the list of spoken lines. `src/world.js`, `src/missions.js` and `src/audio.js` read the pack when it is there and fetch the files when it is not. The bundle keeps the path `src/main.js`, so `index.html` is the same and the sounds' paths (`new URL('../sounds/…', import.meta.url)`) still lead to `dist/sounds/`. Sounds, voice clips, icons, the style sheet and the manifest are copied as they are.
+- **Why**: about a hundred files were fetched at the start (the code's modules, three.js, 44 tile modules, 31 job files); on a simulated phone connection (80 ms, 20 Mbit/s) the game was ready in 6.7 s, then 3.5 s with everything asked for at once, and packed it is 2 requests and 2.7 s (and the file is compressed on Pages).
+- **Keeping it whole**: anything new the game fetches at the start must go into the pack too, or the published game fetches a file that is not in `dist/`. The build warns about an import with no export (it found `A.ding`, lost with the dig sound): read its output.
 
 ## Icons (`icons/`, `manifest.webmanifest`)
 

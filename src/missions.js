@@ -35,6 +35,7 @@ export function parseMission(text) {
 }
 
 export async function loadMissions() {
+  if (globalThis.LILI_PACK) return globalThis.LILI_PACK.missions.map(parseMission);   // the built game carries them (tools/build.mjs)
   const base = new URL('../missions/', import.meta.url);
   const list = (await (await fetch(new URL('list.txt', base))).text()).split('\n').map((s) => s.trim()).filter((s) => s && !s.startsWith('#'));
   return Promise.all(list.map(async (name) => parseMission(await (await fetch(new URL(`${name}.md`, base))).text())));

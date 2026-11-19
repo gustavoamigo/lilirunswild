@@ -24,12 +24,13 @@ Small iterations with the owner as tester.
 
 ## Code
 
-- Three.js r170, vendored in `vendor/`. Plain ES modules, **no build step, no asset files**: models are assembled in code, the ground is painted into a texture, sound is synthesised. The exceptions are sounds: the bark, `sounds/bark.wav` (owner asked for a soundfont sample), and `sounds/lili-growl-*.wav`, Lili's play growl when she pulls on something, chosen by the owner (2026-11-13). It is not a bark. Raw recordings waiting to be chosen go in `sounds/lili/`, which is ignored, never committed: they contain people talking.
+- Three.js r170, vendored in `vendor/`. Plain ES modules, run as they are: **no build step to work on it, no asset files**. Only the published site is packed (`npm run build`, run by `.github/workflows/pages.yml` on every push to main; the owner asked for it, 2026-11-19): the game must keep running from the source files, and anything it fetches at start must also go into the pack (`tools/build.mjs`, `LILI_PACK`). The assets: models are assembled in code, the ground is painted into a texture, sound is synthesised. The exceptions are sounds: the bark, `sounds/bark.wav` (owner asked for a soundfont sample), and `sounds/lili-growl-*.wav`, Lili's play growl when she pulls on something, chosen by the owner (2026-11-13). It is not a bark. Raw recordings waiting to be chosen go in `sounds/lili/`, which is ignored, never committed: they contain people talking.
 - Game logic lives on a flat map (`x` east, `y` south) plus height `z`; `src/scene.js` turns it into 3D. A 2D overlay canvas carries the HUD and bubbles.
 - File map, tuning constants, URL parameters and keys are in `docs/tech.md`.
 
 ```
-python3 tools/serve.py 8765     # http://localhost:8765/
+python3 tools/serve.py 8765     # http://localhost:8765/ (the source, as it is)
+npm ci && npm run build         # dist/: the packed game, as published (python3 -m http.server --directory dist)
 ```
 
 ## Testing

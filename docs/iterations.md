@@ -749,3 +749,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Found by the build, and the owner's screenshot**: removing digging also took out the chime a job plays when it counts one or goes to its next step (`A.ding`, on the line beside the dig sound): since then a job's count hit an error. Restored. And catching the frisbee five times, Lili ran into the girl just as she was about to throw, and it was a tug of war: a frisbee is now never pulled, not while it is about to be thrown either.
 
 **Checked by script**: running into her as the job starts, no tug and the frisbee is thrown; a count plays the chime and the game goes on; the build has no warnings.
+
+**Feedback**: couldn't you add a build that packages the game more efficiently? (Plan agreed: keep working from the source; a build packs the published site; GitHub builds and publishes it on every push.)
+
+**Decision**: `npm run build` (`tools/build.mjs`, esbuild) packs all the code, three.js and the game's data (map, tiles, people, jobs, the list of spoken lines) into one file; sounds and icons are copied. A GitHub workflow builds and publishes it on every push to main; the Pages source is switched to "GitHub Actions". The source still runs as it is, locally.
+
+**Checked by script**: the packed game served from `dist/` runs; on the simulated phone connection it is 2 requests and ready in 2.7 s (the source: 97 requests, 3.5 s; before today 6.7 s). The build's first run found the lost chime.

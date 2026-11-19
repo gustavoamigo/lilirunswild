@@ -1,0 +1,12 @@
+{
+  "name": "lili-runs-wild",
+  "private": true,
+  "type": "module",
+  "description": "Only for packing the game for the web (tools/build.mjs); the game itself runs from the source files as they are.",
+  "scripts": {
+    "build": "node tools/build.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.11"
+  }
+}
