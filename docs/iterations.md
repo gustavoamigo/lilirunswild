@@ -727,3 +727,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: the way is drawn on the ground in the 3D scene, under everyone standing on it: up to seven orange chevrons with a white rim from a little ahead of her towards the place, a glow running along them the way to go, and a pulsing orange ring round the place. The paw prints, the bouncing marker and the arrow at the screen's edge are gone.
 
 **Checked by script**: looked at four ways: to the neighbour at the start (chevrons, ring round her feet), a bone close by (the ring alone), the sea from the town centre (chevrons down the screen), the seagulls on the sand.
+
+**Feedback**: the game's first load is slow.
+
+**Decision**: profiled the start. Half a second went on finding which tile a point is on by looking through every tile (the sea's shore map asks half a million times; the beach and park made the map much bigger), now a grid lookup; half a second on building the same shapes again for every bone, heap, bird and person, now built once and shared.
+
+**Checked by script**: the first frame in headless Chromium 7.1 s → 3.5 s (most of the rest is its software renderer); four places on the beach looked at, unchanged. **Not checked**: the start on the iPad.

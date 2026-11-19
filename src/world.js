@@ -196,7 +196,11 @@ export function buildTown(tiles, pop) {
   platforms.push(carPlat);
 
   // the tile at a point, and what is underfoot there
-  const tileAt = (x, y) => tiles.find((t) => t.col === Math.floor(x / TILE) && t.row === Math.floor(y / TILE));
+  // (by its place in a grid: looking through every tile was half a second of the start, the sea's shore map asking it
+  // for half a million points)
+  const cols = Math.max(...tiles.map((t) => t.col)) + 1, grid = [];
+  for (const t of tiles) grid[t.row * cols + t.col] = t;
+  const tileAt = (x, y) => { const c = Math.floor(x / TILE), r = Math.floor(y / TILE); return c >= 0 && c < cols && r >= 0 ? grid[r * cols + c] : undefined; };
   const surfaceAt = (x, y) => { const t = tileAt(x, y); if (!t) return 'grass'; const [u, v] = unturn(t.rot, x - t.col * TILE, y - t.row * TILE); return tileSurface(t.def, u, v); };
   // Is this a free bit of open ground (nothing solid within `room`)?
   const freeSpot = (x, y, room = 60) => x > BOUNDS.x0 + room && x < BOUNDS.x1 - room && y > BOUNDS.y0 + room && y < BOUNDS.y1 - room

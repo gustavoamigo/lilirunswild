@@ -72,7 +72,16 @@ function ball(color, sx, sy, sz, x, y, z, shadow = true) {
 // Each shape is shaded a little darker underneath and lighter on top, with a gentle mottle,
 // so nothing looks like flat plastic.
 const _m = new THREE.Matrix4(), _q = new THREE.Quaternion(), _c = new THREE.Color();
+// The same parts give the same shape, built once and shared (shapes are never changed once made; one that is, like
+// her body, is made from a geometry of its own, so it is never shared): building a shape for every bone, heap, bird
+// and person afresh was half a second of the game's start.
+const MERGED = new Map();
 function merged(parts) {
+  const key = JSON.stringify(parts.map((p) => [p.geo ? p.geo.uuid : 0, p.color, p.at, p.scale, p.rot, p.flat]));
+  if (!MERGED.has(key)) MERGED.set(key, mergeParts(parts));
+  return MERGED.get(key);
+}
+function mergeParts(parts) {
   const pos = [], nor = [], col = [];
   for (const p of parts) {
     _q.setFromEuler(new THREE.Euler(...(p.rot || [0, 0, 0])));
