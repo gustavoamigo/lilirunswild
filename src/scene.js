@@ -126,7 +126,7 @@ export function initScene(canvas, w) {
     });
   });
 
-  for (const o of world.props) { const m = M.makeProp(o.kind); m.root.userData.kind = o.kind; scene.add(m.root); props.push({ o, ...m }); }
+  for (const o of world.props) { const m = M.makeProp(o.kind, world.surfaceAt(o.x, o.y)); m.root.userData.kind = o.kind; scene.add(m.root); props.push({ o, ...m }); }
   for (const o of world.people) { const m = M.makePerson(o.look); scene.add(m.root); people.push({ o, m }); }
   for (const f of world.flocks) for (const b of f.birds) { const m = f.kind === 'duck' ? M.makeDuck(b.color) : M.makeBird(b.color); m.root.userData.kind = f.kind || 'bird'; scene.add(m.root); birds.push({ f, b, m }); }
   for (const a of world.animals) { const m = M.makeDuck(2, true); scene.add(m.root); animals.push({ a, m }); }   // (a duck is the only one yet)

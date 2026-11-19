@@ -709,3 +709,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Checked by script**: five places looked at (the path down, the sandcastles, the umbrella, swimming in the sea, the park's end of the beach), 140 000 to 260 000 triangles a frame; the boy asked and three sandcastles knocked down did his job; the girl asked and running at the seagulls did hers, and they landed on sand; the woman asked and a swim in the sea did hers; the recognizer heard every new line ("sand castles" for "sandcastles").
 
 **Not checked**: on the iPad; the treasure and bones jobs played through (the same actions as in the woods, which were).
+
+**Feedback** (with a picture): the heap on the beach looks like a bone stuck in a pile of poo.
+
+**Decision**: it had the poo's dark brown. On sand a heap is now sand-coloured; on earth a lighter, warmer brown; both with clods thrown round and more of the bone showing.
+
+**Checked by script**: the beach's heap and a heap on a lawn looked at.
