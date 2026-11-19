@@ -687,3 +687,9 @@ Found while measuring the park: the hedge and the flowers were each one batch fo
 **Decision**: the old sound back (a hiss sweeping from 1700 to 900 Hz, 0.22 s), only louder: 2.4 where it was 0.09, about 9 dB over the music, peak 0.53.
 
 **Checked by script**: the old sound rendered offline at 0.09 (18 dB under the music) and louder; the chosen level about 9 dB over.
+
+**Feedback**: drive to the beach? Which beach? (Answer: the sand round the lake. Owner: yes to calling it the lake.)
+
+**Decision**: the drive round town says "the lake", and its card shows the lake: children know it by that, there is no sea, and the park's pond has a sandy edge too. Where it counts is unchanged (the sand round the lake).
+
+**Checked by script**: both new lines made in their voices and heard word for word.
